@@ -1,6 +1,6 @@
 # ethsim
 
-![example workflow](https://github.com/github/ferencberes/ethsim/actions/workflows/main.yml/badge.svg)
+![build](https://github.com/ferencberes/ethsim/actions/workflows/main.yml/badge.svg)
 
 ## Installation
 
