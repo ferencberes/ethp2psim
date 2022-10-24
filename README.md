@@ -1,5 +1,7 @@
 # ethsim
 
+![example workflow](https://github.com/github/ferencberes/ethsim/actions/workflows/main.yml/badge.svg)
+
 ## Installation
 
 Create your conda environment:
