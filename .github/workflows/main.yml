@@ -1,0 +1,36 @@
+name: CI
+
+on:
+
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+  - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+jobs:
+    build:
+      runs-on: ${{ matrix.os }}
+      strategy:
+        matrix:
+          os: [ubuntu-latest]
+          python-version: [ '3.7', '3.8','3.9']
+      steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: which python
+      - name: Run installation.
+        run: |
+         pip install codecov
+         pip install -r requirements.txt
+      - name: Test coverage.
+        run: |
+         cd tests
+         pytest
+         codecov
+      - name: Code Coverage
+        uses: codecov/codecov-action@v1

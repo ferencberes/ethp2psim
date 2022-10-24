@@ -2,7 +2,8 @@ from components import Network, Message
 import numpy as np
 
 class Simulator():
-    def __init__(self, num_nodes: int=100, k: int=5, num_msg: int=10):
+    def __init__(self, num_nodes: int=100, k: int=5, num_msg: int=10, verbose=True):
+        self.verbose = verbose
         self.G = Network(num_nodes, k)
         self.messages = [Message(sender) for sender in np.random.randint(0, num_nodes-1, num_msg)]
         
@@ -11,8 +12,10 @@ class Simulator():
             reached_nodes = 0.0
             while reached_nodes < coverage_threshold:
                 reached_nodes = msg.process(self.G)
-                print(msg.mid, reached_nodes)
-            print()
+                if self.verbose:
+                    print(msg.mid, reached_nodes)
+            if self.verbose:
+                print()
             
 sim = Simulator(500, 5, 10)
 sim.run()

@@ -12,3 +12,11 @@ Activate your environment, then install Python dependencies:
 conda activate ethsim
 pip install -r reuirements.txt
 ```
+
+## Tests
+
+Run the following command before pushing new commits to the repository!
+```bash
+cd tests
+pytest
+```
