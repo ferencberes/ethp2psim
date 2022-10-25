@@ -15,7 +15,7 @@ jobs:
       runs-on: ${{ matrix.os }}
       strategy:
         matrix:
-          os: [ubuntu-latest]
+          os: [macos-latest]
           python-version: [ '3.7', '3.8','3.9']
       steps:
       - uses: actions/checkout@v2
@@ -29,8 +29,3 @@ jobs:
       - name: Test coverage.
         run: |
          pytest --cov
-         curl -Os https://uploader.codecov.io/latest/linux/codecov 
-         chmod +x codecov 
-         ./codecov -t ${CODECOV_TOKEN}
-      - name: Code Coverage
-        uses: codecov/codecov-action@v1
