@@ -5,19 +5,21 @@ import numpy as np
 class Network:
     def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None):
         """Peer-to-peer network abstraction"""
-        self.num_nodes = num_nodes
-        self.k = k
-        self.generate_graph(graph)
+        self.generate_graph(num_nodes, k, graph)
         
-    def generate_graph(self, graph: nx.Graph=None):
+    def generate_graph(self, num_nodes, k, graph: nx.Graph=None):
         if graph is not None:
             self.graph = graph
-            self.num_nodes = self.graph.number_of_nodes()
             self.k = -1
         else:
-            self.graph = nx.random_regular_graph(self.k, self.num_nodes)
+            self.graph = nx.random_regular_graph(k, num_nodes)
+            self.k = k
         # NOTE: implement custom edge weights
         self.weights = dict(zip(self.graph.edges, np.random.random(self.graph.number_of_edges())))
+        
+    @property
+    def num_nodes(self):
+        return self.graph.number_of_nodes()
 
 class Record:
     def __init__(self, node: int, delay: float, hops: int):
@@ -25,6 +27,28 @@ class Record:
         self.node = node
         self.delay = delay
         self.hops = hops
+        
+class Protocol:
+    def __init__(self, network: Network):
+        """Abstraction for different message passing protocols"""
+        self.network = network
+        
+class BroadcastProtocol(Protocol):
+    def __init__(self, network: Network):
+        """Transaction propagation is based on broadcasting"""
+        super(BroadcastProtocol, self).__init__(network)
+    
+    def propagate(self, record: Record):
+        new_records = []
+        node = record.node
+        for neigh in self.network.graph.neighbors(node):
+            link = (node, neigh)
+            if not link in self.network.weights:
+                link = (neigh, node)
+            elapsed_time = record.delay + self.network.weights[link]
+            rec = Record(neigh, elapsed_time, record.hops+1)
+            new_records.append(rec)
+        return new_records
         
 class Message:
     def __init__(self, sender: int):
@@ -35,21 +59,14 @@ class Message:
         self.history = {sender:Record(self.sender, 0.0, 0)}
         self.queue = [sender]
         
-    # TODO: rename it for broadcast!
-    def process(self, network: Network):
+    def process(self, protocol: Protocol):
         """Propagate the message on outbound links"""
         new_queue = []
         for node in self.queue:
-            record = self.history[node]
-            # NOTE: implement custom neighbor calculation
-            for neigh in network.graph.neighbors(node):
-                if not neigh in self.history:
-                    link = (node, neigh)
-                    if not link in network.weights:
-                        link = (neigh, node)
-                    elapsed_time = record.delay + network.weights[link]
-                    new_record = Record(neigh, elapsed_time, record.hops+1)
-                    self.history[neigh] = new_record
-                    new_queue.append(neigh)
+            new_records = protocol.propagate(self.history[node])
+            for rec in new_records:
+                if not rec.node in self.history:
+                    self.history[rec.node] = rec
+                    new_queue.append(rec.node)
         self.queue = new_queue
-        return len(self.history) / network.num_nodes
+        return len(self.history) / protocol.network.num_nodes
