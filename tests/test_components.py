@@ -1,5 +1,5 @@
-import sys
-sys.path.insert(0, '../python')
+import sys, os
+sys.path.insert(0, '%s/python' % os.getcwd())
 import networkx as nx
 from components import Network, Message
 

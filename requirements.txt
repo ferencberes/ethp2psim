@@ -2,3 +2,4 @@ networkx
 numpy
 jupyterlab
 pytest
+pytest-cov
