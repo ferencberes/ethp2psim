@@ -10,7 +10,6 @@ class Network:
         self.generate_graph(graph)
         
     def generate_graph(self, graph: nx.Graph=None):
-        success = False
         if graph is not None:
             self.graph = graph
             self.num_nodes = self.graph.number_of_nodes()
@@ -32,9 +31,11 @@ class Message:
         """Abstraction for Ethereum transactions"""
         self.mid = uuid.uuid4().hex
         self.sender = sender
+        # TODO: check existence!
         self.history = {sender:Record(self.sender, 0.0, 0)}
         self.queue = [sender]
         
+    # TODO: rename it for broadcast!
     def process(self, network: Network):
         """Propagate the message on outbound links"""
         new_queue = []
