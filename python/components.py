@@ -49,6 +49,18 @@ class BroadcastProtocol(Protocol):
             rec = Record(neigh, elapsed_time, record.hops+1)
             new_records.append(rec)
         return new_records
+    
+class Adversary: 
+    def __init__(self, network: Network, ratio: float):
+        self.nodes = []
+        self.captured_msgs = []
+        """Each node is adversarial according to the ratio probability"""
+        for node_idx, score in enumerate(np.random.random(size=network.num_nodes)):
+            if score < ratio: 
+                self.nodes.append(node_idx)
+                
+    def eavesdrop_msg(msg: Record):
+        self.captured_msgs.append(msg)
         
 class Message:
     def __init__(self, sender: int):
@@ -59,7 +71,7 @@ class Message:
         self.history = {sender:Record(self.sender, 0.0, 0)}
         self.queue = [sender]
         
-    def process(self, protocol: Protocol):
+    def process(self, protocol: Protocol, adv: Adversary):
         """Propagate the message on outbound links"""
         new_queue = []
         for node in self.queue:
