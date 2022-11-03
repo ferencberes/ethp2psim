@@ -25,12 +25,14 @@ jobs:
       - run: which python
       - name: Run installation.
         run: |
-         pip install -r requirements.txt
+          pip install -r requirements.txt
       - name: Test coverage.
         run: |
-         pytest --cov
-         curl -Os https://uploader.codecov.io/latest/linux/codecov 
-         chmod +x codecov 
-         ./codecov -t ${CODECOV_TOKEN}
-      - name: Code Coverage
-        uses: codecov/codecov-action@v1
+          pytest --cov
+      - name: "Upload code coverage"
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          curl -Os https://uploader.codecov.io/latest/linux/codecov
+          chmod +x codecov 
+          ./codecov -t "$CODECOV_TOKEN"
