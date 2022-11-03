@@ -36,5 +36,5 @@ def test_adversary():
     G = nx.Graph()
     G.add_edges_from([(0,1),(0,2),(0,3),(1,4),(4,5)])
     net = Network(graph=G)
-    adv = Adversary(net, 0.334)
+    adv = Adversary(net, 0.334, seed=42)
     assert  1 <= len(adv.nodes)

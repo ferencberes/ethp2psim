@@ -51,10 +51,12 @@ class BroadcastProtocol(Protocol):
         return new_records
     
 class Adversary: 
-    def __init__(self, network: Network, ratio: float):
+    def __init__(self, network: Network, ratio: float, seed: int=None):
         self.nodes = []
         self.captured_msgs = []
         """Each node is adversarial according to the ratio probability"""
+        if seed != None:
+            np.random.seed(seed)
         for node_idx, score in enumerate(np.random.random(size=network.num_nodes)):
             if score < ratio: 
                 self.nodes.append(node_idx)
