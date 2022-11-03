@@ -1,5 +1,6 @@
 networkx
 numpy
+pandas
 jupyterlab
 pytest
 pytest-cov

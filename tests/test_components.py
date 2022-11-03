@@ -3,22 +3,28 @@ sys.path.insert(0, '%s/python' % os.getcwd())
 import networkx as nx
 from components import Network, Message, BroadcastProtocol, Adversary
 
+G = nx.Graph()
+G.add_edges_from([(0,1),(0,2),(0,3),(1,4),(4,5)])
+
 def test_custom_graph():
-    G = nx.Graph()
-    G.add_edges_from([(0,1),(0,2),(0,3),(1,4),(4,5)])
     net = Network(graph=G)
     assert net.num_nodes == 6
     assert net.k == -1
     assert len(net.weights) == 5
+
+def test_adversary():
+    net = Network(graph=G)
+    adv = Adversary(net, 1/3, seed=42)
+    assert len(adv.nodes) == 2
+    assert 4 in adv.nodes
+    assert 5 in adv.nodes
     
 def test_single_message():
-    G = nx.Graph()
-    G.add_edges_from([(0,1),(0,2),(0,3),(1,4),(4,5)])
     net = Network(graph=G)
     protocol = BroadcastProtocol(net)
     # start a message from the middle
     msg = Message(0)
-    adv = Adversary(net, 0.334)
+    adv = Adversary(net, 1/3, seed=42)
     first_ratio = msg.process(protocol, adv)
     assert (first_ratio - 2/3) < 0.0001
     second_ratio = msg.process(protocol, adv)
@@ -31,10 +37,9 @@ def test_single_message():
     assert msg.history[3].hops == 1
     assert msg.history[4].hops == 2
     assert msg.history[5].hops == 3
-    
-def test_adversary():
-    G = nx.Graph()
-    G.add_edges_from([(0,1),(0,2),(0,3),(1,4),(4,5)])
-    net = Network(graph=G)
-    adv = Adversary(net, 0.334, seed=42)
-    assert  1 <= len(adv.nodes)
+    assert len(adv.captured_events) > 0
+    predictions = adv.predict_msg_source()
+    assert predictions.shape[0] == 1
+    assert predictions.shape[1] == G.number_of_nodes()
+    # adversary nodes [4,5] first receive the message from node 1
+    assert predictions.loc[msg.mid, 1] == 1
