@@ -38,7 +38,7 @@ class Protocol:
         self.network = network
         
     def propagate(self, pe: ProtocolEvent):
-        return []
+        pass
         
 class BroadcastProtocol(Protocol):
     def __init__(self, network: Network):

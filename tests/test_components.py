@@ -37,7 +37,9 @@ def test_single_message():
     assert msg.history[3].hops == 1
     assert msg.history[4].hops == 2
     assert msg.history[5].hops == 3
-    assert len(adv.captured_events) > 0
+    # adversary nodes [4,5] both vitness one EavesdropEvent
+    print(adv.captured_events)
+    assert len(adv.captured_events) == 2
     predictions = adv.predict_msg_source()
     assert predictions.shape[0] == 1
     assert predictions.shape[1] == G.number_of_nodes()
