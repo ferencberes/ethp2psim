@@ -1,5 +1,7 @@
-from components import *
 import numpy as np
+from message import Message 
+from protocols import Protocol
+from adversary import Adversary
 
 class Simulator():
     def __init__(self, protocol: Protocol, adv: Adversary, num_msg: int=10, verbose=True):

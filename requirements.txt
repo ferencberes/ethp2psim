@@ -4,3 +4,4 @@ pandas
 jupyterlab
 pytest
 pytest-cov
+matplotlib

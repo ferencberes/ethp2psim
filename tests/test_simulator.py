@@ -1,7 +1,9 @@
 import sys, os
 sys.path.insert(0, '%s/python' % os.getcwd())
 from simulator import Simulator
-from components import *
+from network import Network
+from protocols import BroadcastProtocol
+from adversary import Adversary
 
 def test_dummy():
     net = Network(10, 2)

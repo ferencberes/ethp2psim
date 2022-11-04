@@ -1,7 +1,10 @@
 import sys, os
 sys.path.insert(0, '%s/python' % os.getcwd())
 import networkx as nx
-from components import Network, Message, BroadcastProtocol, Adversary
+from network import Network
+from message import Message
+from protocols import BroadcastProtocol
+from adversary import Adversary
 
 G = nx.Graph()
 G.add_edges_from([(0,1),(0,2),(0,3),(1,4),(4,5)])
