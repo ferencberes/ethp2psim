@@ -14,8 +14,10 @@ class Message:
     def process(self, protocol: Protocol, adv: Adversary):
         """Propagate message based on rules defined by the given protocol"""
         new_queue = []
+        spreading_phase = False
         for sender in self.queue:
-            new_events = protocol.propagate(self.history[sender])
+            new_events, spreading_phase_update = protocol.propagate(self.history[sender])
+            spreading_phase = spreading_phase or spreading_phase_update 
             for rec in new_events:
                 receiver = rec.node
                 if not receiver in self.history:
@@ -25,4 +27,4 @@ class Message:
                     if receiver in adv.nodes:
                         adv.eavesdrop_msg(EavesdropEvent(self.mid, self.source, sender, rec))
         self.queue = new_queue
-        return len(self.history) / protocol.network.num_nodes
+        return (len(self.history) / protocol.network.num_nodes), spreading_phase

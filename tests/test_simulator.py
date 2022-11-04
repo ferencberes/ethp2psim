@@ -18,5 +18,5 @@ def test_simulator():
     adv = Adversary(net, 0.334)
     protocol = BroadcastProtocol(net)
     sim = Simulator(protocol, adv, 1, verbose=True)
-    sim.run(0.9)
+    sim.run(0.9, 0.0)
     assert (len(sim.messages[0].history) / net.num_nodes) >= 0.9

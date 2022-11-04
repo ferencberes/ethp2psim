@@ -28,11 +28,11 @@ def test_single_message():
     # start a message from the middle
     msg = Message(0)
     adv = Adversary(net, 1/3, seed=42)
-    first_ratio = msg.process(protocol, adv)
+    first_ratio, _ = msg.process(protocol, adv)
     assert (first_ratio - 2/3) < 0.0001
-    second_ratio = msg.process(protocol, adv)
+    second_ratio, _ = msg.process(protocol, adv)
     assert (second_ratio - 5/6) < 0.0001
-    third_ratio = msg.process(protocol, adv)
+    third_ratio, _ = msg.process(protocol, adv)
     assert third_ratio == 1.0
     assert msg.history[0].hops == 0
     assert msg.history[1].hops == 1

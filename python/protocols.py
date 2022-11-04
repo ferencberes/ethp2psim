@@ -73,7 +73,7 @@ class BroadcastProtocol(Protocol):
         sender = pe.node
         for receiver in self.network.graph.neighbors(sender):
             new_events.append(self.get_new_event(sender, receiver, pe, True))
-        return new_events
+        return new_events, True
 
 class DandelionProtocol(BroadcastProtocol):
     """Transaction propagation first based on an anonymity phase that is followed by a spreading phase"""
@@ -109,4 +109,4 @@ class DandelionProtocol(BroadcastProtocol):
         if pe.spreading_phase or np.random.random() < spreading_proba:
             return super(DandelionProtocol, self).propagate(pe)
         else:
-            return [self.get_new_event(pe.node, self.outbound_node[pe.node], pe, False)]
+            return [self.get_new_event(pe.node, self.outbound_node[pe.node], pe, False)], False
