@@ -3,7 +3,7 @@ sys.path.insert(0, '%s/python' % os.getcwd())
 import networkx as nx
 from network import Network
 from message import Message
-from protocols import BroadcastProtocol
+from protocols import BroadcastProtocol, DandelionProtocol
 from adversary import Adversary
 
 G = nx.Graph()
@@ -22,17 +22,23 @@ def test_adversary():
     assert 4 in adv.nodes
     assert 5 in adv.nodes
     
-def test_single_message():
+def test_broadcast_single_message():
     net = Network(graph=G)
     protocol = BroadcastProtocol(net)
+    adv = Adversary(net, 1/3, seed=42)
     # start a message from the middle
     msg = Message(0)
-    adv = Adversary(net, 1/3, seed=42)
+    assert 0 in msg.history
+    # 0 broadcasted the message to all its neighbors (1,2,3)
+    for node in [1,2,3]:
+        node in msg.history
     first_ratio, _ = msg.process(protocol, adv)
     assert (first_ratio - 2/3) < 0.0001
     second_ratio, _ = msg.process(protocol, adv)
+    assert 4 in msg.history
     assert (second_ratio - 5/6) < 0.0001
     third_ratio, _ = msg.process(protocol, adv)
+    assert 5 in msg.history
     assert third_ratio == 1.0
     assert msg.history[0].hops == 0
     assert msg.history[1].hops == 1
@@ -48,3 +54,23 @@ def test_single_message():
     assert predictions.shape[1] == G.number_of_nodes()
     # adversary nodes [4,5] first receive the message from node 1
     assert predictions.loc[msg.mid, 1] == 1
+
+def test_dandelion_single_message():
+    net = Network(graph=G)
+    protocol = DandelionProtocol(net, 1/3, seed=42)
+    adv = Adversary(net, 1/3, seed=42)
+    # start a message from the middle
+    msg = Message(0)
+    assert 0 in msg.history
+    first_ratio, first_broadcast = msg.process(protocol, adv)
+    print(first_ratio, first_broadcast)
+    # node 0 did not boradcast but send the message only to node 2
+    assert 2 in msg.history
+    assert 1 not in msg.history
+    assert 3 not in msg.history
+    assert (not first_broadcast)
+    # node 2 has no other neighbor than 0 so no additional node get the message
+    second_ratio, second_broadcast = msg.process(protocol, adv)
+    print(second_broadcast, msg.history)
+    assert len(msg.history) == 2
+    # TODO: what happens in the upcoming steps?

@@ -1,5 +1,5 @@
 from network import Network
-import numpy
+import numpy as np
 
 class ProtocolEvent:
     """Message information propagated through the peer-to-peer network"""
@@ -100,13 +100,14 @@ class DandelionProtocol(BroadcastProtocol):
         """Initialize or re-initialize line graph used for the anonymity phase of the Dandelion protocol"""
         for node in self.network.graph.nodes():
             neighbors = list(self.network.graph.neighbors(node))
-            self.outbound_node[node] = neighbors[self.random.randint()]
+            i = np.random.randint(0,len(neighbors))
+            self.outbound_node[node] = neighbors[i]
         
     def propagate(self, pe: ProtocolEvent):
         """Propagate message based on protocol rules"""
         if self._seed != None:
-            np.random.seed(seed)
-        if pe.spreading_phase or np.random.random() < spreading_proba:
+            np.random.seed(self._seed)
+        if pe.spreading_phase or np.random.random() < self.spreading_proba:
             return super(DandelionProtocol, self).propagate(pe)
         else:
             return [self.get_new_event(pe.node, self.outbound_node[pe.node], pe, False)], False
