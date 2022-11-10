@@ -20,7 +20,7 @@ class Simulator():
         self.verbose = verbose
         self.protocol = protocol
         self.adversary = adv
-        self.messages = [Message(sender) for sender in np.random.randint(0, self.protocol.network.num_nodes-1, num_msg)]
+        self.messages = [Message(sender) for sender in self.protocol.network.sample_random_sources(num_msg)]
         
     def run(self, coverage_threshold: float=0.9, epsilon=0.001):
         """

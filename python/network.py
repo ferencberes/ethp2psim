@@ -2,11 +2,22 @@ import networkx as nx
 import numpy as np
 
 class Network:
+    """Peer-to-peer network abstraction"""
+    
     def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None):
-        """Peer-to-peer network abstraction"""
-        self.generate_graph(num_nodes, k, graph)
+        """
+        Parameters
+        ----------
+        num_nodes : int
+            Number of nodes in the peer-to-peer graph
+        k : int
+            Regularity parameter
+        graph : networkx.Graph
+            Provide custom graph otherwise a k-regular random graph is generated
+        """
+        self._generate_graph(num_nodes, k, graph)
         
-    def generate_graph(self, num_nodes, k, graph: nx.Graph=None):
+    def _generate_graph(self, num_nodes, k, graph: nx.Graph=None):
         if graph is not None:
             self.graph = graph
             self.k = -1
@@ -19,3 +30,14 @@ class Network:
     @property
     def num_nodes(self):
         return self.graph.number_of_nodes()
+    
+    def sample_random_sources(self, count):
+        """
+        Sample network nodes uniformly at random
+        
+        Parameters
+        ----------
+        count : int
+            Number of nodes to sample
+        """
+        return np.random.randint(0, self.num_nodes-1, count)
