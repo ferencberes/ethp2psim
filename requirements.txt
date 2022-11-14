@@ -6,4 +6,5 @@ jupyterlab
 pytest
 pytest-cov
 matplotlib
+seaborn
 tqdm

@@ -32,3 +32,4 @@ def test_evaluator():
     results = [evaluator.exact_hits, evaluator.ranks, evaluator.inverse_ranks, evaluator.entropies]
     for res in results:
         assert len(res) == num_msg
+    assert len(evaluator.get_report()) == 2

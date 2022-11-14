@@ -66,6 +66,9 @@ class BroadcastProtocol(Protocol):
             Represent the underlying P2P network used for message passing
         """
         super(BroadcastProtocol, self).__init__(network)
+        
+    def __repr__(self):
+        return "BroadcastProtocol()"
     
     def propagate(self, pe: ProtocolEvent):
         """Propagate message based on protocol rules"""
@@ -95,6 +98,9 @@ class DandelionProtocol(BroadcastProtocol):
         self.outbound_node = {}
         # initialize line graph
         self.change_line_graph()
+        
+    def __repr__(self):
+        return "DandelionProtocol(%.4f)" % self.spreading_proba
         
     def change_line_graph(self):
         """Initialize or re-initialize line graph used for the anonymity phase of the Dandelion protocol"""

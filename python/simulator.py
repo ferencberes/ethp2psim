@@ -1,5 +1,5 @@
 import numpy as np
-from tqdm.auto import tqdm
+#from tqdm.auto import tqdm
 from scipy.stats import entropy
 from message import Message 
 from protocols import Protocol
@@ -28,6 +28,7 @@ class Simulator():
         self.protocol = protocol
         self.adversary = adv
         self.use_weights = use_weights
+        # adversary nodes don't send messages in the simulation - they only observe
         self.messages = [Message(sender) for sender in self.protocol.network.sample_random_nodes(num_msg, use_weights=use_weights, exclude=self.adversary.nodes)]
         
     def run(self, coverage_threshold: float=0.9, epsilon=0.001):
@@ -41,7 +42,8 @@ class Simulator():
         epsilon : adversary.Adversary
             stop propagating a message if it is in the spreading phase and could not reach more than epsilon fraction of network nodes in the previous step
         """
-        for msg in tqdm(self.messages):
+        #for msg in tqdm(self.messages):
+        for msg in self.messages:
             reached_nodes = 0.0
             delta = 1.0
             while reached_nodes < coverage_threshold and delta >= epsilon:
@@ -89,7 +91,7 @@ class Evaluator:
                 ranks.append(self.proba_ranks.loc[msg.mid, msg.source])
             else:
                 # what to do with unseen messages? random rank might be better...
-                ranks.append(len(self.simulator.protocol.network.num_nodes))
+                ranks.append(self.simulator.protocol.network.num_nodes)
         return np.array(ranks)
     
     @property
@@ -108,4 +110,10 @@ class Evaluator:
             else:
                 entropies.append(rnd_entropy)
         return np.array(entropies)
+    
+    def get_report(self):
+        return {
+            "hit_ratio":np.mean(self.exact_hits),
+            "mean_inverse_rank":np.mean(self.inverse_ranks)
+        }
         
