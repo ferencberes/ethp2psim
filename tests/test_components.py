@@ -13,14 +13,14 @@ def test_custom_graph():
     net = Network(graph=G)
     assert net.num_nodes == 6
     assert net.k == -1
-    assert len(net.weights) == 5
+    assert len(net.edge_weights) == 5
 
 def test_adversary():
     net = Network(graph=G)
     adv = Adversary(net, 1/3, seed=42)
     assert len(adv.nodes) == 2
+    assert 3 in adv.nodes
     assert 4 in adv.nodes
-    assert 5 in adv.nodes
     
 def test_broadcast_single_message():
     net = Network(graph=G)
@@ -46,14 +46,13 @@ def test_broadcast_single_message():
     assert msg.history[3].hops == 1
     assert msg.history[4].hops == 2
     assert msg.history[5].hops == 3
-    # adversary nodes [4,5] both vitness one EavesdropEvent
-    print(adv.captured_events)
+    # adversary nodes [3,4] both vitness one EavesdropEvent
     assert len(adv.captured_events) == 2
     predictions = adv.predict_msg_source()
     assert predictions.shape[0] == 1
     assert predictions.shape[1] == G.number_of_nodes()
-    # adversary nodes [4,5] first receive the message from node 1
-    assert predictions.loc[msg.mid, 1] == 1
+    # adversary nodes [3,4] first receive the message from node 0
+    assert predictions.loc[msg.mid, 0] == 1
 
 def test_dandelion_single_message():
     net = Network(graph=G)

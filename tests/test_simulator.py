@@ -26,7 +26,7 @@ def test_evaluator():
     net = Network(500, 3)
     adv = Adversary(net, 0.1)
     protocol = BroadcastProtocol(net)
-    sim = Simulator(protocol, adv, num_msg, verbose=True)
+    sim = Simulator(protocol, adv, num_msg, True, verbose=True)
     sim.run(0.9, 0.0)
     evaluator = Evaluator(sim)
     results = [evaluator.exact_hits, evaluator.ranks, evaluator.inverse_ranks, evaluator.entropies]

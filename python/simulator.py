@@ -8,7 +8,7 @@ from adversary import Adversary
 class Simulator():
     """Abstraction to simulate message passing on a P2P network"""
     
-    def __init__(self, protocol: Protocol, adv: Adversary, num_msg: int=10, verbose=True):
+    def __init__(self, protocol: Protocol, adv: Adversary, num_msg: int=10, use_weights: bool=False, verbose=True):
         """
         Parameters
         ----------
@@ -18,6 +18,8 @@ class Simulator():
             adversary that observe messages in the P2P network
         num_msg : int
             number of messages to simulate
+        use_weights : int
+            sample message sources with respect to node weights
         """
         if num_msg > 10:
             self.verbose = False
@@ -25,7 +27,8 @@ class Simulator():
             self.verbose = verbose
         self.protocol = protocol
         self.adversary = adv
-        self.messages = [Message(sender) for sender in self.protocol.network.sample_random_sources(num_msg)]
+        self.use_weights = use_weights
+        self.messages = [Message(sender) for sender in self.protocol.network.sample_random_nodes(num_msg, use_weights=use_weights, exclude=self.adversary.nodes)]
         
     def run(self, coverage_threshold: float=0.9, epsilon=0.001):
         """

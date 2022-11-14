@@ -51,9 +51,9 @@ class Protocol:
             Set whether the spreading phase starts at the receiver node
         """
         link = (sender, receiver)
-        if not link in self.network.weights:
+        if not link in self.network.edge_weights:
             link = (receiver, sender)
-        elapsed_time = pe.delay + self.network.weights[link]
+        elapsed_time = pe.delay + self.network.edge_weights[link]
         return ProtocolEvent(receiver, elapsed_time, pe.hops+1, spreading_phase)
         
 class BroadcastProtocol(Protocol):
