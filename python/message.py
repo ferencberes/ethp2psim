@@ -11,6 +11,9 @@ class Message:
         self.history = {source:ProtocolEvent(self.source, 0.0, 0)}
         self.queue = [source]
         
+    def __repr__(self):
+        return "Message(%s, %i)" % (self.mid, self.source)
+        
     def process(self, protocol: Protocol, adv: Adversary):
         """Propagate message based on rules defined by the given protocol"""
         new_queue = []

@@ -1,7 +1,9 @@
-networkx
 numpy
+scipy
 pandas
+networkx
 jupyterlab
 pytest
 pytest-cov
 matplotlib
+tqdm
