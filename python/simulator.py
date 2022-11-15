@@ -74,6 +74,11 @@ class Evaluator:
         self.proba_ranks = self.probas.rank(axis=1, ascending=False, method="average")
     
     @property
+    def message_spread_ratios(self):
+        N = self.simulator.protocol.network.num_nodes
+        return [len(msg.history) / N for msg in self.simulator.messages]
+    
+    @property
     def exact_hits(self):
         hits = []
         for msg in self.simulator.messages:
@@ -116,6 +121,8 @@ class Evaluator:
     def get_report(self):
         return {
             "hit_ratio":np.mean(self.exact_hits),
-            "mean_inverse_rank":np.mean(self.inverse_ranks)
+            "mean_inverse_rank":np.mean(self.inverse_ranks),
+            "entropy":np.mean(self.entropies),
+            "message_spread_ratio":np.mean(self.message_spread_ratios)
         }
         
