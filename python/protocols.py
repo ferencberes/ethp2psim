@@ -1,5 +1,6 @@
 from network import Network
 import numpy as np
+import networkx as nx
 
 class ProtocolEvent:
     """Message information propagated through the peer-to-peer network"""
@@ -93,9 +94,10 @@ class DandelionProtocol(BroadcastProtocol):
             Random seed (disabled by default)
         """
         super(DandelionProtocol, self).__init__(network)
-        self._seed = seed
         self.spreading_proba = spreading_proba
-        self.outbound_node = {}
+        self._rng = np.random.default_rng(seed)
+        self._outbound_node = {}
+        self._inbound_nodes = {}
         # initialize line graph
         self.change_line_graph()
         
@@ -106,14 +108,29 @@ class DandelionProtocol(BroadcastProtocol):
         """Initialize or re-initialize line graph used for the anonymity phase of the Dandelion protocol"""
         for node in self.network.graph.nodes():
             neighbors = list(self.network.graph.neighbors(node))
-            i = np.random.randint(0,len(neighbors))
-            self.outbound_node[node] = neighbors[i]
+            # avoid short loops if possible
+            if node in self._inbound_nodes:
+                free_neighbors = np.setdiff1d(neighbors, list(self._inbound_nodes[node]))
+                if len(free_neighbors) > 0:
+                    neighbors = free_neighbors
+            # select outbound node for the line grpah
+            selected = self._rng.choice(neighbors)
+            self._outbound_node[node] = selected
+            # update inbound nodes
+            if not selected in self._inbound_nodes:
+                self._inbound_nodes[selected] = set()
+            self._inbound_nodes[selected].add(node)
+            
+    @property
+    def line_graph(self):
+        L = nx.DiGraph()
+        for u, v in self._outbound_node.items():
+            L.add_edge(u,v)
+        return L
         
     def propagate(self, pe: ProtocolEvent):
         """Propagate message based on protocol rules"""
-        if self._seed != None:
-            np.random.seed(self._seed)
-        if pe.spreading_phase or np.random.random() < self.spreading_proba:
+        if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
             return super(DandelionProtocol, self).propagate(pe)
         else:
-            return [self.get_new_event(pe.node, self.outbound_node[pe.node], pe, False)], False
+            return [self.get_new_event(pe.node, self._outbound_node[pe.node], pe, False)], False

@@ -15,18 +15,18 @@ class EavesdropEvent:
         return "EavesdropEvent(%s, %i, %i, %s)" % (self.mid, self.source, self.sender, self.protocol_event)
 
 class Adversary: 
-    def __init__(self, network: Network, ratio: float, seed: int=None):
+    def __init__(self, network: Network, ratio: float):
         """Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic"""
         self.ratio = ratio
         self.candidates = list(network.graph.nodes())
         self.captured_events = []
         self.captured_msgs = set()
-        self._sample_adversary_nodes(network, seed)
+        self._sample_adversary_nodes(network)
             
-    def _sample_adversary_nodes(self, network: Network, seed: int):
+    def _sample_adversary_nodes(self, network: Network):
         """Randomly select given fraction of nodes to be adversaries"""
         num_adversaries = int(len(self.candidates) * self.ratio)
-        self.nodes = network.sample_random_nodes(num_adversaries, seed=seed)
+        self.nodes = network.sample_random_nodes(num_adversaries, replace=False)
                 
     def eavesdrop_msg(self, ee:EavesdropEvent):
         """Adversary records the observed information"""

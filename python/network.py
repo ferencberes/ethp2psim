@@ -4,7 +4,7 @@ import numpy as np
 class Network:
     """Peer-to-peer network abstraction"""
     
-    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None):
+    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None):
         """
         Parameters
         ----------
@@ -14,7 +14,10 @@ class Network:
             Regularity parameter
         graph : networkx.Graph
             Provide custom graph otherwise a k-regular random graph is generated
+        seed: int (optional)
+            Random seed (disabled by default)
         """
+        self._rng = np.random.default_rng(seed)
         self._generate_graph(num_nodes, k, graph)
         
     def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None):
@@ -33,7 +36,7 @@ class Network:
     def num_nodes(self):
         return self.graph.number_of_nodes()
     
-    def sample_random_nodes(self, count: int, use_weights: bool=False, exclude: list=None, seed=None):
+    def sample_random_nodes(self, count: int, replace: bool, use_weights: bool=False, exclude: list=None):
         """
         Sample network nodes uniformly at random
         
@@ -41,6 +44,8 @@ class Network:
         ----------
         count : int
             Number of nodes to sample
+        replace : bool
+            Whether the sample is with or without replacement
         use_weights : bool
             Set to sample nodes with respect to their weights
         exclude : list
@@ -55,9 +60,7 @@ class Network:
                 del weights[node]
         sum_weights = np.sum(list(weights.values()))
         probas_arr = [weights[node] / sum_weights  for node in nodes]
-        if seed != None:
-            np.random.seed(seed)
         if use_weights:
-            return np.random.choice(nodes, count, replace=True, p=probas_arr)
+            return self._rng.choice(nodes, count, replace=replace, p=probas_arr)
         else:
-            return np.random.choice(nodes, count, replace=True)
+            return self._rng.choice(nodes, count, replace=replace)

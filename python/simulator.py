@@ -1,5 +1,5 @@
 import numpy as np
-#from tqdm.auto import tqdm
+from tqdm.auto import tqdm
 from scipy.stats import entropy
 from message import Message 
 from protocols import Protocol
@@ -29,9 +29,9 @@ class Simulator():
         self.adversary = adv
         self.use_weights = use_weights
         # adversary nodes don't send messages in the simulation - they only observe
-        self.messages = [Message(sender) for sender in self.protocol.network.sample_random_nodes(num_msg, use_weights=use_weights, exclude=self.adversary.nodes)]
+        self.messages = [Message(sender) for sender in self.protocol.network.sample_random_nodes(num_msg, replace=True, use_weights=use_weights, exclude=self.adversary.nodes)]
         
-    def run(self, coverage_threshold: float=0.9, epsilon=0.001):
+    def run(self, coverage_threshold: float=0.9, max_trials=5, disable_progress_bar=True):
         """
         Run simulation
         
@@ -39,20 +39,22 @@ class Simulator():
         ----------
         coverage_threshold : float
             stop propagating a message if it reached the given fraction of network nodes
-        epsilon : adversary.Adversary
-            stop propagating a message if it is in the spreading phase and could not reach more than epsilon fraction of network nodes in the previous step
+        max_trials : int
+            stop propagating a message if it does not reach any new nodes within `max_trials` steps
         """
-        #for msg in tqdm(self.messages):
-        for msg in self.messages:
+        for msg in tqdm(self.messages, disable=disable_progress_bar):
             reached_nodes = 0.0
             delta = 1.0
-            while reached_nodes < coverage_threshold and delta >= epsilon:
+            num_trials = 0
+            while reached_nodes < coverage_threshold and num_trials < max_trials:
                 old_reached_nodes = reached_nodes
                 reached_nodes, spreading_phase = msg.process(self.protocol, self.adversary)
-                if spreading_phase and old_reached_nodes >= reached_nodes:
-                    delta = old_reached_nodes - reached_nodes
+                if reached_nodes > old_reached_nodes:
+                    num_trials = 0
+                else:
+                    num_trials += 1
                 if self.verbose:
-                    print(msg.mid, reached_nodes, delta)
+                    print(msg.mid, reached_nodes, num_trials)
             if self.verbose:
                 print()
                 
