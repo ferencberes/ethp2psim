@@ -7,7 +7,7 @@ from protocols import BroadcastProtocol, DandelionProtocol
 from adversary import Adversary
 
 def test_dummy():
-    net = Network(10, 2)
+    net = Network(10, 2, node_weight="random")
     protocol = BroadcastProtocol(net)
     adv = Adversary(net, 0.334)
     sim = Simulator(protocol, adv, 3)
@@ -15,7 +15,7 @@ def test_dummy():
     assert len(sim.messages) == 3
     
 def test_simulator():
-    net = Network(100, 3)
+    net = Network(100, 3, node_weight="random")
     adv = Adversary(net, 0.334)
     protocol = BroadcastProtocol(net)
     sim = Simulator(protocol, adv, 1)
@@ -28,7 +28,7 @@ def test_simulator_with_max_trials():
     # 2 circles - not weakly connected
     G.add_edges_from([(0,1),(1,2),(2,0),(3,4),(4,5),(5,3)])
     nx.path_graph(num_nodes)
-    net = Network(graph=G)
+    net = Network(graph=G, node_weight="random")
     adv = Adversary(net, 0.1)
     protocol = DandelionProtocol(net, 0.1)
     sim = Simulator(protocol, adv, 1)
@@ -38,7 +38,7 @@ def test_simulator_with_max_trials():
     
 def test_evaluator():
     num_msg = 50
-    net = Network(500, 3)
+    net = Network(500, 3, node_weight="random")
     adv = Adversary(net, 0.1)
     protocol = BroadcastProtocol(net)
     sim = Simulator(protocol, adv, num_msg, True)

@@ -4,7 +4,7 @@ import numpy as np
 class Network:
     """Peer-to-peer network abstraction"""
     
-    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None, node_weght: str="random"):
+    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None, node_weight: str=None):
         """
         Parameters
         ----------
@@ -16,11 +16,13 @@ class Network:
             Provide custom graph otherwise a k-regular random graph is generated
         seed: int (optional)
             Random seed (disabled by default)
+        node_weight: string (optional)
+            Nodes are weighted either randomly or according to their stake
         """
         self._rng = np.random.default_rng(seed)
-        self._generate_graph(num_nodes, k, graph)
+        self._generate_graph(num_nodes, k, graph, node_weight)
         
-    def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None):
+    def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None, node_weight: str=None):
         if graph is not None:
             self.graph = graph
             self.k = -1
