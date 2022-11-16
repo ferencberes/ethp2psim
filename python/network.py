@@ -4,7 +4,7 @@ import numpy as np
 class Network:
     """Peer-to-peer network abstraction"""
     
-    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None):
+    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None, node_weght: str="random"):
         """
         Parameters
         ----------
@@ -33,12 +33,19 @@ class Network:
         # See Table 2 here: https://arxiv.org/pdf/1801.03998.pdf
         self.edge_weights = dict(zip(self.graph.edges, np.random.normal(loc=171, scale=76, size=self.graph.number_of_edges())))
         # NOTE: implement custom node weights
-        self.node_weights = dict(zip(self.graph.nodes, np.random.random(self.num_nodes)))
+        if node_weight == "random":
+            self.node_weights = dict(zip(self.graph.nodes, np.random.random(self.num_nodes)))
+        # NOTE: nodes are weighted by their staked ether ratio.
+        # This is the probability they will be chosen to propose the next block.
+        elif node_weight == "stake":
+            pdf = np.load(open('figures/sendingProbabilities.npy', 'rb'), allow_pickle=True)
+            pdf = pdf/np.sum(pdf)
+            self.node_weights = dict(zip(self.graph.nodes, pdf[:num_nodes]))
         
     @property
     def num_nodes(self):
         return self.graph.number_of_nodes()
-    
+        
     def sample_random_nodes(self, count: int, replace: bool, use_weights: bool=False, exclude: list=None):
         """
         Sample network nodes uniformly at random
