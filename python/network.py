@@ -27,8 +27,11 @@ class Network:
         else:
             self.graph = nx.random_regular_graph(k, num_nodes)
             self.k = k
-        # NOTE: implement custom edge weights
-        self.edge_weights = dict(zip(self.graph.edges, np.random.random(self.graph.number_of_edges())))
+        # NOTE: random edge weights (p2p latencies)
+        # self.edge_weights = dict(zip(self.graph.edges, np.random.random(self.graph.number_of_edges())))
+        # NOTE: custom edge weights (p2p latencies)
+        # See Table 2 here: https://arxiv.org/pdf/1801.03998.pdf
+        self.edge_weights = dict(zip(self.graph.edges, np.random.normal(loc=171, scale=76, size=self.graph.number_of_edges())))
         # NOTE: implement custom node weights
         self.node_weights = dict(zip(self.graph.nodes, np.random.random(self.num_nodes)))
         
