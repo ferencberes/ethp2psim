@@ -4,7 +4,7 @@ import numpy as np
 class Network:
     """Peer-to-peer network abstraction"""
     
-    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None, node_weight: str=None):
+    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None, node_weight: str="random", edge_weight: str="random"):
         """
         Parameters
         ----------
@@ -17,10 +17,14 @@ class Network:
         seed: int (optional)
             Random seed (disabled by default)
         node_weight: string (optional)
-            Nodes are weighted either randomly or according to their stake
+            Nodes are weighted either randomly or according to their staked Ethereum value
+        edge_weight: string (optional)
+            P2P connection latencies are weighted either randomly or according to normal distribution
         """
         self._rng = np.random.default_rng(seed)
         self._generate_graph(num_nodes, k, graph, node_weight)
+        self._set_node_weights(node_weight)
+        self._set_edge_weights(edge_weight)
         
     def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None, node_weight: str=None):
         if graph is not None:
@@ -29,24 +33,36 @@ class Network:
         else:
             self.graph = nx.random_regular_graph(k, num_nodes)
             self.k = k
-        # NOTE: random edge weights (p2p latencies)
-        # self.edge_weights = dict(zip(self.graph.edges, np.random.random(self.graph.number_of_edges())))
-        # NOTE: custom edge weights (p2p latencies)
-        # See Table 2 here: https://arxiv.org/pdf/1801.03998.pdf
-        self.edge_weights = dict(zip(self.graph.edges, np.random.normal(loc=171, scale=76, size=self.graph.number_of_edges())))
-        # NOTE: implement custom node weights
-        if node_weight == "random":
-            self.node_weights = dict(zip(self.graph.nodes, np.random.random(self.num_nodes)))
-        # NOTE: nodes are weighted by their staked ether ratio.
-        # This is the probability they will be chosen to propose the next block.
-        elif node_weight == "stake":
-            pdf = np.load(open('figures/sendingProbabilities.npy', 'rb'), allow_pickle=True)
-            pdf = pdf/np.sum(pdf)
-            self.node_weights = dict(zip(self.graph.nodes, pdf[:num_nodes]))
-        
+            
     @property
     def num_nodes(self):
         return self.graph.number_of_nodes()
+    
+    @property
+    def num_edges(self):
+        return self.graph.number_of_edges()
+        
+    def _set_edge_weights(self, edge_weights: str):
+        if edge_weights == "random":
+            # set p2p latencies uniformly at random
+            self.edge_weights = dict(zip(self.graph.edges, np.random.random(self.num_edges)))
+        elif edge_weights == "normal":
+            # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
+            self.edge_weights = dict(zip(self.graph.edges, np.random.normal(loc=171, scale=76, size=self.num_edges)))
+        else:
+            raise ValueError("Choose 'edge_weight' from values ['random', 'normal']!")
+        
+    def _set_node_weights(self, node_weight: str):
+        if node_weight == "random":
+            # nodes are weighted uniformly at random
+            self.node_weights = dict(zip(self.graph.nodes, np.random.random(self.num_nodes)))
+        elif node_weight == "stake":
+            # TODO: sample from a distribution instead.. not very nice to load hard-coded file
+            weights = np.load(open('figures/sendingProbabilities.npy', 'rb'), allow_pickle=True)
+            # nodes are weighted by their staked ether ratio
+            self.node_weights = dict(zip(self.graph.nodes, weights[:self.num_nodes]))
+        else:
+            raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
         
     def sample_random_nodes(self, count: int, replace: bool, use_weights: bool=False, exclude: list=None):
         """

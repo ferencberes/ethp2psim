@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, pytest
 sys.path.insert(0, '%s/python' % os.getcwd())
 import networkx as nx
 from network import Network
@@ -10,21 +10,29 @@ SEED = 43
 G = nx.Graph()
 G.add_edges_from([(0,1),(0,2),(0,3),(1,4),(4,5)])
 
+def test_invalid_node_weight():
+    with pytest.raises(ValueError):
+        net = Network(graph=G, node_weight=None)
+        
+def test_invalid_edge_weight():
+    with pytest.raises(ValueError):
+        net = Network(graph=G, edge_weight=None)
+
 def test_custom_graph():
-    net = Network(graph=G, node_weight="random")
+    net = Network(graph=G)
     assert net.num_nodes == 6
     assert net.k == -1
     assert len(net.edge_weights) == 5
 
 def test_adversary():
-    net = Network(graph=G, seed=SEED, node_weight="random")
+    net = Network(graph=G, seed=SEED)
     adv = Adversary(net, 1/3)
     assert len(adv.nodes) == 2
     assert 2 in adv.nodes
     assert 3 in adv.nodes
     
 def test_broadcast_single_message():
-    net = Network(graph=G, seed=SEED, node_weight="random")
+    net = Network(graph=G, seed=SEED)
     protocol = BroadcastProtocol(net)
     adv = Adversary(net, 1/3)
     # start a message from the middle
@@ -56,7 +64,7 @@ def test_broadcast_single_message():
     assert predictions.loc[msg.mid, 0] == 1
 
 def test_dandelion_line_graph():
-    net = Network(graph=G, node_weight="random")
+    net = Network(graph=G)
     protocol = DandelionProtocol(net, 1/3, seed=SEED)
     L = protocol.line_graph
     assert L.number_of_nodes() == net.num_nodes
@@ -64,7 +72,7 @@ def test_dandelion_line_graph():
     
 def test_dandelion_single_message():
     H = nx.complete_graph(10)
-    net = Network(graph=H, seed=SEED, node_weight="random")
+    net = Network(graph=H, seed=SEED)
     protocol = DandelionProtocol(net, 1/4, seed=42)
     adv = Adversary(net, 0.2)
     msg = Message(0)
