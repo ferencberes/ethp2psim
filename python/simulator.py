@@ -104,6 +104,19 @@ class Evaluator:
     @property
     def inverse_ranks(self):
         return 1.0 / self.ranks
+    
+    @property
+    def ndcg_scores(self):
+        scores = []
+        for msg in self.simulator.messages:
+            # adversary might not see every message
+            if msg.mid in self.probas.index:
+                ndcg = 1.0 / np.log2(1.0 + self.proba_ranks.loc[msg.mid, msg.source])
+                scores.append(ndcg)
+            else:
+                # what to do with unseen messages? random rank might be better...
+                scores.append(0.0)
+        return np.array(scores)
         
     @property
     def entropies(self):
@@ -123,6 +136,7 @@ class Evaluator:
             "hit_ratio":np.mean(self.exact_hits),
             "mean_inverse_rank":np.mean(self.inverse_ranks),
             "entropy":np.mean(self.entropies),
+            "ndcg":np.mean(self.ndcg_scores),
             "message_spread_ratio":np.mean(self.message_spread_ratios)
         }
         
