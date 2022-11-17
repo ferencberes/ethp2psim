@@ -62,7 +62,7 @@ class Simulator():
 class Evaluator:
     """Measures the deanonymization performance of the adversary for a given simulation"""
     
-    def __init__(self, simulator: Simulator):
+    def __init__(self, simulator: Simulator, estimator: str="first_reach"):
         """
         Parameters
         ----------
@@ -70,8 +70,10 @@ class Evaluator:
             Specify the simulation for evaluation
         """
         self.simulator = simulator
-        self.probas = simulator.adversary.predict_msg_source()
-        self.proba_ranks = self.probas.rank(axis=1, ascending=False, method="average")
+        self.estimator = estimator
+        self.probas = simulator.adversary.predict_msg_source(estimator=self.estimator)
+        # method='first' is used to properly resolve ties for calculating exact hits
+        self.proba_ranks = self.probas.rank(axis=1, ascending=False, method="first")
     
     @property
     def message_spread_ratios(self):
@@ -83,7 +85,7 @@ class Evaluator:
         hits = []
         for msg in self.simulator.messages:
             # adversary might not see every message
-            if msg.mid in self.probas.index and self.probas.loc[msg.mid, msg.source] == 1.0:
+            if msg.mid in self.probas.index and self.proba_ranks.loc[msg.mid, msg.source] == 1.0:
                 hits.append(1.0)
             else:
                 hits.append(0.0)
@@ -133,8 +135,9 @@ class Evaluator:
     
     def get_report(self):
         return {
+            "estimator":self.estimator,
             "hit_ratio":np.mean(self.exact_hits),
-            "mean_inverse_rank":np.mean(self.inverse_ranks),
+            "inverse_rank":np.mean(self.inverse_ranks),
             "entropy":np.mean(self.entropies),
             "ndcg":np.mean(self.ndcg_scores),
             "message_spread_ratio":np.mean(self.message_spread_ratios)

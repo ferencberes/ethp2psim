@@ -33,18 +33,41 @@ class Adversary:
         self.captured_events.append(ee)
         self.captured_msgs.add(ee.mid)
         
-    def predict_msg_source(self):
-        """Predict source nodes for each message"""
-        first_seen = {}
-        predicted_node = {}
+    def _find_first_contact(self):
+        contact_time = {}
+        received_from = {}
+        contact_node = {}
         for ee in self.captured_events:
             message_id = ee.mid
             sender = ee.sender
             delay = ee.protocol_event.delay
-            if (not message_id in first_seen) or delay < first_seen[message_id]:
-                first_seen[message_id] = delay
-                predicted_node[message_id] = sender
-        predictions = pd.DataFrame(np.zeros((len(self.captured_msgs), len(self.candidates))), columns=self.candidates, index=list(self.captured_msgs))        
-        for mid, node in predicted_node.items():
+            if (not message_id in contact_time) or delay < contact_time[message_id]:
+                contact_time[message_id] = delay
+                received_from[message_id] = sender
+                contact_node[message_id] = ee.protocol_event.node
+        arr = np.zeros((len(self.captured_msgs), len(self.candidates)))
+        empty_predictions = pd.DataFrame(arr, columns=self.candidates, index=list(self.captured_msgs))
+        return contact_time, contact_node, received_from, empty_predictions
+    
+    def _first_reach_estimator(self):
+        contact_time, contact_node, received_from, predictions = self._find_first_contact()
+        for mid, node in received_from.items():
             predictions.at[mid, node] = 1.0
         return predictions
+    
+    def _dummy_estimator(self):
+        N = len(self.candidates) - len(self.nodes)
+        arr = np.ones((len(self.captured_msgs), len(self.candidates))) / N
+        predictions = pd.DataFrame(arr, columns=self.candidates, index=list(self.captured_msgs))
+        for node in self.nodes:
+            predictions[node] *= 0
+        return predictions
+        
+    def predict_msg_source(self, estimator: str="first_reach"):
+        """Predict source nodes for each message"""
+        if estimator == "first_reach":
+            return self._first_reach_estimator()
+        elif estimator == "dummy":
+            return self._dummy_estimator()
+        else:
+            raise ValueError("Choose 'estimator' from values ['first_reach', 'dummy']!")

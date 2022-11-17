@@ -57,11 +57,29 @@ def test_broadcast_single_message():
     assert msg.history[5].hops == 3
     # adversary nodes [2,3] both vitness one EavesdropEvent
     assert len(adv.captured_events) == 2
-    predictions = adv.predict_msg_source()
+    predictions = adv.predict_msg_source(estimator="first_reach")
     assert predictions.shape[0] == 1
     assert predictions.shape[1] == G.number_of_nodes()
     # adversary nodes [2,3] first receive the message from node 0
     assert predictions.loc[msg.mid, 0] == 1
+    
+def test_dummy_adversary():
+    net = Network(graph=G, seed=SEED)
+    protocol = BroadcastProtocol(net)
+    adv = Adversary(net, 1/3)
+    # start a message from the middle
+    msg = Message(0)
+    msg.process(protocol, adv)
+    msg.process(protocol, adv)
+    msg.process(protocol, adv)
+    # test dummy estimator
+    predictions = adv.predict_msg_source(estimator="dummy")
+    print(predictions)
+    for node in range(5):
+        if node in [2,3]:
+            assert predictions.iloc[0][node] == 0.0
+        else:
+            assert predictions.iloc[0][node] == 0.25
 
 def test_dandelion_line_graph():
     net = Network(graph=G)
