@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import networkx as nx
 from protocols import ProtocolEvent
 from network import Network
 
@@ -40,10 +41,14 @@ class Adversary:
             Fraction of adversary nodes in the P2P network
         """
         self.ratio = ratio
-        self.candidates = list(network.graph.nodes())
+        self.network = network 
         self.captured_events = []
         self.captured_msgs = set()
         self._sample_adversary_nodes(network)
+        
+    @property
+    def candidates(self):
+        return list(self.network.graph.nodes())
             
     def _sample_adversary_nodes(self, network: Network):
         """Randomly select given fraction of nodes to be adversaries"""
@@ -77,6 +82,25 @@ class Adversary:
             predictions.at[mid, node] = 1.0
         return predictions
     
+    def _shortest_path_estimator(self):
+        contact_time, contact_node, received_from, predictions = self._find_first_contact()
+        active_adversary_nodes = set(contact_node.values())
+        probas_by_adversary = {}
+        # precompute predictions for adversary nodes
+        for a in active_adversary_nodes:
+            # TODO: later we can eliminate candidates where there are other adversaries on the shortest path! Handle the case when there are multiple adversaries on the path!
+            distances = nx.single_source_dijkstra(self.network.graph, a, weight="latency")[0]
+            # delete adversary nodes as they are never predicted as message source
+            for adv in self.nodes:
+                del distances[adv]
+            inverse_distances = {n : 1.0/distances[n] for n in distances}
+            s = sum(inverse_distances.values())
+            probas_by_adversary[a] = [inverse_distances.get(n, 0.0) / s for n in self.candidates]
+        # fill prediction matrix with probas
+        for mid, observer in contact_node.items():
+            predictions.loc[mid] = probas_by_adversary[observer]
+        return predictions
+        
     def _dummy_estimator(self):
         N = len(self.candidates) - len(self.nodes)
         arr = np.ones((len(self.captured_msgs), len(self.candidates))) / N
@@ -93,14 +117,17 @@ class Adversary:
         
         Parameters
         ----------
-        estimator : {'first_reach', 'dummy'}, default 'first_reach'
+        estimator : {'first_reach', 'shortest_path', 'dummy'}, default 'first_reach'
             Strategy to assign probabilities to network nodes:
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
+            * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
             * dummy: the probability is divided equally between non-adversary nodes.
         """
         if estimator == "first_reach":
             return self._first_reach_estimator()
+        elif estimator == "shortest_path":
+            return self._shortest_path_estimator()
         elif estimator == "dummy":
             return self._dummy_estimator()
         else:
-            raise ValueError("Choose 'estimator' from values ['first_reach', 'dummy']!")
+            raise ValueError("Choose 'estimator' from values ['first_reach', 'shortest_path', 'dummy']!")

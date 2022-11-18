@@ -19,10 +19,12 @@ def test_invalid_edge_weight():
         net = Network(graph=G, edge_weight=None)
 
 def test_custom_graph():
-    net = Network(graph=G)
-    assert net.num_nodes == 6
-    assert net.k == -1
-    assert len(net.edge_weights) == 5
+    for nw in ["random", "stake"]:
+        for ew in ["random", "normal", "unweighted"]:
+            net = Network(graph=G, edge_weight=ew, node_weight=nw)
+            assert net.num_nodes == 6
+            assert net.k == -1
+            assert len(net.edge_weights) == 5
 
 def test_adversary():
     net = Network(graph=G, seed=SEED)

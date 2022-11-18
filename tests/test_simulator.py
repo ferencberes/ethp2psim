@@ -36,15 +36,16 @@ def test_simulator_with_max_trials():
     sim.run(1.0, max_trials=3)
     assert len(sim.messages[0].history) < num_nodes
     
-def test_evaluator():
+def test_evaluators():
     num_msg = 50
     net = Network(500, 3, node_weight="stake", edge_weight="normal")
     adv = Adversary(net, 0.1)
     protocol = BroadcastProtocol(net)
     sim = Simulator(protocol, adv, num_msg, True)
     sim.run(0.9)
-    evaluator = Evaluator(sim)
-    results = [evaluator.exact_hits, evaluator.ranks, evaluator.inverse_ranks, evaluator.entropies]
-    for res in results:
-        assert len(res) == num_msg
-    assert len(evaluator.get_report()) == 6
+    for estimator in ["first_reach", "shortest_path", "dummy"]:
+        evaluator = Evaluator(sim, estimator)
+        results = [evaluator.exact_hits, evaluator.ranks, evaluator.inverse_ranks, evaluator.entropies]
+        for res in results:
+            assert len(res) == num_msg
+        assert len(evaluator.get_report()) == 6

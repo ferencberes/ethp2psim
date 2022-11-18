@@ -68,9 +68,10 @@ class Evaluator:
         ----------
         simulator : Simulator
             Specify the simulation to evaluate
-        estimator : {'first_reach', 'dummy'}, default 'first_reach'
+        estimator : {'first_reach', 'shortest_path', 'dummy'}, default 'first_reach'
             Define adversary stategy to predict source node for each message:
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
+            * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
             * dummy: the probability is divided equally between non-adversary nodes.
         """
         self.simulator = simulator

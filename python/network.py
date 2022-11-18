@@ -16,9 +16,9 @@ class Network:
             Provide custom graph otherwise a k-regular random graph is generated
         seed: int (optional)
             Random seed (disabled by default)
-        node_weight: string (optional)
+        node_weight: {'random', 'stake'}, default 'random'
             Nodes are weighted either randomly or according to their staked Ethereum value
-        edge_weight: string (optional)
+        edge_weight: {'random', 'normal', 'unweighted'}, default 'random'
             P2P connection latencies are weighted either randomly or according to normal distribution
         """
         self._rng = np.random.default_rng(seed)
@@ -48,9 +48,14 @@ class Network:
             self.edge_weights = dict(zip(self.graph.edges, np.random.random(self.num_edges)))
         elif edge_weights == "normal":
             # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
-            self.edge_weights = dict(zip(self.graph.edges, np.random.normal(loc=171, scale=76, size=self.num_edges)))
+            # negative latency values are prohibited
+            self.edge_weights = dict(zip(self.graph.edges, np.abs(np.random.normal(loc=171, scale=76, size=self.num_edges))))
+        elif edge_weights == "unweighted":
+            self.edge_weights = dict(zip(self.graph.edges, np.ones(self.num_edges)))
         else:
             raise ValueError("Choose 'edge_weight' from values ['random', 'normal']!")
+        # set latency for edges
+        nx.set_edge_attributes(self.graph, {edge:{"latency":value} for edge, value in self.edge_weights.items()})
         
     def _set_node_weights(self, node_weight: str):
         if node_weight == "random":
