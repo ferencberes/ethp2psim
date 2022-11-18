@@ -71,3 +71,21 @@ print(evaluator.get_report())
 ```
 
 For a more complex experimental setting see the related [notebook](Experimental.ipynb)
+
+## Documentation
+
+Install every dependency that is needed to generate code documentation.
+The commands below need to be executed only one:
+
+```bash
+cd docs
+pip install -r requirements.txt
+˙```
+
+Then, you can update code documentation locally with the following command:
+```bash
+cd docs
+make html
+```
+
+A generated documentation resides in the `docs/build/html/` folder.
