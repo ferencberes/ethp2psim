@@ -4,8 +4,21 @@ from protocols import ProtocolEvent
 from network import Network
 
 class EavesdropEvent:
+    """Information related to the observed message"""
+    
     def __init__(self, mid: str, source: int, sender:int, pe:ProtocolEvent):
-        """Information related to the observed message"""
+        """
+        Parameters
+        ----------
+        node : str
+            Message identifier
+        source : int
+            Source node of the message
+        sender : int
+            Adversary received the message from this node
+        protocol_event : protocols.ProtocolEvent
+            Contains message spreading related information
+        """
         self.mid = mid
         self.source = source
         self.sender = sender
@@ -15,8 +28,17 @@ class EavesdropEvent:
         return "EavesdropEvent(%s, %i, %i, %s)" % (self.mid, self.source, self.sender, self.protocol_event)
 
 class Adversary: 
+    """Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic"""
+    
     def __init__(self, network: Network, ratio: float):
-        """Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic"""
+        """
+        Parameters
+        ----------
+        network : network.Network
+            Simulated P2P network
+        ratio : float
+            Fraction of adversary nodes in the P2P network
+        """
         self.ratio = ratio
         self.candidates = list(network.graph.nodes())
         self.captured_events = []
@@ -26,7 +48,7 @@ class Adversary:
     def _sample_adversary_nodes(self, network: Network):
         """Randomly select given fraction of nodes to be adversaries"""
         num_adversaries = int(len(self.candidates) * self.ratio)
-        self.nodes = network.sample_random_nodes(num_adversaries, replace=False)
+        self.nodes = network.sample_random_nodes(num_adversaries, use_weights=False, replace=False)
                 
     def eavesdrop_msg(self, ee:EavesdropEvent):
         """Adversary records the observed information"""
@@ -64,7 +86,18 @@ class Adversary:
         return predictions
         
     def predict_msg_source(self, estimator: str="first_reach"):
-        """Predict source nodes for each message"""
+        """
+        Predict source nodes for each message
+        
+        By default, the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
+        
+        Parameters
+        ----------
+        estimator : {'first_reach', 'dummy'}, default 'first_reach'
+            Strategy to assign probabilities to network nodes:
+            * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
+            * dummy: the probability is divided equally between non-adversary nodes.
+        """
         if estimator == "first_reach":
             return self._first_reach_estimator()
         elif estimator == "dummy":

@@ -58,7 +58,7 @@ class Protocol:
         return ProtocolEvent(receiver, elapsed_time, pe.hops+1, spreading_phase)
         
 class BroadcastProtocol(Protocol):
-    """Transaction propagation is only based on broadcasting"""
+    """Message propagation is only based on broadcasting"""
     def __init__(self, network: Network):
         """
         Parameters
@@ -80,7 +80,7 @@ class BroadcastProtocol(Protocol):
         return new_events, True
 
 class DandelionProtocol(BroadcastProtocol):
-    """Transaction propagation first based on an anonymity phase that is followed by a spreading phase"""
+    """Message propagation is first based on an anonymity phase that is followed by a spreading phase"""
     
     def __init__(self, network: Network, spreading_proba: float, seed: int=None):
         """

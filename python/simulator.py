@@ -67,7 +67,11 @@ class Evaluator:
         Parameters
         ----------
         simulator : Simulator
-            Specify the simulation for evaluation
+            Specify the simulation to evaluate
+        estimator : {'first_reach', 'dummy'}, default 'first_reach'
+            Define adversary stategy to predict source node for each message:
+            * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
+            * dummy: the probability is divided equally between non-adversary nodes.
         """
         self.simulator = simulator
         self.estimator = estimator
@@ -134,6 +138,7 @@ class Evaluator:
         return np.array(entropies)
     
     def get_report(self):
+        """Calculate mean performance of the adversary for the given simulation"""
         return {
             "estimator":self.estimator,
             "hit_ratio":np.mean(self.exact_hits),

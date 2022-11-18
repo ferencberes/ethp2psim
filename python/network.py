@@ -9,7 +9,7 @@ class Network:
         Parameters
         ----------
         num_nodes : int
-            Number of nodes in the peer-to-peer graph
+            Number of nodes in the peer-to-peer (P2P) graph
         k : int
             Regularity parameter
         graph : networkx.Graph

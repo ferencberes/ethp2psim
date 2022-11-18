@@ -3,8 +3,15 @@ from adversary import Adversary, EavesdropEvent
 from protocols import Protocol, ProtocolEvent
         
 class Message:
+    """Abstraction for Ethereum transactions"""
+    
     def __init__(self, source: int):
-        """Abstraction for Ethereum transactions"""
+        """
+        Parameters
+        ----------
+        source : int
+            Source node of the message
+        """
         self.mid = uuid.uuid4().hex
         self.source = source
         self.spreading_phase = False
@@ -16,7 +23,16 @@ class Message:
         return "Message(%s, %i)" % (self.mid, self.source)
         
     def process(self, protocol: Protocol, adv: Adversary):
-        """Propagate message based on rules defined by the given protocol"""
+        """
+        Propagate message based on the given protocol
+        
+        Parameters
+        ----------
+        protocol : protocols.Protocol
+            Protocol that defines message spreading
+        adv : adversary.Adversary
+            Adversary that records observed messages on the P2P network 
+        """
         # stop propagation if every node received the message
         if len(self.history) < protocol.network.num_nodes:
             new_queue = []
