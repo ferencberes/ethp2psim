@@ -83,6 +83,7 @@ pip install -r requirements.txt
 ˙```
 
 Then, you can update code documentation locally with the following command:
+
 ```bash
 cd docs
 make html
