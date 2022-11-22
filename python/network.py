@@ -64,6 +64,7 @@ class Network:
         elif node_weight == "stake":
             # TODO: sample from a distribution instead.. not very nice to load hard-coded file
             weights = np.load(open('figures/sendingProbabilities.npy', 'rb'), allow_pickle=True)
+            weights = weights/np.sum(weights) ##This is how we make a probability distribution function out of it.
             # nodes are weighted by their staked ether ratio
             self.node_weights = dict(zip(self.graph.nodes, weights[:self.num_nodes]))
         else:
