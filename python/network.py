@@ -22,11 +22,11 @@ class Network:
             P2P connection latencies are weighted either randomly or according to normal distribution
         """
         self._rng = np.random.default_rng(seed)
-        self._generate_graph(num_nodes, k, graph, node_weight)
+        self._generate_graph(num_nodes, k, graph)
         self._set_node_weights(node_weight)
         self._set_edge_weights(edge_weight)
         
-    def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None, node_weight: str=None):
+    def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None):
         if graph is not None:
             self.graph = graph
             self.k = -1
@@ -45,7 +45,7 @@ class Network:
     def _set_edge_weights(self, edge_weights: str):
         if edge_weights == "random":
             # set p2p latencies uniformly at random
-            self.edge_weights = dict(zip(self.graph.edges, np.random.random(self.num_edges)))
+            self.edge_weights = dict(zip(self.graph.edges,1000*np.random.random(self.num_edges)))
         elif edge_weights == "normal":
             # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
             # negative latency values are prohibited

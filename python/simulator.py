@@ -18,7 +18,7 @@ class Simulator():
             adversary that observe messages in the P2P network
         num_msg : int
             number of messages to simulate
-        use_weights : int
+        use_weights : bool
             sample message sources with respect to node weights
         """
         if num_msg > 10:
