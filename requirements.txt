@@ -3,6 +3,7 @@ scipy
 pandas
 networkx
 jupyterlab
+ipywidgets
 pytest
 pytest-cov
 matplotlib

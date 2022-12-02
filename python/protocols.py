@@ -26,6 +26,12 @@ class ProtocolEvent:
         self.hops = hops
         self.spreading_phase = spreading_phase
         
+    def __lt__(self, other):
+        if(self.delay<other.delay):
+            return True
+        else:
+            return False
+        
     def __repr__(self):
         return "ProtocolEvent(%i, %i, %f, %i)" % (self.sender, self.receiver, self.delay, self.hops)
         

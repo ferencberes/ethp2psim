@@ -82,7 +82,7 @@ def test_dandelion_line_graph():
     
 def test_dandelion_single_message():
     H = nx.complete_graph(10)
-    net = Network(graph=H, seed=SEED)
+    net = Network(graph=H, seed=SEED, edge_weight="unweighted")
     protocol = DandelionProtocol(net, 1/4, seed=42)
     adv = Adversary(net, 0.2)
     msg = Message(0)
