@@ -31,7 +31,7 @@ class Simulator():
         # adversary nodes don't send messages in the simulation - they only observe
         self.messages = [Message(sender) for sender in self.protocol.network.sample_random_nodes(num_msg, replace=True, use_weights=use_weights, exclude=self.adversary.nodes)]
         
-    def run(self, coverage_threshold: float=0.9, max_trials=5, disable_progress_bar=True):
+    def run(self, coverage_threshold: float=0.9, max_trials=10, disable_progress_bar=True):
         """
         Run simulation
         

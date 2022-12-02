@@ -7,7 +7,7 @@ from network import Network
 class EavesdropEvent:
     """Information related to the observed message"""
     
-    def __init__(self, mid: str, source: int, sender:int, pe:ProtocolEvent):
+    def __init__(self, mid: str, source: int, pe:ProtocolEvent):
         """
         Parameters
         ----------
@@ -15,18 +15,23 @@ class EavesdropEvent:
             Message identifier
         source : int
             Source node of the message
-        sender : int
-            Adversary received the message from this node
         protocol_event : protocols.ProtocolEvent
             Contains message spreading related information
         """
         self.mid = mid
         self.source = source
-        self.sender = sender
         self.protocol_event = pe
         
+    @property
+    def sender(self):
+        return self.protocol_event.sender
+    
+    @property
+    def receiver(self):
+        return self.protocol_event.receiver
+        
     def __repr__(self):
-        return "EavesdropEvent(%s, %i, %i, %s)" % (self.mid, self.source, self.sender, self.protocol_event)
+        return "EavesdropEvent(%s, %i, %s)" % (self.mid, self.source, self.protocol_event)
 
 class Adversary: 
     """Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic"""
@@ -71,7 +76,7 @@ class Adversary:
             if (not message_id in contact_time) or delay < contact_time[message_id]:
                 contact_time[message_id] = delay
                 received_from[message_id] = sender
-                contact_node[message_id] = ee.protocol_event.node
+                contact_node[message_id] = ee.receiver
         arr = np.zeros((len(self.captured_msgs), len(self.candidates)))
         empty_predictions = pd.DataFrame(arr, columns=self.candidates, index=list(self.captured_msgs))
         return contact_time, contact_node, received_from, empty_predictions

@@ -16,8 +16,9 @@ class Message:
         self.source = source
         self.spreading_phase = False
         # TODO: check existence!
-        self.history = {source:ProtocolEvent(self.source, 0.0, 0)}
-        self.queue = [source]
+        # we store events when given nodes saw the message
+        self.queue = [ProtocolEvent(self.source, self.source, 0.0, 0)]
+        self.history = {}
         
     def __repr__(self):
         return "Message(%s, %i)" % (self.mid, self.source)
@@ -35,19 +36,20 @@ class Message:
         """
         # stop propagation if every node received the message
         if len(self.history) < protocol.network.num_nodes:
-            new_queue = []
-            spreading_phase = False
-            for sender in self.queue:
-                new_events, spreading_phase_update = protocol.propagate(self.history[sender])
-                spreading_phase = spreading_phase or spreading_phase_update 
-                for rec in new_events:
-                    receiver = rec.node
-                    if not receiver in self.history:
-                        self.history[receiver] = rec
-                        new_queue.append(receiver)
-                        # adversary only records first message contact
-                        if receiver in adv.nodes:
-                            adv.eavesdrop_msg(EavesdropEvent(self.mid, self.source, sender, rec))
-            self.queue = new_queue
-            self.spreading_phase = spreading_phase
+            # pop record with minimum travel time
+            record = self.queue.pop(0)
+            receiver = record.receiver
+            # update message history
+            if receiver not in self.history:
+                self.history[receiver] = []
+            self.history[receiver].append(record)
+            # propagate and adversary actions
+            if record.receiver in adv.nodes:
+                adv.eavesdrop_msg(EavesdropEvent(self.mid, self.source, record))
+            # TODO: adversary can decide later to propagate the message or not..
+            new_events, new_phase = protocol.propagate(record)
+            self.spreading_phase = self.spreading_phase or new_phase
+            # TODO: implement proper priority queue:
+            self.queue += new_events
+            self.queue = sorted(self.queue, key=lambda x: x.delay, reverse=False)
         return (len(self.history) / protocol.network.num_nodes), self.spreading_phase

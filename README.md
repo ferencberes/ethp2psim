@@ -80,10 +80,9 @@ The commands below need to be executed only one:
 ```bash
 cd docs
 pip install -r requirements.txt
-˙``
+˙```
 
 Then, you can update code documentation locally with the following command:
-
 ```bash
 cd docs
 make html

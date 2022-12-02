@@ -5,26 +5,29 @@ import networkx as nx
 class ProtocolEvent:
     """Message information propagated through the peer-to-peer network"""
     
-    def __init__(self, node: int, delay: float, hops: int, spreading_phase: bool=False):    
+    def __init__(self, sender:int, receiver: int, delay: float, hops: int, spreading_phase: bool=False):    
         """
         Parameters
         ----------
-        node : int
+        sender: int
+            Sender node
+        receiver : int
             Receiver node
         delay : float
-            Elapsed time since the message source created this message
+            Elapsed time since the message source created this message when it reaches the receiver node
         hops : int
             Number of hops from the source to the receiver node
         spreading_phase: bool
             Flag to indicate whether the message entered the spreading phase
         """
-        self.node = node
+        self.sender = sender
+        self.receiver = receiver
         self.delay = delay
         self.hops = hops
         self.spreading_phase = spreading_phase
         
     def __repr__(self):
-        return "ProtocolEvent(%i, %f, %i)" % (self.node, self.delay, self.hops)
+        return "ProtocolEvent(%i, %i, %f, %i)" % (self.sender, self.receiver, self.delay, self.hops)
         
 class Protocol:
     """Abstraction for different message passing protocols"""
@@ -55,7 +58,7 @@ class Protocol:
         if not link in self.network.edge_weights:
             link = (receiver, sender)
         elapsed_time = pe.delay + self.network.edge_weights[link]
-        return ProtocolEvent(receiver, elapsed_time, pe.hops+1, spreading_phase)
+        return ProtocolEvent(sender, receiver, elapsed_time, pe.hops+1, spreading_phase)
         
 class BroadcastProtocol(Protocol):
     """Message propagation is only based on broadcasting"""
@@ -74,9 +77,10 @@ class BroadcastProtocol(Protocol):
     def propagate(self, pe: ProtocolEvent):
         """Propagate message based on protocol rules"""
         new_events = []
-        sender = pe.node
-        for receiver in self.network.graph.neighbors(sender):
-            new_events.append(self.get_new_event(sender, receiver, pe, True))
+        forwarder = pe.receiver
+        for receiver in self.network.graph.neighbors(forwarder):
+            if receiver != pe.sender:
+                new_events.append(self.get_new_event(forwarder, receiver, pe, True))
         return new_events, True
 
 class DandelionProtocol(BroadcastProtocol):
@@ -133,4 +137,5 @@ class DandelionProtocol(BroadcastProtocol):
         if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
             return super(DandelionProtocol, self).propagate(pe)
         else:
-            return [self.get_new_event(pe.node, self._outbound_node[pe.node], pe, False)], False
+            node = pe.receiver
+            return [self.get_new_event(node, self._outbound_node[node], pe, False)], False

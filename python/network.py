@@ -18,7 +18,7 @@ class Network:
             Random seed (disabled by default)
         node_weight: {'random', 'stake'}, default 'random'
             Nodes are weighted either randomly or according to their staked Ethereum value
-        edge_weight: {'random', 'normal', 'unweighted'}, default 'random'
+        edge_weight: {'random', 'normal', 'unweighted', 'custom'}, default 'random'
             P2P connection latencies are weighted either randomly or according to normal distribution
         """
         self._rng = np.random.default_rng(seed)
@@ -28,7 +28,7 @@ class Network:
         
     def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None):
         if graph is not None:
-            self.graph = graph
+            self.graph = graph.copy()
             self.k = -1
         else:
             self.graph = nx.random_regular_graph(k, num_nodes)
@@ -42,19 +42,25 @@ class Network:
     def num_edges(self):
         return self.graph.number_of_edges()
         
-    def _set_edge_weights(self, edge_weights: str):
-        if edge_weights == "random":
+    def _set_edge_weights(self, edge_weight: str):
+        if edge_weight == "random":
             # set p2p latencies uniformly at random
             self.edge_weights = dict(zip(self.graph.edges,1000*np.random.random(self.num_edges)))
-        elif edge_weights == "normal":
+        elif edge_weight == "normal":
             # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
             # negative latency values are prohibited
             self.edge_weights = dict(zip(self.graph.edges, np.abs(np.random.normal(loc=171, scale=76, size=self.num_edges))))
-        elif edge_weights == "unweighted":
+        elif edge_weight == "unweighted":
             self.edge_weights = dict(zip(self.graph.edges, np.ones(self.num_edges)))
+        elif edge_weight == "custom":
+            self.edge_weights = {}
+            for u,v,l in self.graph.edges(data=True):
+                self.edge_weights[(u,v)] = l["latency"]
+            print(self.edge_weights)
         else:
-            raise ValueError("Choose 'edge_weight' from values ['random', 'normal']!")
+            raise ValueError("Choose 'edge_weight' from values ['random', 'normal', 'custom', 'unweighted']!")
         # set latency for edges
+        #if edge_weight != "custom":
         nx.set_edge_attributes(self.graph, {edge:{"latency":value} for edge, value in self.edge_weights.items()})
         
     def _set_node_weights(self, node_weight: str):

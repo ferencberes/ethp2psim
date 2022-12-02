@@ -1,3 +1,4 @@
+
 import sys, os
 import networkx as nx
 sys.path.insert(0, '%s/python' % os.getcwd())
@@ -18,10 +19,10 @@ def test_simulator():
     net = Network(100, 3)
     adv = Adversary(net, 0.334)
     protocol = BroadcastProtocol(net)
-    sim = Simulator(protocol, adv, 1)
-    sim.run(0.9)
+    sim = Simulator(protocol, adv, 1, verbose=True)
+    sim.run(0.9, max_trials=50)
     assert (len(sim.messages[0].history) / net.num_nodes) >= 0.9
-    
+
 def test_simulator_with_max_trials():
     num_nodes = 10
     G = nx.Graph()
