@@ -14,6 +14,12 @@ def test_invalid_node_weight():
     with pytest.raises(ValueError):
         net = Network(graph=G, node_weight=None)
         
+def test_invalid_spreading_probability():
+    with pytest.raises(ValueError):
+        H = nx.complete_graph(10)
+        net = Network(graph=H, seed=SEED, edge_weight="unweighted")
+        protocol = DandelionProtocol(net, -5, seed=42) 
+        
 def test_invalid_edge_weight():
     with pytest.raises(ValueError):
         net = Network(graph=G, edge_weight=None)

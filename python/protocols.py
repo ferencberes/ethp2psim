@@ -104,7 +104,10 @@ class DandelionProtocol(BroadcastProtocol):
             Random seed (disabled by default)
         """
         super(DandelionProtocol, self).__init__(network)
-        self.spreading_proba = spreading_proba
+        if spreading_proba < 0 or 1 < spreading_proba:
+            raise ValueError("The value of the spreading probability should be between 0 and 1 (inclusive)!")
+        else:
+            self.spreading_proba = spreading_proba
         self._rng = np.random.default_rng(seed)
         self._outbound_node = {}
         self._inbound_nodes = {}
