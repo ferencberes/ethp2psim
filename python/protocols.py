@@ -134,6 +134,28 @@ class DandelionProtocol(BroadcastProtocol):
                 self._inbound_nodes[selected] = set()
             self._inbound_nodes[selected].add(node)
             
+            
+    def approximate_line_graph(self):
+        """Initialize or re-initialize an approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf"""
+        # This is going to be our line (anonymity) graph
+        G = nx.DiGraph()
+        G.add_nodes_from(self.network.graph.nodes())
+        # This k is a paramter of the algorithm. Might be a function parameter as well
+        k = 5
+        for node in self.network.graph.nodes():
+            # pick k random targets from all nodes-{node}
+            selectedTargetNodes = self._rng.sample(self.network.graph.nodes()-node,k)
+            # pick the smallest in-degree
+            minDegreeNode = 999999
+            connectNode = node
+            for finalNode in selectedTargetNodes:
+                if G.in_degree(finalNode) < minDegreeNode:
+                    connectNode = finalNode
+                    minDegreeNode = G.in_degree(finalNode)
+            # make connection
+            G.add_edge(node, connectNode)
+        return G
+            
     @property
     def line_graph(self):
         L = nx.DiGraph()
