@@ -65,30 +65,28 @@ class Adversary:
         self.captured_events.append(ee)
         self.captured_msgs.add(ee.mid)
         
-    def _find_first_contact(self):
+    def _find_first_contact(self, estimator: str):
         contact_time = {}
         received_from = {}
         contact_node = {}
         for ee in self.captured_events:
             message_id = ee.mid
             sender = ee.sender
-            delay = ee.protocol_event.delay
-            if (not message_id in contact_time) or delay < contact_time[message_id]:
-                contact_time[message_id] = delay
+            receiver = ee.receiver
+            if estimator == "first_sent":
+                timestamp = ee.protocol_event.delay - self.network.get_edge_weight(sender, receiver)
+            else:
+                timestamp = ee.protocol_event.delay
+            if (not message_id in contact_time) or timestamp < contact_time[message_id]:
+                contact_time[message_id] = timestamp
                 received_from[message_id] = sender
-                contact_node[message_id] = ee.receiver
+                contact_node[message_id] = receiver
         arr = np.zeros((len(self.captured_msgs), len(self.candidates)))
         empty_predictions = pd.DataFrame(arr, columns=self.candidates, index=list(self.captured_msgs))
         return contact_time, contact_node, received_from, empty_predictions
     
-    def _first_reach_estimator(self):
-        contact_time, contact_node, received_from, predictions = self._find_first_contact()
-        for mid, node in received_from.items():
-            predictions.at[mid, node] = 1.0
-        return predictions
-    
     def _shortest_path_estimator(self):
-        contact_time, contact_node, received_from, predictions = self._find_first_contact()
+        contact_time, contact_node, received_from, predictions = self._find_first_contact(estimator="first_reach")
         active_adversary_nodes = set(contact_node.values())
         probas_by_adversary = {}
         # precompute predictions for adversary nodes
@@ -122,14 +120,17 @@ class Adversary:
         
         Parameters
         ----------
-        estimator : {'first_reach', 'shortest_path', 'dummy'}, default 'first_reach'
+        estimator : {'first_reach', 'first_sent', 'shortest_path', 'dummy'}, default 'first_reach'
             Strategy to assign probabilities to network nodes:
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
             * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
             * dummy: the probability is divided equally between non-adversary nodes.
         """
-        if estimator == "first_reach":
-            return self._first_reach_estimator()
+        if estimator in ["first_reach","first_sent"]:
+            _, _, received_from, predictions = self._find_first_contact(estimator)
+            for mid, node in received_from.items():
+                predictions.at[mid, node] = 1.0
+            return predictions
         elif estimator == "shortest_path":
             return self._shortest_path_estimator()
         elif estimator == "dummy":

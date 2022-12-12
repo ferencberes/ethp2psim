@@ -75,6 +75,13 @@ class Network:
             self.node_weights = dict(zip(self.graph.nodes, weights[:self.num_nodes]))
         else:
             raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
+            
+    def get_edge_weight(self, sender: int, receiver: int):
+        """Get edge weight for node pair"""
+        link = (sender, receiver)
+        if not link in self.edge_weights:
+            link = (receiver, sender)
+        return self.edge_weights[link]
         
     def sample_random_nodes(self, count: int, replace: bool, use_weights: bool=False, exclude: list=None):
         """

@@ -46,7 +46,7 @@ def test_evaluators():
     protocol = BroadcastProtocol(net, broadcast_mode="sqrt", seed=SEED)
     sim = Simulator(protocol, adv, num_msg, True)
     sim.run(0.9)
-    for estimator in ["first_reach", "shortest_path", "dummy"]:
+    for estimator in ["first_reach", "first_sent", "shortest_path", "dummy"]:
         evaluator = Evaluator(sim, estimator)
         results = [evaluator.exact_hits, evaluator.ranks, evaluator.inverse_ranks, evaluator.entropies]
         for res in results:
