@@ -125,8 +125,8 @@ class DandelionProtocol(BroadcastProtocol):
         self._outbound_node = {}
         self._inbound_nodes = {}
         # initialize line graph
-        #self.change_line_graph()
-        self.approximate_line_graph()
+        self.change_line_graph()
+        #self.approximate_line_graph()
         
     def __repr__(self):
         return "DandelionProtocol(%.4f)" % self.spreading_proba
