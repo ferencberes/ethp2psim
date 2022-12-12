@@ -35,24 +35,28 @@ class Message:
             Adversary that records observed messages on the P2P network 
         """
         # stop propagation if every node received the message
+        stop = False
         if len(self.history) < protocol.network.num_nodes:
             # pop record with minimum travel time
-            record = heapq.heappop(self.queue)
-            node = record.receiver
-            # update message history
-            if node not in self.history:
-                self.history[node] = []
-            self.history[node].append(record)
-            # propagate and adversary actions
-            if node in adv.nodes:
-                adv.eavesdrop_msg(EavesdropEvent(self.mid, self.source, record))
-            # TODO: adversary can decide later to propagate the message or not..
-            new_events, is_spreading = protocol.propagate(record)
-            if is_spreading:
-                self.broadcasters.add(node)
-            self.spreading_phase = self.spreading_phase or is_spreading
-            for event in new_events:
-                if not (event.receiver in self.broadcasters):
-                    # do not send message to node who previously broadcasted it
-                    heapq.heappush(self.queue, event)
-        return (len(self.history) / protocol.network.num_nodes), self.spreading_phase
+            if len(self.queue) > 0:
+                record = heapq.heappop(self.queue)
+                node = record.receiver
+                # update message history
+                if node not in self.history:
+                    self.history[node] = []
+                self.history[node].append(record)
+                # propagate and adversary actions
+                if node in adv.nodes:
+                    adv.eavesdrop_msg(EavesdropEvent(self.mid, self.source, record))
+                # TODO: adversary can decide later to propagate the message or not..
+                new_events, is_spreading = protocol.propagate(record)
+                if is_spreading:
+                    self.broadcasters.add(node)
+                self.spreading_phase = self.spreading_phase or is_spreading
+                for event in new_events:
+                    if not (event.receiver in self.broadcasters):
+                        # do not send message to node who previously broadcasted it
+                        heapq.heappush(self.queue, event)
+            else:
+                stop = True
+        return (len(self.history) / protocol.network.num_nodes), self.spreading_phase, stop

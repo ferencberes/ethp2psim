@@ -49,7 +49,9 @@ class Simulator():
             num_trials = 0
             while reached_nodes < coverage_threshold and num_trials < max_trials:
                 old_reached_nodes = reached_nodes
-                reached_nodes, spreading_phase = msg.process(self.protocol, self.adversary)
+                reached_nodes, spreading_phase, stop = msg.process(self.protocol, self.adversary)
+                if stop:
+                    break
                 if reached_nodes > old_reached_nodes:
                     num_trials = 0
                 else:

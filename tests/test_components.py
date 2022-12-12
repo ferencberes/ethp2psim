@@ -35,7 +35,7 @@ def test_custom_graph():
 def test_broadcast_single_message():
     net_custom = Network(graph=G, seed=SEED, edge_weight="custom")
     print(net_custom.edge_weights)
-    protocol = BroadcastProtocol(net_custom)
+    protocol = BroadcastProtocol(net_custom, seed=SEED)
     adv = Adversary(net_custom, 1/3)
     assert 2 in adv.nodes
     assert 3 in adv.nodes
@@ -43,7 +43,7 @@ def test_broadcast_single_message():
     msg = Message(0)
     receiver_order = [0,1,3,4,5,2]
     for i, receiver in enumerate(receiver_order):
-        _, _ = msg.process(protocol, adv)
+        msg.process(protocol, adv)
         assert receiver in msg.history
         assert len(msg.history) == i+1
     assert msg.history[0][0].hops == 0
@@ -63,7 +63,7 @@ def test_broadcast_single_message():
 
 def test_dummy_adversary():
     net = Network(graph=G, seed=SEED)
-    protocol = BroadcastProtocol(net)
+    protocol = BroadcastProtocol(net, seed=SEED)
     adv = Adversary(net, 1/3)
     # start a message from the middle
     msg = Message(0)
@@ -94,7 +94,7 @@ def test_dandelion_single_message():
     msg = Message(0)
     # broadcast will happen in the 4th round
     for i in range(30):
-        ratio, broadcast = msg.process(protocol, adv)
+        ratio, broadcast, _ = msg.process(protocol, adv)
         print(i, ratio, broadcast)
         if i < 3:
             assert (not broadcast)

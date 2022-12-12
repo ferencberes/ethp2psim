@@ -90,6 +90,7 @@ class BroadcastProtocol(Protocol):
         """Propagate message based on protocol rules"""
         new_events = []
         forwarder = pe.receiver
+        # TODO: exclude neighbors from sampling that have already broadcasted the message...
         neighbors = list(self.network.graph.neighbors(forwarder))
         if self.broadcast_mode == "sqrt":
             receivers = self._rng.choice(neighbors, size=int(np.sqrt(len(neighbors))), replace=False)
@@ -124,7 +125,8 @@ class DandelionProtocol(BroadcastProtocol):
         self._outbound_node = {}
         self._inbound_nodes = {}
         # initialize line graph
-        self.change_line_graph()
+        #self.change_line_graph()
+        self.approximate_line_graph()
         
     def __repr__(self):
         return "DandelionProtocol(%.4f)" % self.spreading_proba
@@ -146,13 +148,12 @@ class DandelionProtocol(BroadcastProtocol):
                 self._inbound_nodes[selected] = set()
             self._inbound_nodes[selected].add(node)
             
-    def approximate_line_graph(self):
+    def approximate_line_graph(self, k=5):
         """Initialize or re-initialize an approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf"""
         # This is going to be our line (anonymity) graph
         G = nx.DiGraph()
         G.add_nodes_from(self.network.graph.nodes())
-        # This k is a paramter of the algorithm. Might be a function parameter as well
-        k = 5
+        # k is a paramter of the algorithm
         for node in self.network.graph.nodes():
             # pick k random targets from all nodes-{node}
             selectedTargetNodes = self._rng.sample(self.network.graph.nodes()-node,k)
@@ -165,6 +166,7 @@ class DandelionProtocol(BroadcastProtocol):
                     minDegreeNode = G.in_degree(finalNode)
             # make connection
             G.add_edge(node, connectNode)
+        # Feri Question: Is it not a problem that this line graph is not a subset of the original peer-to-peer network?
         return G
             
     @property
