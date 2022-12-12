@@ -36,7 +36,7 @@ class EavesdropEvent:
 class Adversary: 
     """Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic"""
     
-    def __init__(self, network: Network, ratio: float):
+    def __init__(self, network: Network, ratio: float, active=False):
         """
         Parameters
         ----------
@@ -46,10 +46,14 @@ class Adversary:
             Fraction of adversary nodes in the P2P network
         """
         self.ratio = ratio
-        self.network = network 
+        self.network = network
+        self.active = active
         self.captured_events = []
         self.captured_msgs = set()
         self._sample_adversary_nodes(network)
+        
+    def __repr__(self):
+        return "Adversary(ratio=%.2f, active=%s)" % (self.ratio, self.active)
         
     @property
     def candidates(self):

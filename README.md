@@ -20,6 +20,7 @@ pip install -r requirements.txt
 ## Tests
 
 Run the following command at the root folder before pushing new commits to the repository!
+Please, always write tests for new code sections to maintain high code coverage!
 ```bash
 pytest --cov
 ```
@@ -41,21 +42,26 @@ from simulator import Simulation, Evaluator
 
 Initialize a random 4 regular graph with 20 nodes to be the peer-to-peer (P2P):
 ```python
-net = Network(20, 4)
+net = Network(20, 4, edge_weight="normal")
 ```
+With the `edge_weight="normal"` we try to simulate communication latency in the P2P network.
 
-Initialize the protocal and draw the related line graph:
+Initialize the Dandelion protocol and draw the related line graph:
 ```python
 import matplotlib.pyplot as plt
 
-dp = DandelionProtocol(net, 0.1)
+dp = DandelionProtocol(net, 0.1, broadcast_mode="sqrt")
 nx.draw(dp.line_graph, node_size=20)
 ```
 
-Initilaize adversary nodes (uniform random 10% of all nodes):
+With the `broadcast_mode="sqrt"` the message is only sent to a randomly selected square root of neighbors in the spreading phase to speed up the protocol.
+
+Initilaize a passive adversary that controls random 10% of all nodes:
 ```python
-adv = Adversary(net, 0.1)
+adv = Adversary(net, 0.1, active=False)
 ```
+You could also use an active adversary (by setting `active=True`) that refuse to propagate received messages.
+
 
 Simulate 10 random messages of the P2P network with Dandelion protocol:
 ```python
@@ -64,13 +70,13 @@ sim.run(coverage_threshold=0.9)
 ```
 **NOTE: By default every message is only simulated until it reaches 90% of all nodes**
 
-Evaluate the performance of the adversary for the given simulation:
+Evaluate the performance of the adversary for the given simulation. Here, you can choose different estimators for adversary performance evaluation (e.g.: "first_sent", "first_reach", "dummy"):
 ```python
-evaluator = Evaluator(sim)
+evaluator = Evaluator(sim, estimator="first_sent")
 print(evaluator.get_report())
 ```
 
-For a more complex experimental setting see the related [notebook](Experimental.ipynb)
+For a more complex experimental setting see the related [notebook](Experimental.ipynb) that takes approximately 30 minutes to execute.
 
 ## Documentation
 
