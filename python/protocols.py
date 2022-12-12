@@ -68,23 +68,34 @@ class Protocol:
         
 class BroadcastProtocol(Protocol):
     """Message propagation is only based on broadcasting"""
-    def __init__(self, network: Network):
+    def __init__(self, network: Network, broadcast_mode: str=None, seed: int=None):
         """
         Parameters
         ----------
         network : network.Network
             Represent the underlying P2P network used for message passing
+        broadcast_mode : str
+            Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor.
+        seed: int (optional)
+            Random seed (disabled by default)
         """
         super(BroadcastProtocol, self).__init__(network)
+        self.broadcast_mode = broadcast_mode
+        self._rng = np.random.default_rng(seed)
         
     def __repr__(self):
-        return "BroadcastProtocol()"
+        return "BroadcastProtocol(broadcast_mode=%s)" % self.broadcast_mode
     
     def propagate(self, pe: ProtocolEvent):
         """Propagate message based on protocol rules"""
         new_events = []
         forwarder = pe.receiver
-        for receiver in self.network.graph.neighbors(forwarder):
+        neighbors = list(self.network.graph.neighbors(forwarder))
+        if self.broadcast_mode == "sqrt":
+            receivers = self._rng.choice(neighbors, size=int(np.sqrt(len(neighbors))), replace=False)
+        else:
+            receivers = neighbors
+        for receiver in receivers:
             if receiver != pe.sender:
                 new_events.append(self.get_new_event(forwarder, receiver, pe, True))
         return new_events, True
@@ -92,7 +103,7 @@ class BroadcastProtocol(Protocol):
 class DandelionProtocol(BroadcastProtocol):
     """Message propagation is first based on an anonymity phase that is followed by a spreading phase"""
     
-    def __init__(self, network: Network, spreading_proba: float, seed: int=None):
+    def __init__(self, network: Network, spreading_proba: float, broadcast_mode: str=None, seed: int=None):
         """
         Parameters
         ----------
@@ -100,15 +111,16 @@ class DandelionProtocol(BroadcastProtocol):
             Represent the underlying P2P network used for message passing
         spreading_proba: float
             Probability to end the anonimity phase and start the spreading phase for each message
+        broadcast_mode : str
+            Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
         seed: int (optional)
             Random seed (disabled by default)
         """
-        super(DandelionProtocol, self).__init__(network)
+        super(DandelionProtocol, self).__init__(network, broadcast_mode, seed)
         if spreading_proba < 0 or 1 < spreading_proba:
             raise ValueError("The value of the spreading probability should be between 0 and 1 (inclusive)!")
         else:
             self.spreading_proba = spreading_proba
-        self._rng = np.random.default_rng(seed)
         self._outbound_node = {}
         self._inbound_nodes = {}
         # initialize line graph
@@ -133,7 +145,6 @@ class DandelionProtocol(BroadcastProtocol):
             if not selected in self._inbound_nodes:
                 self._inbound_nodes[selected] = set()
             self._inbound_nodes[selected].add(node)
-            
             
     def approximate_line_graph(self):
         """Initialize or re-initialize an approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf"""

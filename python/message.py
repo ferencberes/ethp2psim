@@ -47,11 +47,12 @@ class Message:
             if node in adv.nodes:
                 adv.eavesdrop_msg(EavesdropEvent(self.mid, self.source, record))
             # TODO: adversary can decide later to propagate the message or not..
-            if not node in self.broadcasters:
-                new_events, is_spreading = protocol.propagate(record)
-                if is_spreading:
-                    self.broadcasters.add(node)
-                self.spreading_phase = self.spreading_phase or is_spreading
-                for event in new_events:
+            new_events, is_spreading = protocol.propagate(record)
+            if is_spreading:
+                self.broadcasters.add(node)
+            self.spreading_phase = self.spreading_phase or is_spreading
+            for event in new_events:
+                if not (event.receiver in self.broadcasters):
+                    # do not send message to node who previously broadcasted it
                     heapq.heappush(self.queue, event)
         return (len(self.history) / protocol.network.num_nodes), self.spreading_phase

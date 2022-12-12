@@ -2,8 +2,9 @@ import numpy as np
 from tqdm.auto import tqdm
 from scipy.stats import entropy
 from message import Message 
-from protocols import Protocol
+from protocols import Protocol, DandelionProtocol
 from adversary import Adversary
+from network import Network
 
 class Simulator():
     """Abstraction to simulate message passing on a P2P network"""
@@ -148,4 +149,3 @@ class Evaluator:
             "ndcg":np.mean(self.ndcg_scores),
             "message_spread_ratio":np.mean(self.message_spread_ratios)
         }
-        
