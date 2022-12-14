@@ -145,7 +145,7 @@ class DandelionProtocol(BroadcastProtocol):
                 self._inbound_nodes[selected] = set()
             self._inbound_nodes[selected].add(node)
             
-    def approximate_line_graph(self, k=5):
+    def approximate_line_graph(self, k=3):
         """Initialize or re-initialize an approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf"""
         # This is going to be our line (anonymity) graph
         G = nx.DiGraph()
@@ -162,7 +162,9 @@ class DandelionProtocol(BroadcastProtocol):
                     connectNode = finalNode
                     minDegreeNode = G.in_degree(finalNode)
             # make connection
-            G.add_edge(node, connectNode)
+            edge_latency = np.abs(np.random.normal(loc=171, scale=76, size=1))
+            G.add_edge(node, connectNode, weight=edge_latency)
+            self._outbound_node[node].append(connectNode)
         # Feri Question: Is it not a problem that this line graph is not a subset of the original peer-to-peer network?
         return G
             
@@ -180,3 +182,51 @@ class DandelionProtocol(BroadcastProtocol):
         else:
             node = pe.receiver
             return [self.get_new_event(node, self._outbound_node[node], pe, False)], False
+        
+class DandelionPlusPlusProtocol(DandelionProtocol):
+    """Message propagation is first based on an anonymity phase that is followed by a spreading phase"""
+    
+    def __init__(self, network: Network, spreading_proba: float, broadcast_mode: str=None, seed: int=None):
+        """
+        Parameters
+        ----------
+        network : network.Network
+            Represent the underlying P2P network used for message passing
+        spreading_proba: float
+            Probability to end the anonimity phase and start the spreading phase for each message
+        broadcast_mode : str
+            Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
+        seed: int (optional)
+            Random seed (disabled by default)
+        """
+        super(DandelionPlusPlusProtocol, self).__init__(network, spreading_proba, broadcast_mode, seed)
+        # initialize the anonymity graph
+        self.approximate_4regular_graph()
+    
+    def approximate_4regular_graph(self):
+        """Approximates a directed 4-regular graph in a fully-distributed fashion. See Algorithm 2 in the original Dandelion++ paper https://arxiv.org/pdf/1805.11060.pdf"""
+        # This is going to be our line (anonymity) graph
+        G = nx.DiGraph()
+        G.add_nodes_from(self.network.graph.nodes())
+        for node in self.network.graph.nodes():
+            # pick random target from all nodes-{node}
+            selectedTargetNode = self._rng.sample(self.network.graph.nodes()-node,1)
+            selectedTargetNode2 = self._rng.sample(self.network.graph.nodes()-node-selectedTargetNode,1)
+            # make connections with the two selected nodes
+            edge_latency = np.abs(np.random.normal(loc=171, scale=76, size=1))
+            edge_latency2 = np.abs(np.random.normal(loc=171, scale=76, size=1))
+            G.add_edge(node, selectedTargetNode, weight=edge_latency)
+            G.add_edge(node, selectedTargetNode2, weight=edge_latency2)
+            self._outbound_node[node].append(selectedTargetNode)
+            self._outbound_node[node].append(selectedTargetNode2)
+        return G
+    
+    def propagate(self, pe: ProtocolEvent):
+        """Propagate messages based on the Dandelion++ protocol rules. See Algorithm 5 in the original Dandelion++ paper. Link: https://arxiv.org/pdf/1805.11060.pdf"""
+        if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
+            return BroadcastProtocol.propagate(self, pe)
+        else:
+            node = pe.receiver
+            #Randomly select the recipient of the message among the neighbors in the anonymity graph
+            receiver_node = self._rng.choice(self._outbound_node[node], size=1)
+            return [self.get_new_event(node, receiver_node, pe, False)], False
