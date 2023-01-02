@@ -1,9 +1,8 @@
-
 import sys, os
 import networkx as nx
 sys.path.insert(0, '%s/python' % os.getcwd())
 from simulator import Simulator, Evaluator
-from network import Network
+from network import Network, NodeWeightGenerator, EdgeWeightGenerator 
 from protocols import BroadcastProtocol, DandelionProtocol
 from adversary import Adversary
 
@@ -41,7 +40,7 @@ def test_simulator_with_max_trials():
     
 def test_evaluators():
     num_msg = 10
-    net = Network(500, 3, node_weight="stake", edge_weight="normal")
+    net = Network(500, 3, node_weight_gen=NodeWeightGenerator("stake"), edge_weight_gen=EdgeWeightGenerator("normal"))
     adv = Adversary(net, 0.1)
     protocol = BroadcastProtocol(net, broadcast_mode="sqrt", seed=SEED)
     sim = Simulator(protocol, adv, num_msg, True)

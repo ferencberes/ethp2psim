@@ -84,7 +84,7 @@ class EdgeWeightGenerator:
 class Network:
     """Peer-to-peer network abstraction"""
     
-    def __init__(self, num_nodes: int=100, k: int=5, graph: nx.Graph=None, seed: int=None, node_weight: str="random", edge_weight: str="random"):
+    def __init__(self, num_nodes: int=100, k: int=5, node_weight_gen: NodeWeightGenerator=NodeWeightGenerator("random"), edge_weight_gen: EdgeWeightGenerator=EdgeWeightGenerator("random"), graph: nx.Graph=None, seed: int=None):
         """
         Parameters
         ----------
@@ -92,20 +92,20 @@ class Network:
             Number of nodes in the peer-to-peer (P2P) graph
         k : int
             Regularity parameter
+        node_weight_gen: NodeWeightGenerator
+            Set generator for node weights. By default random node weights are used.
+        edge_weight_gen: EdgeWeightGenerator
+            Set generator for edge weights. By default random edge weights are used.
         graph : networkx.Graph
             Provide custom graph otherwise a k-regular random graph is generated
         seed: int (optional)
             Random seed (disabled by default)
-        node_weight: {'random', 'stake'}, default 'random'
-            Nodes are weighted either randomly or according to their staked Ethereum value
-        edge_weight: {'random', 'normal', 'unweighted', 'custom'}, default 'random'
-            P2P connection latencies are weighted either randomly or according to normal distribution
         """
         self._rng = np.random.default_rng(seed)
         self._generate_graph(num_nodes, k, graph)
-        self._node_weight_generator = NodeWeightGenerator(node_weight)
+        self._node_weight_generator = node_weight_gen
         self._set_node_weights()
-        self._edge_weight_generator = EdgeWeightGenerator(edge_weight)
+        self._edge_weight_generator = edge_weight_gen
         self._set_edge_weights()
         
     def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None):

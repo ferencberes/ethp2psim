@@ -1,7 +1,7 @@
 import sys, os, pytest
 sys.path.insert(0, '%s/python' % os.getcwd())
 import networkx as nx
-from network import Network
+from network import Network, NodeWeightGenerator, EdgeWeightGenerator
 from message import Message
 from protocols import BroadcastProtocol, DandelionProtocol
 from adversary import Adversary
@@ -12,28 +12,28 @@ G.add_weighted_edges_from([(0,1,0.1),(0,2,0.5),(0,3,0.15),(1,4,0.2),(4,5,0.1)], 
 
 def test_invalid_node_weight():
     with pytest.raises(ValueError):
-        net = Network(graph=G, node_weight=None)
+        net = Network(graph=G, node_weight_gen=NodeWeightGenerator(None))
         
 def test_invalid_spreading_probability():
     with pytest.raises(ValueError):
         H = nx.complete_graph(10)
-        net = Network(graph=H, seed=SEED, edge_weight="unweighted")
+        net = Network(graph=H, seed=SEED, edge_weight_gen=EdgeWeightGenerator("unweighted"))
         protocol = DandelionProtocol(net, -5, seed=42) 
         
 def test_invalid_edge_weight():
     with pytest.raises(ValueError):
-        net = Network(graph=G, edge_weight=None)
+        net = Network(graph=G, edge_weight_gen=EdgeWeightGenerator(None))
 
 def test_custom_graph():
     for nw in ["random", "stake"]:
         for ew in ["random", "normal", "unweighted"]:
-            net = Network(graph=G, edge_weight=ew, node_weight=nw)
+            net = Network(graph=G, edge_weight_gen=EdgeWeightGenerator(ew), node_weight_gen=NodeWeightGenerator(nw))
             assert net.num_nodes == 6
             assert net.k == -1
             assert len(net.edge_weights) == 5
             
 def test_graph_update():
-    net = Network(graph=G, edge_weight="custom", node_weight="random")
+    net = Network(graph=G, edge_weight_gen=EdgeWeightGenerator("custom"))
     H = nx.Graph()
     H.add_weighted_edges_from([(1,5,0.9),(5,6,0.1),(4,5,0.2)], weight="latency")
     net.update(H, reset_edge_weights=False)
@@ -43,20 +43,20 @@ def test_graph_update():
     assert (net.get_edge_weight(4, 5) - 0.1) < 0.0001
     
 def test_graph_update_with_reset():
-    net = Network(graph=G, edge_weight="custom", node_weight="random")
+    net = Network(graph=G, edge_weight_gen=EdgeWeightGenerator("custom"))
     H = nx.Graph()
     H.add_weighted_edges_from([(4,5,0.2)], weight="latency")
     net.update(H, reset_edge_weights=True)
     assert (net.get_edge_weight(4, 5) - 0.2) < 0.0001
     
 def test_graph_edge_removal():
-    net = Network(graph=G, edge_weight="custom", node_weight="random")
+    net = Network(graph=G, edge_weight_gen=EdgeWeightGenerator("custom"))
     assert (net.get_edge_weight(4, 5) - 0.1) < 0.0001
     assert net.remove_edge(5, 4)
     assert not net.remove_edge(0, 5)
 
 def test_broadcast_single_message():
-    net_custom = Network(graph=G, seed=SEED, edge_weight="custom")
+    net_custom = Network(graph=G, seed=SEED, edge_weight_gen=EdgeWeightGenerator("custom"))
     print(net_custom.edge_weights)
     protocol = BroadcastProtocol(net_custom, seed=SEED)
     adv = Adversary(net_custom, 1/3)
@@ -111,7 +111,7 @@ def test_dandelion_line_graph():
     
 def test_dandelion_single_message():
     H = nx.complete_graph(10)
-    net = Network(graph=H, seed=SEED, edge_weight="unweighted")
+    net = Network(graph=H, seed=SEED, edge_weight_gen=EdgeWeightGenerator("unweighted"))
     protocol = DandelionProtocol(net, 1/4, seed=42)
     adv = Adversary(net, 0.2)
     msg = Message(0)
