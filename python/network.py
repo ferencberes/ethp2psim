@@ -4,13 +4,16 @@ import numpy as np
 class NodeWeightGenerator:
     """Reusable object to generate weights for Peer-to-peer network nodes"""
     
-    def __init__(self, mode: str="random"):
+    def __init__(self, mode: str="random", seed: int=None):
         """
         Parameters
         ----------
         mode: {'random', 'stake'}, default 'random'
             Nodes are weighted either randomly or according to their staked Ethereum value
+        seed: int (optional)
+            Random seed (disabled by default)
         """
+        self._rng = np.random.default_rng(seed)
         if mode in ["random", "stake"]:
             self.mode = mode
         else:
@@ -26,7 +29,7 @@ class NodeWeightGenerator:
         nodes = graph.nodes
         if self.mode == "random":
             # nodes are weighted uniformly at random
-            weights = dict(zip(nodes, np.random.random(size=len(nodes))))
+            weights = dict(zip(nodes, self._rng.random(size=len(nodes))))
         elif self.mode == "stake":
             # TODO: sample from a distribution instead.. not very nice to load hard-coded file
             weights = np.load(open('figures/sendingProbabilities.npy', 'rb'), allow_pickle=True)
@@ -39,13 +42,16 @@ class NodeWeightGenerator:
 class EdgeWeightGenerator:
     """Reusable object to generate latencies for connections between Peer-to-peer network nodes"""
     
-    def __init__(self, mode: str="random"):
+    def __init__(self, mode: str="random", seed: int=None):
         """
         Parameters
         ----------
         mode: {'random', 'normal', 'unweighted', 'custom'}, default 'random'
             Choose setting for connection latency generation!
+        seed: int (optional)
+            Random seed (disabled by default)
         """
+        self._rng = np.random.default_rng(seed)
         if mode in ["random", "normal", "unweighted", "custom"]:
             self.mode= mode
         else:
@@ -62,11 +68,11 @@ class EdgeWeightGenerator:
         edges = graph.edges
         if self.mode== "random":
             # set p2p latencies uniformly at random
-            weights = dict(zip(edges, 1000*np.random.random(size=len(edges))))
+            weights = dict(zip(edges, 1000*self._rng.random(size=len(edges))))
         elif self.mode== "normal":
             # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
             # negative latency values are prohibited
-            weights = dict(zip(edges, np.abs(np.random.normal(loc=171, scale=76, size=len(edges)))))
+            weights = dict(zip(edges, np.abs(self._rng.normal(loc=171, scale=76, size=len(edges)))))
         elif self.mode== "unweighted":
             weights = dict(zip(edges, np.ones(len(edges))))
         elif self.mode== "custom":
@@ -134,7 +140,7 @@ class Network:
         link = (sender, receiver)
         if not link in self.edge_weights:
             link = (receiver, sender)
-        return self.edge_weights[link]
+        return self.edge_weights.get(link, None)
         
     def sample_random_nodes(self, count: int, replace: bool, use_weights: bool=False, exclude: list=None):
         """
@@ -164,3 +170,48 @@ class Network:
             return self._rng.choice(nodes, count, replace=replace, p=probas_arr)
         else:
             return self._rng.choice(nodes, count, replace=replace)
+        
+    def update(self, graph: nx.Graph, reset_edge_weights=False, reset_node_weights=False):
+        """
+        Update P2P network.
+        
+        Parameters
+        ----------
+        graph : networkx.Graph
+            Update connections based on the provided graph.
+        reset_edge_weights : bool (default: False)
+            Set whether to reset weights for existing edges
+        reset_node_weights : bool (default: False)
+            Set whether to reset weights for existing nodes
+        """
+        undirected_G = graph.to_undirected()
+        # update node weights
+        new_node_weights = self._node_weight_generator.generate(undirected_G)
+        for node, weight in new_node_weights.items():
+            if reset_node_weights or (not node in self.node_weights):
+                self.node_weights[node] = weight
+        # update edge weights
+        new_edge_weights = self._edge_weight_generator.generate(undirected_G)
+        for link, weight in new_edge_weights.items():
+            if reset_edge_weights or (self.get_edge_weight(link[0], link[1]) == None):
+                self.edge_weights[link] = weight
+        nx.set_edge_attributes(self.graph, {edge:{"latency":value} for edge, value in self.edge_weights.items()})
+        # update structure
+        self.graph.update(undirected_G.edges(), undirected_G.nodes())
+        
+    def remove_edge(self, sender: int, receiver: int):
+        """Delete edge from the network"""
+        link = (sender, receiver)
+        if link in self.edge_weights:
+            success = True
+        else:
+            link = (receiver, sender)
+            if link in self.edge_weights:
+                success = True
+            else:
+                success = False
+        if success:
+            del self.edge_weights[link]
+            self.graph.remove_edge(sender, receiver)
+        return success
+        

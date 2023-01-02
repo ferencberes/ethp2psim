@@ -31,6 +31,29 @@ def test_custom_graph():
             assert net.num_nodes == 6
             assert net.k == -1
             assert len(net.edge_weights) == 5
+            
+def test_graph_update():
+    net = Network(graph=G, edge_weight="custom", node_weight="random")
+    H = nx.Graph()
+    H.add_weighted_edges_from([(1,5,0.9),(5,6,0.1),(4,5,0.2)], weight="latency")
+    net.update(H, reset_edge_weights=False)
+    assert net.num_nodes == 7
+    assert (net.get_edge_weight(1, 5) - 0.9) < 0.0001
+    assert (net.get_edge_weight(5, 6) - 0.1) < 0.0001
+    assert (net.get_edge_weight(4, 5) - 0.1) < 0.0001
+    
+def test_graph_update_with_reset():
+    net = Network(graph=G, edge_weight="custom", node_weight="random")
+    H = nx.Graph()
+    H.add_weighted_edges_from([(4,5,0.2)], weight="latency")
+    net.update(H, reset_edge_weights=True)
+    assert (net.get_edge_weight(4, 5) - 0.2) < 0.0001
+    
+def test_graph_edge_removal():
+    net = Network(graph=G, edge_weight="custom", node_weight="random")
+    assert (net.get_edge_weight(4, 5) - 0.1) < 0.0001
+    assert net.remove_edge(5, 4)
+    assert not net.remove_edge(0, 5)
 
 def test_broadcast_single_message():
     net_custom = Network(graph=G, seed=SEED, edge_weight="custom")
