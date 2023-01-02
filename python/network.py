@@ -1,6 +1,80 @@
 import networkx as nx
 import numpy as np
 
+class NodeWeightGenerator:
+    """Reusable object to generate weights for Peer-to-peer network nodes"""
+    
+    def __init__(self, mode: str="random"):
+        """
+        Parameters
+        ----------
+        mode: {'random', 'stake'}, default 'random'
+            Nodes are weighted either randomly or according to their staked Ethereum value
+        """
+        if mode in ["random", "stake"]:
+            self.mode = mode
+        else:
+            raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
+            
+    def generate(self, graph: nx.Graph):
+        """
+        Parameters
+        ----------
+        graph : networkx.Graph
+            Provide graph to generate node weights
+        """
+        nodes = graph.nodes
+        if self.mode == "random":
+            # nodes are weighted uniformly at random
+            weights = dict(zip(nodes, np.random.random(size=len(nodes))))
+        elif self.mode == "stake":
+            # TODO: sample from a distribution instead.. not very nice to load hard-coded file
+            weights = np.load(open('figures/sendingProbabilities.npy', 'rb'), allow_pickle=True)
+            weights = weights / np.sum(weights)
+            # nodes are weighted by their staked ether ratio
+            # TODO: what if there are more nodes than in the loaded file!!??
+            weights = dict(zip(nodes, weights[:len(nodes)]))
+        return weights
+
+class EdgeWeightGenerator:
+    """Reusable object to generate latencies for connections between Peer-to-peer network nodes"""
+    
+    def __init__(self, mode: str="random"):
+        """
+        Parameters
+        ----------
+        mode: {'random', 'normal', 'unweighted', 'custom'}, default 'random'
+            Choose setting for connection latency generation!
+        """
+        if mode in ["random", "normal", "unweighted", "custom"]:
+            self.mode= mode
+        else:
+            raise ValueError("Choose 'edge_weight' from values ['random', 'normal', 'custom', 'unweighted']!")
+        
+    def generate(self, graph: nx.Graph):
+        """
+        Parameters
+        ----------
+        graph : networkx.Graph
+            Provide graph to generate connections latencies
+        """
+        weights = {}
+        edges = graph.edges
+        if self.mode== "random":
+            # set p2p latencies uniformly at random
+            weights = dict(zip(edges, 1000*np.random.random(size=len(edges))))
+        elif self.mode== "normal":
+            # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
+            # negative latency values are prohibited
+            weights = dict(zip(edges, np.abs(np.random.normal(loc=171, scale=76, size=len(edges)))))
+        elif self.mode== "unweighted":
+            weights = dict(zip(edges, np.ones(len(edges))))
+        elif self.mode== "custom":
+            weights = {}
+            for u,v,l in graph.edges(data=True):
+                weights[(u,v)] = l["latency"]
+        return weights
+
 class Network:
     """Peer-to-peer network abstraction"""
     
@@ -23,8 +97,10 @@ class Network:
         """
         self._rng = np.random.default_rng(seed)
         self._generate_graph(num_nodes, k, graph)
-        self._set_node_weights(node_weight)
-        self._set_edge_weights(edge_weight)
+        self._node_weight_generator = NodeWeightGenerator(node_weight)
+        self._set_node_weights()
+        self._edge_weight_generator = EdgeWeightGenerator(edge_weight)
+        self._set_edge_weights()
         
     def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph=None):
         if graph is not None:
@@ -41,40 +117,17 @@ class Network:
     @property
     def num_edges(self):
         return self.graph.number_of_edges()
-        
-    def _set_edge_weights(self, edge_weight: str):
-        if edge_weight == "random":
-            # set p2p latencies uniformly at random
-            self.edge_weights = dict(zip(self.graph.edges,1000*np.random.random(self.num_edges)))
-        elif edge_weight == "normal":
-            # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
-            # negative latency values are prohibited
-            self.edge_weights = dict(zip(self.graph.edges, np.abs(np.random.normal(loc=171, scale=76, size=self.num_edges))))
-        elif edge_weight == "unweighted":
-            self.edge_weights = dict(zip(self.graph.edges, np.ones(self.num_edges)))
-        elif edge_weight == "custom":
-            self.edge_weights = {}
-            for u,v,l in self.graph.edges(data=True):
-                self.edge_weights[(u,v)] = l["latency"]
-            print(self.edge_weights)
-        else:
-            raise ValueError("Choose 'edge_weight' from values ['random', 'normal', 'custom', 'unweighted']!")
-        # set latency for edges
-        #if edge_weight != "custom":
+    
+    @property
+    def nodes(self):
+        return self.graph.nodes()
+
+    def _set_node_weights(self):
+        self.node_weights = self._node_weight_generator.generate(self.graph)
+    
+    def _set_edge_weights(self):
+        self.edge_weights = self._edge_weight_generator.generate(self.graph)
         nx.set_edge_attributes(self.graph, {edge:{"latency":value} for edge, value in self.edge_weights.items()})
-        
-    def _set_node_weights(self, node_weight: str):
-        if node_weight == "random":
-            # nodes are weighted uniformly at random
-            self.node_weights = dict(zip(self.graph.nodes, np.random.random(self.num_nodes)))
-        elif node_weight == "stake":
-            # TODO: sample from a distribution instead.. not very nice to load hard-coded file
-            weights = np.load(open('figures/sendingProbabilities.npy', 'rb'), allow_pickle=True)
-            weights = weights/np.sum(weights) ##This is how we make a probability distribution function out of it.
-            # nodes are weighted by their staked ether ratio
-            self.node_weights = dict(zip(self.graph.nodes, weights[:self.num_nodes]))
-        else:
-            raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
             
     def get_edge_weight(self, sender: int, receiver: int):
         """Get edge weight for node pair"""
