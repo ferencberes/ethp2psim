@@ -3,7 +3,7 @@ sys.path.insert(0, '%s/python' % os.getcwd())
 import networkx as nx
 from network import Network, NodeWeightGenerator, EdgeWeightGenerator
 from message import Message
-from protocols import BroadcastProtocol, DandelionProtocol
+from protocols import BroadcastProtocol, DandelionProtocol, DandelionPlusPlusProtocol
 from adversary import Adversary
 
 SEED = 43
@@ -105,21 +105,44 @@ def test_dummy_adversary():
 def test_dandelion_line_graph():
     net = Network(graph=G)
     protocol = DandelionProtocol(net, 1/3, seed=SEED)
-    L = protocol.line_graph
-    assert L.number_of_nodes() == net.num_nodes
-    assert L.number_of_edges() == net.num_nodes
+    AG = protocol.anonymity_graph
+    assert AG.number_of_nodes() == net.num_nodes
+    assert AG.number_of_edges() == net.num_nodes
+    
+def test_dandelion_pp_line_graph():
+    net = Network(graph=G)
+    protocol = DandelionPlusPlusProtocol(net, 1/3, seed=SEED)
+    AG = protocol.anonymity_graph
+    assert AG.number_of_nodes() == net.num_nodes
+    assert AG.number_of_edges() == 2 * net.num_nodes
     
 def test_dandelion_single_message():
     H = nx.complete_graph(10)
     net = Network(graph=H, seed=SEED, edge_weight_gen=EdgeWeightGenerator("unweighted"))
-    protocol = DandelionProtocol(net, 1/4, seed=42)
+    protocol = DandelionProtocol(net, 1/4, seed=SEED)
     adv = Adversary(net, 0.2)
     msg = Message(0)
-    # broadcast will happen in the 4th round
-    for i in range(30):
+    # broadcast will happen in the 2nd step
+    for i in range(11):
         ratio, broadcast, _ = msg.process(protocol, adv)
         print(i, ratio, broadcast)
-        if i < 3:
+        if i < 1:
+            assert (not broadcast)
+        else:
+            assert broadcast
+    assert ratio == 1.0
+    
+def test_dandelion_pp_single_message():
+    H = nx.complete_graph(10)
+    net = Network(graph=H, seed=SEED, edge_weight_gen=EdgeWeightGenerator("unweighted"))
+    protocol = DandelionPlusPlusProtocol(net, 1/4, seed=SEED)
+    adv = Adversary(net, 0.2)
+    msg = Message(0)
+    # broadcast will happen in the 2nd step
+    for i in range(11):
+        ratio, broadcast, _ = msg.process(protocol, adv)
+        print(i, ratio, broadcast)
+        if i < 1:
             assert (not broadcast)
         else:
             assert broadcast

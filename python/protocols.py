@@ -119,69 +119,49 @@ class DandelionProtocol(BroadcastProtocol):
             raise ValueError("The value of the spreading probability should be between 0 and 1 (inclusive)!")
         else:
             self.spreading_proba = spreading_proba
-        self._outbound_node = {}
-        self._inbound_nodes = {}
         # initialize line graph
-        self.change_line_graph()
-        #self.approximate_line_graph()
+        self.change_anonimity_graph()
         
     def __repr__(self):
-        return "DandelionProtocol(%.4f)" % self.spreading_proba
+        return "DandelionProtocol(spreading_proba=%.4f, broadcast_mode=%s)" % (self.spreading_proba, self.broadcast_mode)
         
-    def change_line_graph(self):
-        """Initialize or re-initialize line graph used for the anonymity phase of the Dandelion protocol"""
-        for node in self.network.graph.nodes():
-            neighbors = list(self.network.graph.neighbors(node))
-            # avoid short loops if possible
-            if node in self._inbound_nodes:
-                free_neighbors = np.setdiff1d(neighbors, list(self._inbound_nodes[node]))
-                if len(free_neighbors) > 0:
-                    neighbors = free_neighbors
-            # select outbound node for the line grpah
-            selected = self._rng.choice(neighbors)
-            self._outbound_node[node] = selected
-            # update inbound nodes
-            if not selected in self._inbound_nodes:
-                self._inbound_nodes[selected] = set()
-            self._inbound_nodes[selected].add(node)
+    def change_anonimity_graph(self):
+        """Initialize or re-initialize anonymity graph for the anonymity phase of the Dandelion++ protocol"""
+        self.anonymity_graph = self._approximate_anonymity_graph()
+        self.network.update(self.anonymity_graph)
             
-    def approximate_line_graph(self, k=3):
-        """Initialize or re-initialize an approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf"""
+    def _approximate_anonymity_graph(self):
+        """Approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf
+        """
+        # parameter of the algorithm
+        k=3
         # This is going to be our line (anonymity) graph
-        G = nx.DiGraph()
-        G.add_nodes_from(self.network.graph.nodes())
+        LG = nx.DiGraph()
+        LG.add_nodes_from(self.network.graph.nodes())
         # k is a paramter of the algorithm
-        for node in self.network.graph.nodes():
+        for node in self.network.nodes:
             # pick k random targets from all nodes-{node}
-            selectedTargetNodes = self._rng.sample(self.network.graph.nodes()-node,k)
+            candidates = self.network.sample_random_nodes(k, replace=False, exclude=[node])
             # pick the smallest in-degree
-            minDegreeNode = 999999
-            connectNode = node
-            for finalNode in selectedTargetNodes:
-                if G.in_degree(finalNode) < minDegreeNode:
-                    connectNode = finalNode
-                    minDegreeNode = G.in_degree(finalNode)
-            # make connection
-            edge_latency = np.abs(np.random.normal(loc=171, scale=76, size=1))
-            G.add_edge(node, connectNode, weight=edge_latency)
-            self._outbound_node[node].append(connectNode)
-        # Feri Question: Is it not a problem that this line graph is not a subset of the original peer-to-peer network?
-        return G
+            connectNode = candidates[0]
+            connectNodeDegree = LG.in_degree(connectNode)
+            for candidate in candidates[1:]:
+                if LG.in_degree(candidate) < connectNodeDegree:
+                    connectNode = candidate
+                    connectNodeDegree = LG.in_degree(connectNode)
+            # make connection (latency generation is handled in network.Network.update())
+            LG.add_edge(node, connectNode)
+        return LG
             
-    @property
-    def line_graph(self):
-        L = nx.DiGraph()
-        for u, v in self._outbound_node.items():
-            L.add_edge(u,v)
-        return L
-        
     def propagate(self, pe: ProtocolEvent):
         """Propagate message based on protocol rules"""
         if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
             return super(DandelionProtocol, self).propagate(pe)
         else:
             node = pe.receiver
-            return [self.get_new_event(node, self._outbound_node[node], pe, False)], False
+            anonimity_graph_neighbors = [neigh for neigh in self.anonymity_graph.neighbors(node)]
+            #assert len(anonimity_graph_neighbors) == 1
+            return [self.get_new_event(node, anonimity_graph_neighbors[0], pe, False)], False
         
 class DandelionPlusPlusProtocol(DandelionProtocol):
     """Message propagation is first based on an anonymity phase that is followed by a spreading phase"""
@@ -200,26 +180,22 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
             Random seed (disabled by default)
         """
         super(DandelionPlusPlusProtocol, self).__init__(network, spreading_proba, broadcast_mode, seed)
-        # initialize the anonymity graph
-        self.approximate_4regular_graph()
+        
+    def __repr__(self):
+        return "DandelionPlusPlusProtocol(spreading_proba=%.4f, broadcast_mode=%s)" % (self.spreading_proba, self.broadcast_mode)
     
-    def approximate_4regular_graph(self):
+    def _approximate_anonymity_graph(self):
         """Approximates a directed 4-regular graph in a fully-distributed fashion. See Algorithm 2 in the original Dandelion++ paper https://arxiv.org/pdf/1805.11060.pdf"""
-        # This is going to be our line (anonymity) graph
-        G = nx.DiGraph()
-        G.add_nodes_from(self.network.graph.nodes())
-        for node in self.network.graph.nodes():
-            # pick random target from all nodes-{node}
-            selectedTargetNode = self._rng.sample(self.network.graph.nodes()-node,1)
-            selectedTargetNode2 = self._rng.sample(self.network.graph.nodes()-node-selectedTargetNode,1)
-            # make connections with the two selected nodes
-            edge_latency = np.abs(np.random.normal(loc=171, scale=76, size=1))
-            edge_latency2 = np.abs(np.random.normal(loc=171, scale=76, size=1))
-            G.add_edge(node, selectedTargetNode, weight=edge_latency)
-            G.add_edge(node, selectedTargetNode2, weight=edge_latency2)
-            self._outbound_node[node].append(selectedTargetNode)
-            self._outbound_node[node].append(selectedTargetNode2)
-        return G
+        # This is going to be our anonymity graph
+        AG = nx.DiGraph()
+        AG.add_nodes_from(self.network.nodes)
+        for node in self.network.nodes:
+            # pick 2 random targets from all nodes-{node}
+            candidates = self.network.sample_random_nodes(2, replace=False, exclude=[node])
+            # make connections with the two selected nodes (latency generation is handled in network.Network.update())
+            for candidate in candidates:
+                AG.add_edge(node, candidate)
+        return AG
     
     def propagate(self, pe: ProtocolEvent):
         """Propagate messages based on the Dandelion++ protocol rules. See Algorithm 5 in the original Dandelion++ paper. Link: https://arxiv.org/pdf/1805.11060.pdf"""
@@ -228,5 +204,6 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
         else:
             node = pe.receiver
             #Randomly select the recipient of the message among the neighbors in the anonymity graph
-            receiver_node = self._rng.choice(self._outbound_node[node], size=1)
+            anonimity_graph_neighbors = [neigh for neigh in self.anonymity_graph.neighbors(node)]
+            receiver_node = self._rng.choice(anonimity_graph_neighbors, size=1)[0]
             return [self.get_new_event(node, receiver_node, pe, False)], False
