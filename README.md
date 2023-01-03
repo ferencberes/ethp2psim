@@ -48,22 +48,26 @@ ew_gen = EdgeWeightGenerator("normal")
 nw_gen = NodeWeightGenerator("stake")
 ```
 
-Initialize a random 4 regular graph with 20 nodes to be **the peer-to-peer (P2P) network**:
+With these generators, let's create a random 4 regular graph with 20 nodes to be the ** peer-to-peer (P2P) network** in this experiment:
 ```python
-net = Network(20, 4, edge_weight_gen=ew_gen)
+net = Network(20, 4, edge_weight_gen=ew_gen, node_weight_gen=nw_gen)
 ```
 
-Initialize the Dandelion **protocol** and draw the related line (anonymity) graph:
+Next, initialize the Dandelion **protocol** where 
+   * a message in the stem (anonymity) phase is broadcasted with 40% probability, or it is further propagated on the line graph with 60% probability.  
+   * With the `broadcast_mode="sqrt"` the message is only sent to a randomly selected square root of neighbors in the spreading phase to speed up the protocol.
+   
+```python
+dp = DandelionProtocol(net, 0.4, broadcast_mode="sqrt")
+```
+
+You can easily visualize the line (anonymity) graph for the Dandelion protocol:
 ```python
 import matplotlib.pyplot as plt
-
-dp = DandelionProtocol(net, 0.1, broadcast_mode="sqrt")
 nx.draw(dp.anonymity_graph, node_size=20)
 ```
 
-With the `broadcast_mode="sqrt"` the message is only sent to a randomly selected square root of neighbors in the spreading phase to speed up the protocol.
-
-Initilaize a passive **adversary** that controls random 10% of all nodes:
+Finally, initilaize a passive **adversary** that controls random 10% of all nodes:
 ```python
 adv = Adversary(net, 0.1, active=False)
 ```
@@ -90,7 +94,7 @@ evaluator = Evaluator(sim, estimator="first_reach")
 print(evaluator.get_report())
 ```
 
-For a more complex experimental setting see the related [notebook](Experimental.ipynb) that takes approximately 30 minutes to execute.
+For a more complex experimental setting see the related [notebook](Experimental.ipynb) that could take approximately 35-40 minutes to execute.
 
 ## Documentation
 
