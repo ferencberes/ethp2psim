@@ -25,6 +25,16 @@ Please, always write tests for new code sections to maintain high code coverage!
 pytest --cov
 ```
 
+## Source code formatting
+
+In this project, we use the [black](https://github.com/psf/black) Python code formatter.
+Before each commit, please execute the following commands to force proper code formatting:
+
+```bash
+black python
+black tests
+```
+
 ## Quickstart
 
 Here, we show an example on how to run a simulation with the Dandelion protocol in case of the most basic adversarial setting (predict a node to be the message source if adversarial nodes first heard of this message from the given node).

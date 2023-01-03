@@ -1,17 +1,18 @@
 import uuid, heapq
 from adversary import Adversary, EavesdropEvent
 from protocols import Protocol, ProtocolEvent
-        
+
+
 class Message:
     """
     Abstraction for Ethereum transactions
-       
+
     Parameters
     ----------
     source : int
         Source node of the message
     """
-    
+
     def __init__(self, source: int):
         self.mid = uuid.uuid4().hex
         self.source = source
@@ -20,20 +21,20 @@ class Message:
         # we store events when given nodes saw the message
         self.history = {}
         self.broadcasters = set()
-        
+
     def __repr__(self):
         return "Message(%s, %i)" % (self.mid, self.source)
-        
+
     def process(self, protocol: Protocol, adv: Adversary):
         """
         Propagate message based on the given protocol
-        
+
         Parameters
         ----------
         protocol : protocols.Protocol
             Protocol that defines message spreading
         adv : adversary.Adversary
-            Adversary that records observed messages on the P2P network 
+            Adversary that records observed messages on the P2P network
         """
         # stop propagation if every node received the message
         stop = False
@@ -64,4 +65,8 @@ class Message:
                             heapq.heappush(self.queue, event)
             else:
                 stop = True
-        return (len(self.history) / protocol.network.num_nodes), self.spreading_phase, stop
+        return (
+            (len(self.history) / protocol.network.num_nodes),
+            self.spreading_phase,
+            stop,
+        )

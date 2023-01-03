@@ -1,15 +1,16 @@
 import numpy as np
 from tqdm.auto import tqdm
 from scipy.stats import entropy
-from message import Message 
+from message import Message
 from protocols import Protocol, DandelionProtocol
 from adversary import Adversary
 from network import Network
 
-class Simulator():
+
+class Simulator:
     """
     Abstraction to simulate message passing on a P2P network
-        
+
     Parameters
     ----------
     protocol : protocol.Protocol
@@ -21,8 +22,15 @@ class Simulator():
     use_weights : bool
         sample message sources with respect to node weights
     """
-    
-    def __init__(self, protocol: Protocol, adv: Adversary, num_msg: int=10, use_weights: bool=False, verbose=True):
+
+    def __init__(
+        self,
+        protocol: Protocol,
+        adv: Adversary,
+        num_msg: int = 10,
+        use_weights: bool = False,
+        verbose=True,
+    ):
         if num_msg > 10:
             self.verbose = False
         else:
@@ -31,12 +39,22 @@ class Simulator():
         self.adversary = adv
         self.use_weights = use_weights
         # adversary nodes don't send messages in the simulation - they only observe
-        self.messages = [Message(sender) for sender in self.protocol.network.sample_random_nodes(num_msg, replace=True, use_weights=use_weights, exclude=self.adversary.nodes)]
-        
-    def run(self, coverage_threshold: float=0.9, max_trials=10, disable_progress_bar=True):
+        self.messages = [
+            Message(sender)
+            for sender in self.protocol.network.sample_random_nodes(
+                num_msg,
+                replace=True,
+                use_weights=use_weights,
+                exclude=self.adversary.nodes,
+            )
+        ]
+
+    def run(
+        self, coverage_threshold: float = 0.9, max_trials=10, disable_progress_bar=True
+    ):
         """
         Run simulation
-        
+
         Parameters
         ----------
         coverage_threshold : float
@@ -50,7 +68,9 @@ class Simulator():
             num_trials = 0
             while reached_nodes < coverage_threshold and num_trials < max_trials:
                 old_reached_nodes = reached_nodes
-                reached_nodes, spreading_phase, stop = msg.process(self.protocol, self.adversary)
+                reached_nodes, spreading_phase, stop = msg.process(
+                    self.protocol, self.adversary
+                )
                 if stop:
                     break
                 if reached_nodes > old_reached_nodes:
@@ -61,12 +81,12 @@ class Simulator():
                     print(msg.mid, reached_nodes, num_trials)
             if self.verbose:
                 print()
-                
+
 
 class Evaluator:
     """
     Measures the deanonymization performance of the adversary for a given simulation
-        
+
     Parameters
     ----------
     simulator : Simulator
@@ -77,30 +97,33 @@ class Evaluator:
         * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
         * dummy: the probability is divided equally between non-adversary nodes.
     """
-    
-    def __init__(self, simulator: Simulator, estimator: str="first_reach"):
+
+    def __init__(self, simulator: Simulator, estimator: str = "first_reach"):
         self.simulator = simulator
         self.estimator = estimator
         self.probas = simulator.adversary.predict_msg_source(estimator=self.estimator)
         # method='first' is used to properly resolve ties for calculating exact hits
         self.proba_ranks = self.probas.rank(axis=1, ascending=False, method="first")
-    
+
     @property
     def message_spread_ratios(self):
         N = self.simulator.protocol.network.num_nodes
         return [len(msg.history) / N for msg in self.simulator.messages]
-    
+
     @property
     def exact_hits(self):
         hits = []
         for msg in self.simulator.messages:
             # adversary might not see every message
-            if msg.mid in self.probas.index and self.proba_ranks.loc[msg.mid, msg.source] == 1.0:
+            if (
+                msg.mid in self.probas.index
+                and self.proba_ranks.loc[msg.mid, msg.source] == 1.0
+            ):
                 hits.append(1.0)
             else:
                 hits.append(0.0)
         return np.array(hits)
-    
+
     @property
     def ranks(self):
         ranks = []
@@ -112,11 +135,11 @@ class Evaluator:
                 # what to do with unseen messages? random rank might be better...
                 ranks.append(self.simulator.protocol.network.num_nodes)
         return np.array(ranks)
-    
+
     @property
     def inverse_ranks(self):
         return 1.0 / self.ranks
-    
+
     @property
     def ndcg_scores(self):
         scores = []
@@ -129,11 +152,11 @@ class Evaluator:
                 # what to do with unseen messages? random rank might be better...
                 scores.append(0.0)
         return np.array(scores)
-        
+
     @property
     def entropies(self):
         num_nodes = self.simulator.protocol.network.num_nodes
-        rnd_entropy = entropy(1.0/num_nodes * np.ones(num_nodes))
+        rnd_entropy = entropy(1.0 / num_nodes * np.ones(num_nodes))
         entropies = []
         for msg in self.simulator.messages:
             # adversary might not see every message
@@ -142,14 +165,14 @@ class Evaluator:
             else:
                 entropies.append(rnd_entropy)
         return np.array(entropies)
-    
+
     def get_report(self):
         """Calculate mean performance of the adversary for the given simulation"""
         return {
-            "estimator":self.estimator,
-            "hit_ratio":np.mean(self.exact_hits),
-            "inverse_rank":np.mean(self.inverse_ranks),
-            "entropy":np.mean(self.entropies),
-            "ndcg":np.mean(self.ndcg_scores),
-            "message_spread_ratio":np.mean(self.message_spread_ratios)
+            "estimator": self.estimator,
+            "hit_ratio": np.mean(self.exact_hits),
+            "inverse_rank": np.mean(self.inverse_ranks),
+            "entropy": np.mean(self.entropies),
+            "ndcg": np.mean(self.ndcg_scores),
+            "message_spread_ratio": np.mean(self.message_spread_ratios),
         }
