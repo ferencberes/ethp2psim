@@ -30,49 +30,63 @@ pytest --cov
 Here, we show an example on how to run a simulation with the Dandelion protocol in case of the most basic adversarial setting (predict a node to be the message source if adversarial nodes first heard of this message from the given node).
 
 
-Import simulation components:
+### i.) Initialize simulation components:
 ```python
 import sys
 sys.path.insert(0, "python")
-from network import Network
+from network import Network, EdgeWeightGenerator, NodeWeightGenerator
 from protocols import DandelionProtocol
 from adversary import Adversary
-from simulator import Simulation, Evaluator
 ```
 
-Initialize a random 4 regular graph with 20 nodes to be the peer-to-peer (P2P):
+First, initialize a re-usable **generators for edge and node weights**, e.g. 
+   * channel latency is sampled uniformly at random
+   * nodes have weights proportional with their staked Ether amount
+   
 ```python
-net = Network(20, 4, edge_weight="normal")
+ew_gen = EdgeWeightGenerator("normal")
+nw_gen = NodeWeightGenerator("stake")
 ```
-With the `edge_weight="normal"` we try to simulate communication latency in the P2P network.
 
-Initialize the Dandelion protocol and draw the related line graph:
+Initialize a random 4 regular graph with 20 nodes to be **the peer-to-peer (P2P) network**:
+```python
+net = Network(20, 4, edge_weight_gen=ew_gen)
+```
+
+Initialize the Dandelion **protocol** and draw the related line (anonymity) graph:
 ```python
 import matplotlib.pyplot as plt
 
 dp = DandelionProtocol(net, 0.1, broadcast_mode="sqrt")
-nx.draw(dp.line_graph, node_size=20)
+nx.draw(dp.anonymity_graph, node_size=20)
 ```
 
 With the `broadcast_mode="sqrt"` the message is only sent to a randomly selected square root of neighbors in the spreading phase to speed up the protocol.
 
-Initilaize a passive adversary that controls random 10% of all nodes:
+Initilaize a passive **adversary** that controls random 10% of all nodes:
 ```python
 adv = Adversary(net, 0.1, active=False)
 ```
 You could also use an active adversary (by setting `active=True`) that refuse to propagate received messages.
 
+### ii.) Run simulation
 
-Simulate 10 random messages of the P2P network with Dandelion protocol:
+**Simulate** 10 random messages for the same P2P network and adversary with Dandelion protocol:
 ```python
+from simulator import Simulation
 sim = Simulator(dp, adv, 10, verbose=False)
 sim.run(coverage_threshold=0.9)
 ```
 **NOTE: By default every message is only simulated until it reaches 90% of all nodes**
 
-Evaluate the performance of the adversary for the given simulation. Here, you can choose different estimators for adversary performance evaluation (e.g.: "first_sent", "first_reach", "dummy"):
+We also highlight that source nodes for messages are randomly sampled with respect to their staked Ether amount due to the formerly prepared `NodeWeightGenerator`.
+
+### iii.) Evaluate simulation
+
+**Evaluate** the performance of the adversary for the given simulation. Here, you can choose different estimators for adversary performance evaluation (e.g.: "first_sent", "first_reach", "dummy"):
 ```python
-evaluator = Evaluator(sim, estimator="first_sent")
+from simulator import Evaluator
+evaluator = Evaluator(sim, estimator="first_reach")
 print(evaluator.get_report())
 ```
 
@@ -86,7 +100,7 @@ The commands below need to be executed only one:
 ```bash
 cd docs
 pip install -r requirements.txt
-˙```
+```
 
 Then, you can update code documentation locally with the following command:
 ```bash
