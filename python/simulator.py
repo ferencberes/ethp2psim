@@ -7,21 +7,22 @@ from adversary import Adversary
 from network import Network
 
 class Simulator():
-    """Abstraction to simulate message passing on a P2P network"""
+    """
+    Abstraction to simulate message passing on a P2P network
+        
+    Parameters
+    ----------
+    protocol : protocol.Protocol
+        protocol that determines the rules of message passing
+    adv : adversary.Adversary
+        adversary that observe messages in the P2P network
+    num_msg : int
+        number of messages to simulate
+    use_weights : bool
+        sample message sources with respect to node weights
+    """
     
     def __init__(self, protocol: Protocol, adv: Adversary, num_msg: int=10, use_weights: bool=False, verbose=True):
-        """
-        Parameters
-        ----------
-        protocol : protocol.Protocol
-            protocol that determines the rules of message passing
-        adv : adversary.Adversary
-            adversary that observe messages in the P2P network
-        num_msg : int
-            number of messages to simulate
-        use_weights : bool
-            sample message sources with respect to node weights
-        """
         if num_msg > 10:
             self.verbose = False
         else:
@@ -63,20 +64,21 @@ class Simulator():
                 
 
 class Evaluator:
-    """Measures the deanonymization performance of the adversary for a given simulation"""
+    """
+    Measures the deanonymization performance of the adversary for a given simulation
+        
+    Parameters
+    ----------
+    simulator : Simulator
+        Specify the simulation to evaluate
+    estimator : {'first_reach', 'shortest_path', 'dummy'}, default 'first_reach'
+        Define adversary stategy to predict source node for each message:
+        * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
+        * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
+        * dummy: the probability is divided equally between non-adversary nodes.
+    """
     
     def __init__(self, simulator: Simulator, estimator: str="first_reach"):
-        """
-        Parameters
-        ----------
-        simulator : Simulator
-            Specify the simulation to evaluate
-        estimator : {'first_reach', 'shortest_path', 'dummy'}, default 'first_reach'
-            Define adversary stategy to predict source node for each message:
-            * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
-            * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
-            * dummy: the probability is divided equally between non-adversary nodes.
-        """
         self.simulator = simulator
         self.estimator = estimator
         self.probas = simulator.adversary.predict_msg_source(estimator=self.estimator)

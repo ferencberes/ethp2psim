@@ -5,19 +5,20 @@ from protocols import ProtocolEvent
 from network import Network
 
 class EavesdropEvent:
-    """Information related to the observed message"""
+    """
+    Information related to the observed message
+    
+    Parameters
+    ----------
+    node : str
+        Message identifier
+    source : int
+        Source node of the message
+    protocol_event : protocols.ProtocolEvent
+        Contains message spreading related information
+    """
     
     def __init__(self, mid: str, source: int, pe:ProtocolEvent):
-        """
-        Parameters
-        ----------
-        node : str
-            Message identifier
-        source : int
-            Source node of the message
-        protocol_event : protocols.ProtocolEvent
-            Contains message spreading related information
-        """
         self.mid = mid
         self.source = source
         self.protocol_event = pe
@@ -34,17 +35,18 @@ class EavesdropEvent:
         return "EavesdropEvent(%s, %i, %s)" % (self.mid, self.source, self.protocol_event)
 
 class Adversary: 
-    """Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic"""
+    """
+    Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic
+        
+    Parameters
+    ----------
+    network : network.Network
+        Simulated P2P network
+    ratio : float
+        Fraction of adversary nodes in the P2P network
+    """
     
     def __init__(self, network: Network, ratio: float, active=False):
-        """
-        Parameters
-        ----------
-        network : network.Network
-            Simulated P2P network
-        ratio : float
-            Fraction of adversary nodes in the P2P network
-        """
         self.ratio = ratio
         self.network = network
         self.active = active

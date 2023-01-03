@@ -3,23 +3,24 @@ import numpy as np
 import networkx as nx
 
 class ProtocolEvent:
-    """Message information propagated through the peer-to-peer network"""
+    """
+    Message information propagated through the peer-to-peer network
+        
+    Parameters
+    ----------
+    sender: int
+        Sender node
+    receiver : int
+        Receiver node
+    delay : float
+        Elapsed time since the message source created this message when it reaches the receiver node
+    hops : int
+        Number of hops from the source to the receiver node
+    spreading_phase: bool
+        Flag to indicate whether the message entered the spreading phase
+    """
     
     def __init__(self, sender:int, receiver: int, delay: float, hops: int, spreading_phase: bool=False):    
-        """
-        Parameters
-        ----------
-        sender: int
-            Sender node
-        receiver : int
-            Receiver node
-        delay : float
-            Elapsed time since the message source created this message when it reaches the receiver node
-        hops : int
-            Number of hops from the source to the receiver node
-        spreading_phase: bool
-            Flag to indicate whether the message entered the spreading phase
-        """
         self.sender = sender
         self.receiver = receiver
         self.delay = delay
@@ -64,18 +65,20 @@ class Protocol:
         return ProtocolEvent(sender, receiver, elapsed_time, pe.hops+1, spreading_phase)
         
 class BroadcastProtocol(Protocol):
-    """Message propagation is only based on broadcasting"""
+    """
+    Message propagation is only based on broadcasting
+       
+    Parameters
+    ----------
+    network : network.Network
+        Represent the underlying P2P network used for message passing
+    broadcast_mode : str
+        Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor.
+    seed: int (optional)
+        Random seed (disabled by default)
+    """
+    
     def __init__(self, network: Network, broadcast_mode: str=None, seed: int=None):
-        """
-        Parameters
-        ----------
-        network : network.Network
-            Represent the underlying P2P network used for message passing
-        broadcast_mode : str
-            Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor.
-        seed: int (optional)
-            Random seed (disabled by default)
-        """
         super(BroadcastProtocol, self).__init__(network)
         self.broadcast_mode = broadcast_mode
         self._rng = np.random.default_rng(seed)
@@ -99,21 +102,22 @@ class BroadcastProtocol(Protocol):
         return new_events, True
 
 class DandelionProtocol(BroadcastProtocol):
-    """Message propagation is first based on an anonymity phase that is followed by a spreading phase"""
+    """
+    Message propagation is first based on an anonymity phase that is followed by a spreading phase
+        
+    Parameters
+    ----------
+    network : network.Network
+        Represent the underlying P2P network used for message passing
+    spreading_proba: float
+        Probability to end the anonimity phase and start the spreading phase for each message
+    broadcast_mode : str
+        Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
+    seed: int (optional)
+        Random seed (disabled by default)
+    """
     
     def __init__(self, network: Network, spreading_proba: float, broadcast_mode: str=None, seed: int=None):
-        """
-        Parameters
-        ----------
-        network : network.Network
-            Represent the underlying P2P network used for message passing
-        spreading_proba: float
-            Probability to end the anonimity phase and start the spreading phase for each message
-        broadcast_mode : str
-            Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
-        seed: int (optional)
-            Random seed (disabled by default)
-        """
         super(DandelionProtocol, self).__init__(network, broadcast_mode, seed)
         if spreading_proba < 0 or 1 < spreading_proba:
             raise ValueError("The value of the spreading probability should be between 0 and 1 (inclusive)!")
@@ -164,21 +168,22 @@ class DandelionProtocol(BroadcastProtocol):
             return [self.get_new_event(node, anonimity_graph_neighbors[0], pe, False)], False
         
 class DandelionPlusPlusProtocol(DandelionProtocol):
-    """Message propagation is first based on an anonymity phase that is followed by a spreading phase"""
+    """
+    Message propagation is first based on an anonymity phase that is followed by a spreading phase
+        
+    Parameters
+    ----------
+    network : network.Network
+        Represent the underlying P2P network used for message passing
+    spreading_proba: float
+        Probability to end the anonimity phase and start the spreading phase for each message
+    broadcast_mode : str
+        Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
+    seed: int (optional)
+        Random seed (disabled by default)
+    """
     
     def __init__(self, network: Network, spreading_proba: float, broadcast_mode: str=None, seed: int=None):
-        """
-        Parameters
-        ----------
-        network : network.Network
-            Represent the underlying P2P network used for message passing
-        spreading_proba: float
-            Probability to end the anonimity phase and start the spreading phase for each message
-        broadcast_mode : str
-            Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
-        seed: int (optional)
-            Random seed (disabled by default)
-        """
         super(DandelionPlusPlusProtocol, self).__init__(network, spreading_proba, broadcast_mode, seed)
         
     def __repr__(self):

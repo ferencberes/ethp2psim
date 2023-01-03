@@ -3,15 +3,16 @@ from adversary import Adversary, EavesdropEvent
 from protocols import Protocol, ProtocolEvent
         
 class Message:
-    """Abstraction for Ethereum transactions"""
+    """
+    Abstraction for Ethereum transactions
+       
+    Parameters
+    ----------
+    source : int
+        Source node of the message
+    """
     
     def __init__(self, source: int):
-        """
-        Parameters
-        ----------
-        source : int
-            Source node of the message
-        """
         self.mid = uuid.uuid4().hex
         self.source = source
         self.spreading_phase = False
