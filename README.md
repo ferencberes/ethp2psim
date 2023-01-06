@@ -20,15 +20,15 @@ pip install -r requirements.txt
 ## Tests
 
 Run the following command at the root folder before pushing new commits to the repository!
-Please, always write tests for new code sections to maintain high code coverage!
 ```bash
 pytest --cov
 ```
+**Please, always write tests for new code sections to maintain high code coverage!**
 
 ## Source code formatting
 
 In this project, we use the [black](https://github.com/psf/black) Python code formatter.
-Before each commit, please execute the following commands to force proper code formatting:
+**Before each commit, please execute the following commands to maintain proper code formatting!**
 
 ```bash
 black python
@@ -60,7 +60,7 @@ nw_gen = NodeWeightGenerator("stake")
 
 With these generators, let's create a random 4 regular graph with 20 nodes to be the ** peer-to-peer (P2P) network** in this experiment:
 ```python
-net = Network(20, 4, edge_weight_gen=ew_gen, node_weight_gen=nw_gen)
+net = Network(nw_gen, ew_gen, num_nodes=20, k=4)
 ```
 
 Next, initialize the Dandelion **protocol** where 
@@ -85,15 +85,20 @@ You could also use an active adversary (by setting `active=True`) that refuse to
 
 ### ii.) Run simulation
 
-**Simulate** 10 random messages for the same P2P network and adversary with Dandelion protocol:
+In this experiment, let's **simulate** 10 random messages for the same P2P network and adversary with Dandelion protocol.
+
+First, initialize the simulator by setting the protocol, the number of simulated messages, and how the message source nodes are sampled.
 ```python
 from simulator import Simulation
-sim = Simulator(dp, adv, 10, verbose=False)
+sim = Simulator(dp, adv, num_msg=10, use_node_weights=True, verbose=False)
+```
+We highlight that due to the `use_node_weights=True` setting, source nodes for messages are randomly sampled with respect to their staked Ether amount in accordance to the formerly prepared `NodeWeightGenerator`.
+
+Next, run the simulation:
+```python
 sim.run(coverage_threshold=0.9)
 ```
 **NOTE: By default every message is only simulated until it reaches 90% of all nodes**
-
-We also highlight that source nodes for messages are randomly sampled with respect to their staked Ether amount due to the formerly prepared `NodeWeightGenerator`.
 
 ### iii.) Evaluate simulation
 
