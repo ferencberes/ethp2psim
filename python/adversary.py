@@ -3,6 +3,7 @@ import numpy as np
 import networkx as nx
 from protocols import ProtocolEvent
 from network import Network
+from typing import NoReturn, Iterable, Union
 
 
 class EavesdropEvent:
@@ -25,11 +26,11 @@ class EavesdropEvent:
         self.protocol_event = pe
 
     @property
-    def sender(self):
+    def sender(self) -> int:
         return self.protocol_event.sender
 
     @property
-    def receiver(self):
+    def receiver(self) -> int:
         return self.protocol_event.receiver
 
     def __repr__(self):
@@ -52,7 +53,7 @@ class Adversary:
         Fraction of adversary nodes in the P2P network
     """
 
-    def __init__(self, network: Network, ratio: float, active=False):
+    def __init__(self, network: Network, ratio: float, active: bool = False):
         self.ratio = ratio
         self.network = network
         self.active = active
@@ -64,22 +65,24 @@ class Adversary:
         return "Adversary(ratio=%.2f, active=%s)" % (self.ratio, self.active)
 
     @property
-    def candidates(self):
+    def candidates(self) -> list:
         return list(self.network.graph.nodes())
 
-    def _sample_adversary_nodes(self, network: Network):
+    def _sample_adversary_nodes(self, network: Network) -> NoReturn:
         """Randomly select given fraction of nodes to be adversaries"""
         num_adversaries = int(len(self.candidates) * self.ratio)
         self.nodes = network.sample_random_nodes(
             num_adversaries, use_weights=False, replace=False
         )
 
-    def eavesdrop_msg(self, ee: EavesdropEvent):
+    def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:
         """Adversary records the observed information"""
         self.captured_events.append(ee)
         self.captured_msgs.add(ee.mid)
 
-    def _find_first_contact(self, estimator: str):
+    def _find_first_contact(
+        self, estimator: str
+    ) -> Iterable[Union[dict, pd.DataFrame]]:
         contact_time = {}
         received_from = {}
         contact_node = {}
@@ -103,7 +106,7 @@ class Adversary:
         )
         return contact_time, contact_node, received_from, empty_predictions
 
-    def _shortest_path_estimator(self):
+    def _shortest_path_estimator(self) -> pd.DataFrame:
         (
             contact_time,
             contact_node,
@@ -131,7 +134,7 @@ class Adversary:
             predictions.loc[mid] = probas_by_adversary[observer]
         return predictions
 
-    def _dummy_estimator(self):
+    def _dummy_estimator(self) -> pd.DataFrame:
         N = len(self.candidates) - len(self.nodes)
         arr = np.ones((len(self.captured_msgs), len(self.candidates))) / N
         predictions = pd.DataFrame(
@@ -141,7 +144,7 @@ class Adversary:
             predictions[node] *= 0
         return predictions
 
-    def predict_msg_source(self, estimator: str = "first_reach"):
+    def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
         """
         Predict source nodes for each message
 

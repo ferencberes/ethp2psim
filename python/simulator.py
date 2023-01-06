@@ -5,6 +5,7 @@ from message import Message
 from protocols import Protocol, DandelionProtocol
 from adversary import Adversary
 from network import Network
+from typing import Optional, List, Iterable
 
 
 class Simulator:
@@ -17,19 +18,21 @@ class Simulator:
         protocol that determines the rules of message passing
     adv : adversary.Adversary
         adversary that observe messages in the P2P network
-    num_msg : int
+    num_msg : Optional[int] (Default: 10)
         number of messages to simulate
-    use_weights : bool
+    use_node_weights : bool
         sample message sources with respect to node weights
+    messages : Optional[List[Message]]
     """
 
     def __init__(
         self,
         protocol: Protocol,
         adv: Adversary,
-        num_msg: int = 10,
-        use_weights: bool = False,
-        verbose=True,
+        num_msg: Optional[int] = 10,
+        use_node_weights: bool = False,
+        messages: Optional[List[Message]] = None,
+        verbose: bool = True,
     ):
         if num_msg > 10:
             self.verbose = False
@@ -37,21 +40,34 @@ class Simulator:
             self.verbose = verbose
         self.protocol = protocol
         self.adversary = adv
-        self.use_weights = use_weights
-        # adversary nodes don't send messages in the simulation - they only observe
-        self.messages = [
-            Message(sender)
-            for sender in self.protocol.network.sample_random_nodes(
-                num_msg,
-                replace=True,
-                use_weights=use_weights,
-                exclude=self.adversary.nodes,
-            )
-        ]
+        self.use_node_weights = use_node_weights
+        if messages != None:
+            self._messages = messages
+        elif num_msg != None:
+            # NOTE: by default adversary nodes don't send messages in the simulation - they only observe
+            self._messages = [
+                Message(sender)
+                for sender in self.protocol.network.sample_random_nodes(
+                    num_msg,
+                    replace=True,
+                    use_weights=use_node_weights,
+                    exclude=self.adversary.nodes,
+                )
+            ]
+        else:
+            raise ValueError("One of `num_msg` or `messages` should not be None!")
+        self._executed = False
+
+    @property
+    def messages(self):
+        return self._messages
 
     def run(
-        self, coverage_threshold: float = 0.9, max_trials=10, disable_progress_bar=True
-    ):
+        self,
+        coverage_threshold: float = 0.9,
+        max_trials: int = 100,
+        disable_progress_bar: bool = True,
+    ) -> list:
         """
         Run simulation
 
@@ -62,25 +78,56 @@ class Simulator:
         max_trials : int
             stop propagating a message if it does not reach any new nodes within `max_trials` steps
         """
+        coverage_for_messages = []
         for msg in tqdm(self.messages, disable=disable_progress_bar):
-            reached_nodes = 0.0
+            node_coverage = 0.0
             delta = 1.0
             num_trials = 0
-            while reached_nodes < coverage_threshold and num_trials < max_trials:
-                old_reached_nodes = reached_nodes
-                reached_nodes, spreading_phase, stop = msg.process(
+            while node_coverage < coverage_threshold and num_trials < max_trials:
+                old_node_coverage = node_coverage
+                node_coverage, spreading_phase, stop = msg.process(
                     self.protocol, self.adversary
                 )
                 if stop:
                     break
-                if reached_nodes > old_reached_nodes:
+                if node_coverage > old_node_coverage:
                     num_trials = 0
                 else:
                     num_trials += 1
                 if self.verbose:
-                    print(msg.mid, reached_nodes, num_trials)
+                    print(msg.mid, node_coverage, num_trials)
             if self.verbose:
                 print()
+            coverage_for_messages.append(node_coverage)
+        self._executed = True
+        return coverage_for_messages
+
+    def node_contact_time_quantiles(
+        self, q=np.arange(0.1, 1.0, 0.1)
+    ) -> Iterable[np.array]:
+        """
+        Calculate the mean and the standard deviation for first node contact time quantiles
+
+        Parameters
+        ----------
+        q : list (Default: numpy.arange(0.1, 1.0, 0.1)))
+           Node quantiles
+        """
+        if self._executed:
+            contact_time_quantiles = []
+            for msg in self.messages:
+                first_contact_times = [
+                    contasts[0].delay for node, contasts in msg.history.items()
+                ]
+                contact_time_quantiles.append(list(np.quantile(first_contact_times, q)))
+            quantile_mx = np.array(contact_time_quantiles)
+            mean_quantiles = np.mean(quantile_mx, axis=0)
+            std_quantiles = np.std(quantile_mx, axis=0)
+            return (mean_quantiles, std_quantiles)
+        else:
+            raise RuntimeError(
+                "Execute the `run()` function before querying node contact times!"
+            )
 
 
 class Evaluator:
@@ -166,7 +213,7 @@ class Evaluator:
                 entropies.append(rnd_entropy)
         return np.array(entropies)
 
-    def get_report(self):
+    def get_report(self) -> dict:
         """Calculate mean performance of the adversary for the given simulation"""
         return {
             "estimator": self.estimator,

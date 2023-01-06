@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+from typing import Optional, NoReturn, Union
 
 
 class NodeWeightGenerator:
@@ -14,14 +15,14 @@ class NodeWeightGenerator:
         Random seed (disabled by default)
     """
 
-    def __init__(self, mode: str = "random", seed: int = None):
+    def __init__(self, mode: str = "random", seed: Optional[int] = None):
         self._rng = np.random.default_rng(seed)
         if mode in ["random", "stake"]:
             self.mode = mode
         else:
             raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
 
-    def generate(self, graph: nx.Graph):
+    def generate(self, graph: nx.Graph) -> dict:
         """
         Parameters
         ----------
@@ -56,7 +57,7 @@ class EdgeWeightGenerator:
         Random seed (disabled by default)
     """
 
-    def __init__(self, mode: str = "random", seed: int = None):
+    def __init__(self, mode: str = "random", seed: Optional[int] = None):
         self._rng = np.random.default_rng(seed)
         if mode in ["random", "normal", "unweighted", "custom"]:
             self.mode = mode
@@ -65,7 +66,7 @@ class EdgeWeightGenerator:
                 "Choose 'edge_weight' from values ['random', 'normal', 'custom', 'unweighted']!"
             )
 
-    def generate(self, graph: nx.Graph):
+    def generate(self, graph: nx.Graph) -> dict:
         """
         Parameters
         ----------
@@ -114,12 +115,12 @@ class Network:
 
     def __init__(
         self,
-        num_nodes: int = 100,
-        k: int = 5,
-        node_weight_gen: NodeWeightGenerator = NodeWeightGenerator("random"),
-        edge_weight_gen: EdgeWeightGenerator = EdgeWeightGenerator("random"),
-        graph: nx.Graph = None,
-        seed: int = None,
+        node_weight_gen: NodeWeightGenerator,
+        edge_weight_gen: EdgeWeightGenerator,
+        num_nodes: Optional[int] = 100,
+        k: Optional[int] = 5,
+        graph: Optional[nx.Graph] = None,
+        seed: Optional[int] = None,
     ):
         self._rng = np.random.default_rng(seed)
         self._generate_graph(num_nodes, k, graph)
@@ -128,7 +129,9 @@ class Network:
         self._edge_weight_generator = edge_weight_gen
         self._set_edge_weights()
 
-    def _generate_graph(self, num_nodes: int, k: int, graph: nx.Graph = None):
+    def _generate_graph(
+        self, num_nodes: int, k: int, graph: Optional[nx.Graph] = None
+    ) -> NoReturn:
         if graph is not None:
             self.graph = graph.copy()
             self.k = -1
@@ -137,28 +140,28 @@ class Network:
             self.k = k
 
     @property
-    def num_nodes(self):
+    def num_nodes(self) -> int:
         return self.graph.number_of_nodes()
 
     @property
-    def num_edges(self):
+    def num_edges(self) -> int:
         return self.graph.number_of_edges()
 
     @property
-    def nodes(self):
-        return self.graph.nodes()
+    def nodes(self) -> list:
+        return list(self.graph.nodes())
 
-    def _set_node_weights(self):
+    def _set_node_weights(self) -> NoReturn:
         self.node_weights = self._node_weight_generator.generate(self.graph)
 
-    def _set_edge_weights(self):
+    def _set_edge_weights(self) -> NoReturn:
         self.edge_weights = self._edge_weight_generator.generate(self.graph)
         nx.set_edge_attributes(
             self.graph,
             {edge: {"latency": value} for edge, value in self.edge_weights.items()},
         )
 
-    def get_edge_weight(self, sender: int, receiver: int):
+    def get_edge_weight(self, sender: int, receiver: int) -> Union[float, None]:
         """Get edge weight for node pair"""
         link = (sender, receiver)
         if not link in self.edge_weights:
@@ -166,8 +169,12 @@ class Network:
         return self.edge_weights.get(link, None)
 
     def sample_random_nodes(
-        self, count: int, replace: bool, use_weights: bool = False, exclude: list = None
-    ):
+        self,
+        count: int,
+        replace: bool,
+        use_weights: bool = False,
+        exclude: Optional[list] = None,
+    ) -> np.array:
         """
         Sample network nodes uniformly at random
 
@@ -197,8 +204,11 @@ class Network:
             return self._rng.choice(nodes, count, replace=replace)
 
     def update(
-        self, graph: nx.Graph, reset_edge_weights=False, reset_node_weights=False
-    ):
+        self,
+        graph: nx.Graph,
+        reset_edge_weights: bool = False,
+        reset_node_weights: bool = False,
+    ) -> NoReturn:
         """
         Update P2P network.
 
@@ -229,18 +239,18 @@ class Network:
         # update structure
         self.graph.update(undirected_G.edges(), undirected_G.nodes())
 
-    def remove_edge(self, sender: int, receiver: int):
+    def remove_edge(self, node1: int, node2: int) -> bool:
         """Delete edge from the network"""
-        link = (sender, receiver)
+        link = (node1, node2)
         if link in self.edge_weights:
             success = True
         else:
-            link = (receiver, sender)
+            link = (node2, node1)
             if link in self.edge_weights:
                 success = True
             else:
                 success = False
         if success:
             del self.edge_weights[link]
-            self.graph.remove_edge(sender, receiver)
+            self.graph.remove_edge(node1, node2)
         return success

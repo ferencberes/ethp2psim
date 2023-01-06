@@ -1,6 +1,7 @@
 import uuid, heapq
 from adversary import Adversary, EavesdropEvent
 from protocols import Protocol, ProtocolEvent
+from typing import Iterable, Union
 
 
 class Message:
@@ -25,7 +26,9 @@ class Message:
     def __repr__(self):
         return "Message(%s, %i)" % (self.mid, self.source)
 
-    def process(self, protocol: Protocol, adv: Adversary):
+    def process(
+        self, protocol: Protocol, adv: Adversary
+    ) -> Iterable[Union[float, bool]]:
         """
         Propagate message based on the given protocol
 

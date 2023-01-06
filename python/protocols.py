@@ -1,6 +1,7 @@
 from network import Network
 import numpy as np
 import networkx as nx
+from typing import Optional, Iterable, NoReturn, Union
 
 
 class ProtocolEvent:
@@ -62,7 +63,7 @@ class Protocol:
 
     def get_new_event(
         self, sender: int, receiver: int, pe: ProtocolEvent, spreading_phase: bool
-    ):
+    ) -> ProtocolEvent:
         """
         Calculate parameters for the propagated message
 
@@ -97,19 +98,28 @@ class BroadcastProtocol(Protocol):
         Random seed (disabled by default)
     """
 
-    def __init__(self, network: Network, broadcast_mode: str = None, seed: int = None):
+    def __init__(
+        self, network: Network, broadcast_mode: str = None, seed: Optional[int] = None
+    ):
         super(BroadcastProtocol, self).__init__(network)
-        self.broadcast_mode = broadcast_mode
+        avg_degree = np.mean(list(dict(network.graph.degree()).values()))
+        if avg_degree < 9.0 and broadcast_mode == "sqrt":
+            raise ValueError(
+                "You should not use `broatcast_mode='sqrt'` with average graph degree less than 9! The provided graph has %.1f average degree."
+                % avg_degree
+            )
+        else:
+            self.broadcast_mode = broadcast_mode
         self._rng = np.random.default_rng(seed)
 
     def __repr__(self):
         return "BroadcastProtocol(broadcast_mode=%s)" % self.broadcast_mode
 
-    def propagate(self, pe: ProtocolEvent):
+    def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
         new_events = []
         forwarder = pe.receiver
-        # TODO: exclude neighbors from sampling that have already broadcasted the message...
+        # TODO: exclude neighbors from sampling that have already broadcasted the message... it requires global knowledge so it might not have to be implemented!
         neighbors = list(self.network.graph.neighbors(forwarder))
         if self.broadcast_mode == "sqrt":
             receivers = self._rng.choice(
@@ -144,7 +154,7 @@ class DandelionProtocol(BroadcastProtocol):
         network: Network,
         spreading_proba: float,
         broadcast_mode: str = None,
-        seed: int = None,
+        seed: Optional[int] = None,
     ):
         super(DandelionProtocol, self).__init__(network, broadcast_mode, seed)
         if spreading_proba < 0 or 1 < spreading_proba:
@@ -162,12 +172,12 @@ class DandelionProtocol(BroadcastProtocol):
             self.broadcast_mode,
         )
 
-    def change_anonimity_graph(self):
+    def change_anonimity_graph(self) -> NoReturn:
         """Initialize or re-initialize anonymity graph for the anonymity phase of the Dandelion++ protocol"""
         self.anonymity_graph = self._approximate_anonymity_graph()
         self.network.update(self.anonymity_graph)
 
-    def _approximate_anonymity_graph(self):
+    def _approximate_anonymity_graph(self) -> nx.Graph:
         """Approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf"""
         # parameter of the algorithm
         k = 3
@@ -191,7 +201,7 @@ class DandelionProtocol(BroadcastProtocol):
             LG.add_edge(node, connectNode)
         return LG
 
-    def propagate(self, pe: ProtocolEvent):
+    def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
         if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
             return super(DandelionProtocol, self).propagate(pe)
@@ -227,7 +237,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
         network: Network,
         spreading_proba: float,
         broadcast_mode: str = None,
-        seed: int = None,
+        seed: Optional[int] = None,
     ):
         super(DandelionPlusPlusProtocol, self).__init__(
             network, spreading_proba, broadcast_mode, seed
@@ -239,7 +249,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
             self.broadcast_mode,
         )
 
-    def _approximate_anonymity_graph(self):
+    def _approximate_anonymity_graph(self) -> nx.Graph:
         """Approximates a directed 4-regular graph in a fully-distributed fashion. See Algorithm 2 in the original Dandelion++ paper https://arxiv.org/pdf/1805.11060.pdf"""
         # This is going to be our anonymity graph
         AG = nx.DiGraph()
@@ -254,7 +264,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
                 AG.add_edge(node, candidate)
         return AG
 
-    def propagate(self, pe: ProtocolEvent):
+    def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate messages based on the Dandelion++ protocol rules. See Algorithm 5 in the original Dandelion++ paper. Link: https://arxiv.org/pdf/1805.11060.pdf"""
         if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
             return BroadcastProtocol.propagate(self, pe)
