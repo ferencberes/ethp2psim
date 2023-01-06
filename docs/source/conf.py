@@ -30,6 +30,7 @@ extensions = [
 'sphinx.ext.mathjax',
 'sphinx.ext.viewcode',
 'sphinx.ext.inheritance_diagram',
+'sphinx_autodoc_typehints',
 ]
 
 templates_path = ['_templates']
@@ -49,6 +50,7 @@ html_static_path = ['_static']
 master_doc = 'index'
 
 # NOTE: update path to see source code
+napoleon_use_param = True
 import sys, os
 source_dir = os.path.join(os.path.abspath(os.pardir), "..", "python")
 print(source_dir)
