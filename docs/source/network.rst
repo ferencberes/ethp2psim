@@ -1,13 +1,13 @@
 Peer-to-peer (P2P) network
 ==========================
 
-In this module, we provide two generators to assign weights to the edges and the nodes of the peer-to-peer (P2P) network. By our terminology, edge weights represent communication latency on the channels (edges) of the P2P network, while node weights account for node relevance.
+In this module, we provide two generators to assign weights to the nodes and edges of the peer-to-peer (P2P) network. By our terminology, edge weights represent communication latency on the channels (edges) of the P2P network, while node weights account for node relevance.
 
-.. autoclass:: network.EdgeWeightGenerator
+.. autoclass:: network.NodeWeightGenerator
    :members:
    :inherited-members:
-   
-.. autoclass:: network.NodeWeightGenerator
+
+.. autoclass:: network.EdgeWeightGenerator
    :members:
    :inherited-members:
 

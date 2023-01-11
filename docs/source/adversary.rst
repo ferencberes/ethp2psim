@@ -1,6 +1,10 @@
-:mod:`adversary`
-================
+Adversarial settings
+====================
 
-.. automodule:: adversary
+.. autoclass:: adversary.EavesdropEvent
+   :members:
+   :inherited-members:
+   
+.. autoclass:: adversary.Adversary
    :members:
    :inherited-members:

@@ -20,14 +20,7 @@ Follow the :doc:`quickstart` from some introdunctionary usage examples!
    
    quickstart
    network
-   
-.. toctree::
-   :maxdepth: 2
-   :caption: API:
-   
-   
-   message
-   protocols
+   message_and_protocols
    adversary
    simulator
 
