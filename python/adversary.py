@@ -3,7 +3,7 @@ import numpy as np
 import networkx as nx
 from protocols import ProtocolEvent
 from network import Network
-from typing import NoReturn, Iterable, Union
+from typing import Optional, NoReturn, Iterable, Union, List
 
 
 class EavesdropEvent:
@@ -53,13 +53,19 @@ class Adversary:
         Fraction of adversary nodes in the P2P network
     """
 
-    def __init__(self, network: Network, ratio: float, active: bool = False):
+    def __init__(
+        self,
+        network: Network,
+        ratio: float,
+        adversaries: Optional[list[int]] = None,
+        active: bool = False,
+    ):
         self.ratio = ratio
         self.network = network
         self.active = active
         self.captured_events = []
         self.captured_msgs = set()
-        self._sample_adversary_nodes(network)
+        self._sample_adversary_nodes(network, adversaries)
 
     def __repr__(self):
         return "Adversary(ratio=%.2f, active=%s)" % (self.ratio, self.active)
@@ -68,12 +74,17 @@ class Adversary:
     def candidates(self) -> list:
         return list(self.network.graph.nodes())
 
-    def _sample_adversary_nodes(self, network: Network) -> NoReturn:
-        """Randomly select given fraction of nodes to be adversaries"""
-        num_adversaries = int(len(self.candidates) * self.ratio)
-        self.nodes = network.sample_random_nodes(
-            num_adversaries, use_weights=False, replace=False
-        )
+    def _sample_adversary_nodes(
+        self, network: Network, adversaries: Optional[list[int]] = None
+    ) -> NoReturn:
+        """Randomly select given fraction of nodes to be adversaries unless the user defines the adversarial nodes"""
+        if adversaries != None:
+            self.nodes = network.sample_nodes(adversaries)
+        else:
+            num_adversaries = int(len(self.candidates) * self.ratio)
+            self.nodes = network.sample_random_nodes(
+                num_adversaries, use_weights=False, replace=False
+            )
 
     def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:
         """Adversary records the observed information"""
