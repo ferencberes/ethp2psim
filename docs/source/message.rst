@@ -1,5 +1,5 @@
 :mod:`message`
-=============
+==============
 
 .. automodule:: message
    :members:

@@ -1,46 +1,9 @@
-# ethsim
-
-[![CI for Ubuntu with Codecov sync](https://github.com/ferencberes/ethsim/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/ferencberes/ethsim/actions/workflows/ubuntu.yml)
-[![CI for MacOS without Codecov sync](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml/badge.svg)](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml)
-[![codecov](https://codecov.io/gh/ferencberes/ethsim/branch/main/graph/badge.svg?token=6871LSZKSK)](https://codecov.io/gh/ferencberes/ethsim)
-
-## Installation
-
-Create your conda environment:
-```bash
-conda create -n ethsim python=3.8
-```
-
-Activate your environment, then install Python dependencies:
-```bash
-conda activate ethsim
-pip install -r requirements.txt
-```
-
-## Tests
-
-Run the following command at the root folder before pushing new commits to the repository!
-```bash
-pytest --cov
-```
-**Please, always write tests for new code sections to maintain high code coverage!**
-
-## Source code formatting
-
-In this project, we use the [black](https://github.com/psf/black) Python code formatter.
-**Before each commit, please execute the following commands to maintain proper code formatting!**
-
-```bash
-black python
-black tests
-```
-
-## Quickstart
+# Quickstart
 
 Here, we show an example of how to simulate the Dandelion protocol in the case of the most basic adversarial setting (predict a node to be the message source if malicious nodes first heard of this message from the given node).
 
 
-### i.) Initialize simulation components
+## Initialize simulation components
 ```python
 import sys
 sys.path.insert(0, "python")
@@ -83,7 +46,7 @@ adv = Adversary(net, 0.1, active=False)
 ```
 You could also use an active adversary (by setting `active=True`) that refuse to propagate received messages.
 
-### ii.) Run simulation
+## Run simulation
 
 In this experiment, let's **simulate** 10 random messages for the same P2P network and adversary with the Dandelion protocol.
 
@@ -100,7 +63,7 @@ sim.run(coverage_threshold=0.9)
 ```
 **NOTE: By default, every message is only simulated until it reaches 90% of all nodes**
 
-### iii.) Evaluate the simulation
+## Evaluate the simulation
 
 **Evaluate** the performance of the adversary for the given simulation. Here, you can choose different estimators for adversary performance evaluation (e.g., "first_sent", "first_reach", "dummy"):
 ```python
@@ -108,23 +71,3 @@ from simulator import Evaluator
 evaluator = Evaluator(sim, estimator="first_reach")
 print(evaluator.get_report())
 ```
-
-For a more complex experimental setting, see the related [notebook](Experimental.ipynb) that could take approximately 35-40 minutes to execute.
-
-## Documentation
-
-Install every dependency that is needed to generate code documentation.
-The commands below need to be executed only once:
-
-```bash
-cd docs
-pip install -r requirements.txt
-```
-
-Then, you can update code documentation locally with the following command:
-```bash
-cd docs
-make html
-```
-
-A generated documentation resides in the `docs/build/html/` folder.

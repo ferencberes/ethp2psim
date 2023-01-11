@@ -1,5 +1,5 @@
-:mod:`protocols`
-=============
+:mod:`protocols` module
+=======================
 
 .. automodule:: protocols
    :members:

@@ -6,11 +6,26 @@
 Welcome to ethsim's documentation!
 ==================================
 
+In this Python package, we release our modular Ethereum transaction simulator to help better understand and compare different message passing protocols in different adversarial settings.
+
+Our simulator has the following major components that you can use to build up complex simulations or to implement your message passing protocol:
+
+TODO
+
+Follow the :doc:`quickstart` from some introdunctionary usage examples!
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    
+   quickstart
    network
+   
+.. toctree::
+   :maxdepth: 2
+   :caption: API:
+   
+   
    message
    protocols
    adversary

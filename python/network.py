@@ -28,6 +28,13 @@ class NodeWeightGenerator:
         ----------
         graph : networkx.Graph
             Provide graph to generate node weights
+
+        Examples
+        --------
+        >>> G = networkx.Graph()
+        >>> G.add_edges_from([(0,1),(1,2),(2,3),(2,0)])
+        >>> nw_gen = NodeWeightGenerator('random')
+        >>> nw_gen.generate(G)
         """
         nodes = graph.nodes
         if self.mode == "random":

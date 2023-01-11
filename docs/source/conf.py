@@ -34,7 +34,7 @@ extensions = [
 ]
 
 templates_path = ['_templates']
-exclude_patterns = []
+exclude_patterns = ['.ipynb_checkpoints/*']
 
 source_suffix = {
     '.rst': 'restructuredtext',

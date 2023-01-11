@@ -1,5 +1,5 @@
 :mod:`adversary`
-=============
+================
 
 .. automodule:: adversary
    :members:
