@@ -31,10 +31,12 @@ class NodeWeightGenerator:
 
         Examples
         --------
-        >>> G = networkx.Graph()
-        >>> G.add_edges_from([(0,1),(1,2),(2,3),(2,0)])
+        >>> import networkx as nx
+        >>> G = nx.Graph()
+        >>> G.add_edges_from([(0,1),(1,2),(2,0)])
         >>> nw_gen = NodeWeightGenerator('random')
-        >>> nw_gen.generate(G)
+        >>> len(nw_gen.generate(G))
+        3
         """
         nodes = graph.nodes
         if self.mode == "random":
@@ -79,6 +81,15 @@ class EdgeWeightGenerator:
         ----------
         graph : networkx.Graph
             Provide graph to generate connections latencies
+            
+        Examples
+        --------
+        >>> import networkx as nx
+        >>> G = nx.Graph()
+        >>> G.add_edges_from([(0,1),(1,2),(2,3),(2,0)])
+        >>> ew_gen = EdgeWeightGenerator('normal')
+        >>> len(ew_gen.generate(G))
+        4
         """
         weights = {}
         edges = graph.edges
@@ -106,14 +117,14 @@ class Network:
 
     Parameters
     ----------
-    num_nodes : int
-        Number of nodes in the peer-to-peer (P2P) graph
-    k : int
-        Regularity parameter
     node_weight_gen: NodeWeightGenerator
         Set generator for node weights. By default random node weights are used.
     edge_weight_gen: EdgeWeightGenerator
         Set generator for edge weights. By default random edge weights are used.
+    num_nodes : int
+        Number of nodes in the peer-to-peer (P2P) graph
+    k : int
+        Regularity parameter
     graph : networkx.Graph
         Provide custom graph otherwise a k-regular random graph is generated
     seed: int (optional)
@@ -169,7 +180,20 @@ class Network:
         )
 
     def get_edge_weight(self, sender: int, receiver: int) -> Union[float, None]:
-        """Get edge weight for node pair"""
+        """
+        Get edge weight for node pair
+        
+        Examples
+        --------
+        >>> import networkx as nx
+        >>> G = nx.Graph()
+        >>> G.add_weighted_edges_from([(0,1,0.1),(1,2,0.2),(2,0,0.3)], weight='latency')
+        >>> nw_gen = NodeWeightGenerator('random')
+        >>> ew_gen = EdgeWeightGenerator('custom')
+        >>> net = Network(nw_gen, ew_gen, graph=G)
+        >>> net.get_edge_weight(0, 2)
+        0.3
+        """
         link = (sender, receiver)
         if not link in self.edge_weights:
             link = (receiver, sender)
@@ -208,6 +232,19 @@ class Network:
             Set to sample nodes with respect to their weights
         exclude : list
             List of nodes to exclude from the sample
+        
+        Examples
+        --------
+        >>> nw_gen = NodeWeightGenerator('random')
+        >>> ew_gen = EdgeWeightGenerator('normal')
+        >>> net = Network(nw_gen, ew_gen, num_nodes=5, k=2)
+        >>> candidates = net.sample_random_nodes(3, False, exclude=[3,4])
+        >>> len(candidates)
+        3
+        >>> 3 in candidates
+        False
+        >>> 4 in candidates
+        False
         """
         nodes = list(self.graph.nodes())
         weights = self.node_weights.copy()
@@ -240,6 +277,22 @@ class Network:
             Set whether to reset weights for existing edges
         reset_node_weights : bool (default: False)
             Set whether to reset weights for existing nodes
+            
+        Examples
+        --------
+        >>> import networkx as nx
+        >>> G1 = nx.Graph()
+        >>> G1.add_edges_from([(0,1),(1,2),(2,0)])
+        >>> G2 = nx.Graph()
+        >>> G2.add_edges_from([(2,3),(3,4),(4,0)])
+        >>> nw_gen = NodeWeightGenerator('random')
+        >>> ew_gen = EdgeWeightGenerator('normal')
+        >>> net = Network(nw_gen, ew_gen, graph=G1)
+        >>> net.num_nodes
+        3
+        >>> net.update(G2)
+        >>> net.num_nodes
+        5
         """
         undirected_G = graph.to_undirected()
         # update node weights
@@ -260,7 +313,7 @@ class Network:
         self.graph.update(undirected_G.edges(), undirected_G.nodes())
 
     def remove_edge(self, node1: int, node2: int) -> bool:
-        """Delete edge from the network"""
+        """Delete edge from the network. The functions returns whther edge removal was successful."""
         link = (node1, node2)
         if link in self.edge_weights:
             success = True

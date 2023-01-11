@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 Run the following command at the root folder before pushing new commits to the repository!
 ```bash
-pytest --cov
+pytest --doctest-modules --cov
 ```
 **Please, always write tests for new code sections to maintain high code coverage!**
 

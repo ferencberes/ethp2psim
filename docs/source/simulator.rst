@@ -1,6 +1,10 @@
-:mod:`simulator`
-================
+Simulating Ethereum transactions
+================================
 
-.. automodule:: simulator
+.. autoclass:: simulator.Simulator
+   :members:
+   :inherited-members:
+   
+.. autoclass:: simulator.Evaluator
    :members:
    :inherited-members:
