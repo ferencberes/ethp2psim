@@ -64,7 +64,7 @@ class Simulator:
 
     def run(
         self,
-        coverage_threshold: float = 0.9,
+        coverage_threshold: float = 1.0,
         max_trials: int = 100,
         disable_progress_bar: bool = True,
     ) -> list:

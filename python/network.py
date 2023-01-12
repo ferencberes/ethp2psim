@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-from typing import Optional, NoReturn, Union
+from typing import Optional, NoReturn, Union, List
 
 
 class NodeWeightGenerator:
@@ -81,7 +81,7 @@ class EdgeWeightGenerator:
         ----------
         graph : networkx.Graph
             Provide graph to generate connections latencies
-            
+
         Examples
         --------
         >>> import networkx as nx
@@ -182,7 +182,7 @@ class Network:
     def get_edge_weight(self, sender: int, receiver: int) -> Union[float, None]:
         """
         Get edge weight for node pair
-        
+
         Examples
         --------
         >>> import networkx as nx
@@ -199,7 +199,7 @@ class Network:
             link = (receiver, sender)
         return self.edge_weights.get(link, None)
 
-    def sample_nodes(self, adversaries: list[int]) -> np.array:
+    def sample_nodes(self, adversaries: List[int]) -> List[int]:
         """
         Sample network nodes defined by the user/simulator
 
@@ -210,15 +210,15 @@ class Network:
         """
         nodes = list(self.graph.nodes())
         res_list = [nodes[i] for i in adversaries]
-        return res_list
+        return list(np.array(res_list))
 
     def sample_random_nodes(
         self,
         count: int,
         replace: bool,
         use_weights: bool = False,
-        exclude: Optional[list] = None,
-    ) -> np.array:
+        exclude: Optional[List[int]] = None,
+    ) -> List[int]:
         """
         Sample network nodes uniformly at random
 
@@ -232,7 +232,7 @@ class Network:
             Set to sample nodes with respect to their weights
         exclude : list
             List of nodes to exclude from the sample
-        
+
         Examples
         --------
         >>> nw_gen = NodeWeightGenerator('random')
@@ -256,9 +256,9 @@ class Network:
         sum_weights = np.sum(list(weights.values()))
         probas_arr = [weights[node] / sum_weights for node in nodes]
         if use_weights:
-            return self._rng.choice(nodes, count, replace=replace, p=probas_arr)
+            return list(self._rng.choice(nodes, count, replace=replace, p=probas_arr))
         else:
-            return self._rng.choice(nodes, count, replace=replace)
+            return list(self._rng.choice(nodes, count, replace=replace))
 
     def update(
         self,
@@ -277,7 +277,7 @@ class Network:
             Set whether to reset weights for existing edges
         reset_node_weights : bool (default: False)
             Set whether to reset weights for existing nodes
-            
+
         Examples
         --------
         >>> import networkx as nx

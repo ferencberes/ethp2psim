@@ -96,9 +96,8 @@ Due to the `use_node_weights=True` setting, source nodes for messages are random
 
 Next, run the simulation:
 ```python
-sim.run(coverage_threshold=0.9)
+sim.run()
 ```
-**NOTE: By default, every message is only simulated until it reaches 90% of all nodes**
 
 ### iii.) Evaluate the simulation
 

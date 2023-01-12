@@ -57,8 +57,8 @@ class Adversary:
         self,
         network: Network,
         ratio: float,
-        adversaries: Optional[list[int]] = None,
         active: bool = False,
+        adversaries: Optional[List[int]] = None,
     ):
         self.ratio = ratio
         self.network = network
@@ -75,7 +75,7 @@ class Adversary:
         return list(self.network.graph.nodes())
 
     def _sample_adversary_nodes(
-        self, network: Network, adversaries: Optional[list[int]] = None
+        self, network: Network, adversaries: Optional[List[int]] = None
     ) -> NoReturn:
         """Randomly select given fraction of nodes to be adversaries unless the user defines the adversarial nodes"""
         if adversaries != None:
