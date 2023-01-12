@@ -10,20 +10,22 @@ class NodeWeightGenerator:
 
     Parameters
     ----------
-    mode: {'random', 'stake'}, default 'random'
-        Nodes are weighted either randomly or according to their staked Ethereum value
+    mode: {'random', 'stake', 'degree', 'betweenness'}, default 'random'
+        Nodes are weighted either randomly, according to their staked Ethereum value or by their network centrality scores (i.e, degree, Betwenness)
     seed: int (optional)
         Random seed (disabled by default)
     """
 
     def __init__(self, mode: str = "random", seed: Optional[int] = None):
         self._rng = np.random.default_rng(seed)
-        if mode in ["random", "stake"]:
+        if mode in ["random", "stake", "degree", "betweenness"]:
             self.mode = mode
             if self.mode == "stake":
                 self._staked_eth = StakedEthereumDistribution()
         else:
-            raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
+            raise ValueError(
+                "Choose 'node_weight' from values ['random', 'stake', 'degree', 'betweenness']!"
+            )
 
     def generate(self, graph: nx.Graph) -> dict:
         """
@@ -50,6 +52,10 @@ class NodeWeightGenerator:
             weights = self._rng.choice(self._staked_eth.weights, size=len(nodes))
             weights = weights / np.sum(weights)
             weights = dict(zip(nodes, weights))
+        elif self.mode == "degree":
+            weights = dict(nx.degree(graph))
+        elif self.mode == "betweenness":
+            weights = dict(nx.betweenness_centrality(graph))
         return weights
 
 
@@ -178,9 +184,16 @@ class Network:
             {edge: {"latency": value} for edge, value in self.edge_weights.items()},
         )
 
-    def get_edge_weight(self, sender: int, receiver: int) -> Union[float, None]:
+    def get_edge_weight(self, node1: int, node2: int) -> Union[float, None]:
         """
         Get edge weight for node pair
+
+        Parameters
+        ----------
+        node1 : int
+            First endpoint of the link to be removed
+        node2 : int
+            Second endpoint of the link to be removed
 
         Examples
         --------
@@ -192,10 +205,12 @@ class Network:
         >>> net = Network(nw_gen, ew_gen, graph=G)
         >>> net.get_edge_weight(0, 2)
         0.3
+        >>> net.get_edge_weight(0, 3) is None
+        True
         """
-        link = (sender, receiver)
+        link = (node1, node2)
         if not link in self.edge_weights:
-            link = (receiver, sender)
+            link = (node2, node1)
         return self.edge_weights.get(link, None)
 
     def sample_nodes(self, adversaries: List[int]) -> List[int]:
@@ -284,35 +299,67 @@ class Network:
         >>> G1.add_edges_from([(0,1),(1,2),(2,0)])
         >>> G2 = nx.Graph()
         >>> G2.add_edges_from([(2,3),(3,4),(4,0)])
-        >>> nw_gen = NodeWeightGenerator('random')
+        >>> nw_gen = NodeWeightGenerator('degree')
         >>> ew_gen = EdgeWeightGenerator('normal')
         >>> net = Network(nw_gen, ew_gen, graph=G1)
         >>> net.num_nodes
         3
+        >>> net.node_weights[2]
+        2
         >>> net.update(G2)
         >>> net.num_nodes
         5
+        >>> net.node_weights[2]
+        3
         """
+        # update structure
         undirected_G = graph.to_undirected()
-        # update node weights
-        new_node_weights = self._node_weight_generator.generate(undirected_G)
+        self.graph.update(undirected_G.edges(data=True), undirected_G.nodes())
+        # update node weight: for centrality metrics every node weight must be updated
+        new_node_weights = self._node_weight_generator.generate(self.graph)
         for node, weight in new_node_weights.items():
-            if reset_node_weights or (not node in self.node_weights):
+            if (
+                reset_node_weights
+                or (self.node_weights.get(node) is None)
+                or self._node_weight_generator.mode in ["degree", "betweenness"]
+            ):
                 self.node_weights[node] = weight
         # update edge weights
-        new_edge_weights = self._edge_weight_generator.generate(undirected_G)
+        new_edge_weights = self._edge_weight_generator.generate(self.graph)
         for link, weight in new_edge_weights.items():
-            if reset_edge_weights or (self.get_edge_weight(link[0], link[1]) == None):
+            if reset_edge_weights or (self.get_edge_weight(link[0], link[1]) is None):
                 self.edge_weights[link] = weight
         nx.set_edge_attributes(
             self.graph,
             {edge: {"latency": value} for edge, value in self.edge_weights.items()},
         )
-        # update structure
-        self.graph.update(undirected_G.edges(), undirected_G.nodes())
 
     def remove_edge(self, node1: int, node2: int) -> bool:
-        """Delete edge from the network. The functions returns whther edge removal was successful."""
+        """
+        Delete edge from the network. The functions returns whether edge removal was successful.
+
+        Parameters
+        ----------
+        node1 : int
+            First endpoint of the link to be removed
+        node2 : int
+            Second endpoint of the link to be removed
+
+        Examples
+        --------
+        >>> import networkx as nx
+        >>> G = nx.Graph()
+        >>> G.add_edges_from([(0,1),(1,2),(2,0),(2,3)])
+        >>> nw_gen = NodeWeightGenerator('random')
+        >>> ew_gen = EdgeWeightGenerator('normal')
+        >>> net = Network(nw_gen, ew_gen, graph=G)
+        >>> net.remove_edge(2,3)
+        True
+        >>> net.remove_edge(2,3)
+        False
+        >>> net.remove_edge(0,2)
+        True
+        """
         link = (node1, node2)
         if link in self.edge_weights:
             success = True

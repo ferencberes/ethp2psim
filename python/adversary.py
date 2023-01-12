@@ -51,6 +51,10 @@ class Adversary:
         Simulated P2P network
     ratio : float
         Fraction of adversary nodes in the P2P network
+    active : bool
+        Turn on to enable adversary nodes to deny message propagation
+    use_node_weights : bool
+        Sample adversary nodes with respect to node weights
     """
 
     def __init__(
@@ -58,11 +62,13 @@ class Adversary:
         network: Network,
         ratio: float,
         active: bool = False,
+        use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
     ):
         self.ratio = ratio
         self.network = network
         self.active = active
+        self.use_node_weights = use_node_weights
         self.captured_events = []
         self.captured_msgs = set()
         self._sample_adversary_nodes(network, adversaries)
@@ -83,7 +89,7 @@ class Adversary:
         else:
             num_adversaries = int(len(self.candidates) * self.ratio)
             self.nodes = network.sample_random_nodes(
-                num_adversaries, use_weights=False, replace=False
+                num_adversaries, use_weights=self.use_node_weights, replace=False
             )
 
     def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:

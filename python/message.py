@@ -44,7 +44,7 @@ class Message:
     def flush_queue(self, adv: Adversary) -> NoReturn:
         """
         Process every remaining event in the message queue
-        
+
         Parameters
         ----------
         adv : adversary.Adversary
