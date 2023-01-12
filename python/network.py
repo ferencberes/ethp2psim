@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+from data import StakedEthereumDistribution
 from typing import Optional, NoReturn, Union, List
 
 
@@ -19,6 +20,8 @@ class NodeWeightGenerator:
         self._rng = np.random.default_rng(seed)
         if mode in ["random", "stake"]:
             self.mode = mode
+            if self.mode == "stake":
+                self._staked_eth = StakedEthereumDistribution()
         else:
             raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
 
@@ -34,7 +37,7 @@ class NodeWeightGenerator:
         >>> import networkx as nx
         >>> G = nx.Graph()
         >>> G.add_edges_from([(0,1),(1,2),(2,0)])
-        >>> nw_gen = NodeWeightGenerator('random')
+        >>> nw_gen = NodeWeightGenerator('stake')
         >>> len(nw_gen.generate(G))
         3
         """
@@ -43,14 +46,10 @@ class NodeWeightGenerator:
             # nodes are weighted uniformly at random
             weights = dict(zip(nodes, self._rng.random(size=len(nodes))))
         elif self.mode == "stake":
-            # TODO: sample from a distribution instead.. not very nice to load hard-coded file
-            weights = np.load(
-                open("figures/sendingProbabilities.npy", "rb"), allow_pickle=True
-            )
-            weights = weights / np.sum(weights)
             # nodes are weighted by their staked ether ratio
-            # TODO: what if there are more nodes than in the loaded file!!??
-            weights = dict(zip(nodes, weights[: len(nodes)]))
+            weights = self._rng.choice(self._staked_eth.weights, size=len(nodes))
+            weights = weights / np.sum(weights)
+            weights = dict(zip(nodes, weights))
         return weights
 
 

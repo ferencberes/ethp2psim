@@ -10,3 +10,4 @@ matplotlib
 seaborn
 tqdm
 black
+wget
