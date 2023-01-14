@@ -5,6 +5,7 @@ from simulator import Simulator, Evaluator
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, List
 import pandas as pd
+from tqdm import tqdm
 
 
 def run_and_eval(
@@ -63,12 +64,12 @@ def run_experiment(
     results = []
     if max_workers > 1:
         executor = ThreadPoolExecutor(max_workers=max_workers)
-        pool = executor.map(func, queries)
+        results = list(tqdm(executor.map(func, queries), total=len(queries)))
         executor.shutdown()
-        for res in pool:
-            results += res
+        # for res in pool:
+        #    results += res
     else:
-        for query in queries:
+        for query in tqdm(queries):
             results += func(query)
     results_df = pd.DataFrame(results)
     return results_df
