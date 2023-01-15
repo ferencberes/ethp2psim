@@ -109,7 +109,7 @@ evaluator = Evaluator(sim, estimator="first_reach")
 print(evaluator.get_report())
 ```
 
-For a more complex experimental setting, see the related [notebook](Experimental.ipynb) that could take approximately 35-40 minutes to execute.
+For more complex experiments, we prepared a [script](scripts/compare_baselines.py). You can observe the related results in this [notebook](Results.ipynb).
 
 ## Documentation
 

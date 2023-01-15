@@ -144,6 +144,7 @@ for adv_ratio in adversary_ratios * num_trials:
     query["adversary_ratio"] = adv_ratio
     queries.append(query)
     # print(query)
+print(len(queries))
 
 # run experiment
 results_df = run_experiment(run_single_experiment, queries, max_threads)

@@ -8,6 +8,8 @@ pytest
 pytest-cov
 matplotlib
 seaborn
+plotly
+ipywidgets>=7.5
 tqdm
 black
 wget

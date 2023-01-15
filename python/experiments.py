@@ -8,6 +8,22 @@ import pandas as pd
 from tqdm import tqdm
 
 
+def shorten_protocol_name(x: str) -> str:
+    val = x.replace("Protocol", "").replace("spreading_proba", "p")
+    val = val.split("broadcast")[0][:-1].replace("(", ": ")
+    if val[-1] == ",":
+        val = val[:-1]
+    return val
+
+
+def shorten_protocol_names_for_df(
+    df: pd.DataFrame, col: str = "protocol"
+) -> pd.DataFrame:
+    tmp_df = df.copy()
+    tmp_df[col] = tmp_df[col].apply(shorten_protocol_name)
+    return tmp_df
+
+
 def run_and_eval(
     network: Network,
     adversary: Adversary,
