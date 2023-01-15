@@ -12,4 +12,5 @@ plotly
 ipywidgets>=7.5
 tqdm
 black
+black[jupyter]
 wget

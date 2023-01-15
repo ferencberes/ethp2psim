@@ -34,6 +34,7 @@ In this project, we use the [black](https://github.com/psf/black) Python code fo
 black python
 black tests
 black scripts
+black *.ipynb
 ```
 
 ## Quickstart
