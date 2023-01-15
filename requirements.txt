@@ -9,6 +9,7 @@ pytest-cov
 matplotlib
 seaborn
 plotly
+kaleido
 ipywidgets>=7.5
 tqdm
 black
