@@ -55,6 +55,8 @@ class Adversary:
         Turn on to enable adversary nodes to deny message propagation
     use_node_weights : bool
         Sample adversary nodes with respect to node weights
+    adversaries: List[int]
+        Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
     """
 
     def __init__(

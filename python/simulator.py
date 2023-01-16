@@ -203,12 +203,12 @@ class Evaluator:
     @property
     def entropies(self):
         num_nodes = self.simulator.protocol.network.num_nodes
-        rnd_entropy = entropy(1.0 / num_nodes * np.ones(num_nodes))
+        rnd_entropy = entropy(1.0 / num_nodes * np.ones(num_nodes), base=2)
         entropies = []
         for msg in self.simulator.messages:
             # adversary might not see every message
             if msg.mid in self.probas.index:
-                entropies.append(entropy(self.probas.loc[msg.mid].values))
+                entropies.append(entropy(self.probas.loc[msg.mid].values, base=2))
             else:
                 entropies.append(rnd_entropy)
         return np.array(entropies)
