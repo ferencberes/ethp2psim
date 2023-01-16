@@ -20,6 +20,9 @@ def shorten_protocol_names_for_df(
     df: pd.DataFrame, col: str = "protocol"
 ) -> pd.DataFrame:
     tmp_df = df.copy()
+    tmp_df["broadcast_mode"] = tmp_df[col].apply(
+        lambda x: "sqrt" if "sqrt" in x else "all"
+    )
     tmp_df[col] = tmp_df[col].apply(shorten_protocol_name)
     return tmp_df
 
