@@ -122,31 +122,32 @@ parser.add_argument(
     help="Specify output file prefix. Otherwise the timestamp will be used.",
 )
 
-# load arguments
-args = parser.parse_args()
-adversary_ratios = args.adversary_ratios
-num_trials = args.num_trials
-max_threads = args.max_threads
-if args.output_file_prefix != None:
-    output_file_prefix = args.output_file_prefix
-else:
-    output_file_prefix = dt.now().strftime("%Y-%m-%d_%H:%M:%S")
+if __name__ == "__main__":
+    # load arguments
+    args = parser.parse_args()
+    adversary_ratios = args.adversary_ratios
+    num_trials = args.num_trials
+    max_threads = args.max_threads
+    if args.output_file_prefix != None:
+        output_file_prefix = args.output_file_prefix
+    else:
+        output_file_prefix = dt.now().strftime("%Y-%m-%d_%H:%M:%S")
 
-# save config file
-config = vars(args)
-with open("%s.json" % output_file_prefix, "w") as f:
-    f.write(json.dumps(config))
+    # save config file
+    config = vars(args)
+    with open("%s.json" % output_file_prefix, "w") as f:
+        f.write(json.dumps(config))
 
-# prepare queries
-queries = []
-for adv_ratio in adversary_ratios * num_trials:
-    query = config.copy()
-    query["adversary_ratio"] = adv_ratio
-    queries.append(query)
-    # print(query)
-print(len(queries))
+    # prepare queries
+    queries = []
+    for adv_ratio in adversary_ratios * num_trials:
+        query = config.copy()
+        query["adversary_ratio"] = adv_ratio
+        queries.append(query)
+        # print(query)
+    print(len(queries))
 
-# run experiment
-results_df = run_experiment(run_single_experiment, queries, max_threads)
-# save results
-results_df.to_csv("%s.csv" % output_file_prefix, index=False)
+    # run experiment
+    results_df = run_experiment(run_single_experiment, queries, max_threads)
+    # save results
+    results_df.to_csv("%s.csv" % output_file_prefix, index=False)
