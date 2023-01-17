@@ -161,6 +161,9 @@ class Network:
         else:
             self.graph = nx.random_regular_graph(k, num_nodes)
             self.k = k
+            
+    def __repr__(self):
+        return "Network(nw_mode=%s, ew_mode=%s, num_nodes=%i, k=%i)" % (self._node_weight_generator.mode, self._edge_weight_generator.mode, self.num_nodes, self.k)
 
     @property
     def num_nodes(self) -> int:
