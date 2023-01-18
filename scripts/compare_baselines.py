@@ -22,9 +22,6 @@ def run_single_experiment(config):
             nw_generator, ew_generator, config["network_size"], config["degree"]
         )
         num_msg = int(config["network_size"] * config["msg_fraction"])
-    adv = Adversary(
-        net, ratio=config["adversary_ratio"], active=config["active_adversary"]
-    )
     protocols = [BroadcastProtocol(net, broadcast_mode=config["broadcast_mode"])]
     for broadcast_proba in config["dandelion_broadcast_probas"]:
         protocols.append(
@@ -39,7 +36,10 @@ def run_single_experiment(config):
         )
     single_run_results = []
     for protocol in protocols:
-        new_reports = run_and_eval(net, adv, protocol, num_msg)
+        adv = Adversary(
+            protocol, ratio=config["adversary_ratio"], active=config["active_adversary"]
+        )
+        new_reports = run_and_eval(adv, num_msg)
         single_run_results += new_reports
     # print(config["adversary_ratio"])
     return single_run_results

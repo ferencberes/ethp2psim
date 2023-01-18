@@ -12,9 +12,7 @@ from tqdm import tqdm
 
 
 def run_and_eval(
-    network: Network,
     adversary: Adversary,
-    protocol: Protocol,
     num_msg: int,
     coverage_threshold: float = 1.0,
     estimators: list = ["first_reach", "first_sent"],
@@ -25,12 +23,8 @@ def run_and_eval(
 
     Parameters
     ----------
-    network: Network
-        P2P network for the experiment
     adversary: Adversary
         Predefined adversary that observes messages during the simulation
-    protocol: Protocol
-        Predefined message passing protocol
     num_msg: int
         Number of messages to simulate
     coverage_threshold: float
@@ -49,14 +43,14 @@ def run_and_eval(
     >>> ew_gen = EdgeWeightGenerator("normal")
     >>> net = Network(nw_gen, ew_gen, 50, 5)
     >>> protocol = BroadcastProtocol(net, broadcast_mode="all")
-    >>> adversary = Adversary(net, 0.1)
-    >>> reports = run_and_eval(net, adversary, protocol, 10, q=[0.1,0.2,0.5], estimators=["first_sent"])
+    >>> adversary = Adversary(protocol, 0.1)
+    >>> reports = run_and_eval(adversary, 10, q=[0.1,0.2,0.5], estimators=["first_sent"])
     >>> len(reports)
     1
     >>> len(reports[0]["mean_contact_time_quantiles"])
     3
     """
-    sim = Simulator(protocol, adversary, num_msg, verbose=False)
+    sim = Simulator(adversary, num_msg, verbose=False)
     sim.run(coverage_threshold=coverage_threshold)
     mean_contact_times, std_contact_times = sim.node_contact_time_quantiles(q=q)
     reports = []
@@ -65,8 +59,8 @@ def run_and_eval(
         report = evaluator.get_report()
         report["mean_contact_time_quantiles"] = list(mean_contact_times)
         report["std_contact_time_quantiles"] = list(std_contact_times)
-        report["network"] = str(network)
-        report["protocol"] = str(protocol)
+        report["network"] = str(adversary.protocol.network)
+        report["protocol"] = str(adversary.protocol)
         report["adversary"] = str(adversary)
         reports.append(report)
     return reports
@@ -97,8 +91,8 @@ def run_experiment(
     ...     ew_gen = EdgeWeightGenerator("normal")
     ...     net = Network(nw_gen, ew_gen, 50, 5)
     ...     protocol = DandelionProtocol(net, spreading_proba=config["proba"], broadcast_mode="all")
-    ...     adversary = Adversary(net, 0.1)
-    ...     return run_and_eval(net, adversary, protocol, 10, estimators=["first_sent"])
+    ...     adversary = Adversary(protocol, 0.1)
+    ...     return run_and_eval(adversary, 10, estimators=["first_sent"])
     >>> probas = [0.5,0.25]
     >>> queries = [{"proba":p} for p in probas]
     >>> results = run_experiment(single_experiment, queries)

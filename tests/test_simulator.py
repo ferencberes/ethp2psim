@@ -17,17 +17,17 @@ rnd_edge_weight = EdgeWeightGenerator("random")
 def test_dummy():
     net = Network(rnd_node_weight, rnd_edge_weight, 10, 2)
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
-    adv = Adversary(net, 0.334)
-    sim = Simulator(protocol, adv, 3)
+    adv = Adversary(protocol, 0.334)
+    sim = Simulator(adv, 3)
     assert sim.protocol.network.num_nodes == 10
     assert len(sim.messages) == 3
 
 
 def test_simulator():
     net = Network(rnd_node_weight, rnd_edge_weight, 100, 3)
-    adv = Adversary(net, 0.334)
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
-    sim = Simulator(protocol, adv, 1, verbose=True)
+    adv = Adversary(protocol, 0.334)
+    sim = Simulator(adv, 1, verbose=True)
     sim.run(0.9, max_trials=50)
     assert (len(sim.messages[0].history) / net.num_nodes) >= 0.9
 
@@ -38,9 +38,9 @@ def test_simulator_with_max_trials():
     # 2 circles - not weakly connected
     G.add_edges_from([(0, 1), (1, 2), (2, 0), (3, 4), (4, 5), (5, 3)])
     net = Network(rnd_node_weight, rnd_edge_weight, graph=G)
-    adv = Adversary(net, 0.1)
     protocol = DandelionProtocol(net, 0.1, broadcast_mode="all", seed=SEED)
-    sim = Simulator(protocol, adv, 1)
+    adv = Adversary(protocol, 0.1)
+    sim = Simulator(adv, 1)
     # test if simulation stops after not reaching more nodes
     sim.run(1.0, max_trials=3)
     assert len(sim.messages[0].history) < num_nodes
@@ -54,9 +54,9 @@ def test_contact_time_quantiles():
         weight="latency",
     )
     net = Network(rnd_node_weight, EdgeWeightGenerator("custom"), graph=G)
-    adv = Adversary(net, 0.1)
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
-    sim = Simulator(protocol, adv, messages=[Message(0)])
+    adv = Adversary(protocol, 0.1)
+    sim = Simulator(adv, messages=[Message(0)])
     # test if simulation stops after not reaching more nodes
     sim.run(1.0)
     mean_contact_times, _ = sim.node_contact_time_quantiles(q=[0.5, 1.0])
@@ -73,9 +73,9 @@ def test_evaluators():
         500,
         3,
     )
-    adv = Adversary(net, 0.1)
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
-    sim = Simulator(protocol, adv, num_msg, True)
+    adv = Adversary(protocol, 0.1)
+    sim = Simulator(adv, num_msg, True)
     sim.run(0.9)
     for estimator in ["first_reach", "first_sent", "shortest_path", "dummy"]:
         evaluator = Evaluator(sim, estimator)

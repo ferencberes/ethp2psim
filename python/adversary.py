@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
-from protocols import ProtocolEvent
+from protocols import ProtocolEvent, Protocol
 from network import Network
 from typing import Optional, NoReturn, Iterable, Union, List
 
@@ -47,8 +47,8 @@ class Adversary:
 
     Parameters
     ----------
-    network : network.Network
-        Simulated P2P network
+    protocol : protocol.Protocol
+        protocol that determines the rules of message passing
     ratio : float
         Fraction of adversary nodes in the P2P network
     active : bool
@@ -61,19 +61,19 @@ class Adversary:
 
     def __init__(
         self,
-        network: Network,
+        protocol: Protocol,
         ratio: float,
         active: bool = False,
         use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
     ):
         self.ratio = ratio
-        self.network = network
+        self.protocol = protocol
         self.active = active
         self.use_node_weights = use_node_weights
         self.captured_events = []
         self.captured_msgs = set()
-        self._sample_adversary_nodes(network, adversaries)
+        self._sample_adversary_nodes(self.network, adversaries)
 
     def __repr__(self):
         return "Adversary(ratio=%.2f, active=%s, use_node_weights=%s)" % (
@@ -82,6 +82,10 @@ class Adversary:
             self.use_node_weights,
         )
 
+    @property
+    def network(self):
+        return self.protocol.network
+    
     @property
     def candidates(self) -> list:
         return list(self.network.graph.nodes())
@@ -115,7 +119,7 @@ class Adversary:
             receiver = ee.receiver
             if estimator == "first_sent":
                 timestamp = ee.protocol_event.delay - self.network.get_edge_weight(
-                    sender, receiver
+                    sender, receiver, self.protocol.anonymity_network
                 )
             else:
                 timestamp = ee.protocol_event.delay

@@ -14,8 +14,6 @@ class Simulator:
 
     Parameters
     ----------
-    protocol : protocol.Protocol
-        protocol that determines the rules of message passing
     adv : adversary.Adversary
         adversary that observe messages in the P2P network
     num_msg : Optional[int] (Default: 10)
@@ -27,7 +25,6 @@ class Simulator:
 
     def __init__(
         self,
-        protocol: Protocol,
         adv: Adversary,
         num_msg: Optional[int] = 10,
         use_node_weights: bool = False,
@@ -38,8 +35,8 @@ class Simulator:
             self.verbose = False
         else:
             self.verbose = verbose
-        self.protocol = protocol
         self.adversary = adv
+        self.protocol = self.adversary.protocol
         self.use_node_weights = use_node_weights
         if messages != None:
             self._messages = messages

@@ -89,7 +89,7 @@ def test_broadcast_single_message():
     )
     print(net_custom.edge_weights)
     protocol = BroadcastProtocol(net_custom, broadcast_mode="all", seed=SEED)
-    adv = Adversary(net_custom, 1 / 3)
+    adv = Adversary(protocol, 1 / 3)
     assert 2 in adv.nodes
     assert 3 in adv.nodes
     # start a message from the middle
@@ -117,7 +117,7 @@ def test_broadcast_single_message():
 def test_dummy_adversary():
     net = Network(rnd_node_weight, rnd_edge_weight, graph=G, seed=SEED)
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
-    adv = Adversary(net, 1 / 3)
+    adv = Adversary(protocol, 1 / 3)
     # start a message from the middle
     msg = Message(0)
     msg.process(protocol, adv)
@@ -155,7 +155,7 @@ def test_dandelion_single_message():
         rnd_node_weight, EdgeWeightGenerator("unweighted"), graph=H, seed=SEED
     )
     protocol = DandelionProtocol(net, 1 / 4, broadcast_mode="all", seed=SEED)
-    adv = Adversary(net, 0.2)
+    adv = Adversary(protocol, 0.2)
     msg = Message(0)
     # broadcast will happen in the 2nd step
     for i in range(11):
@@ -174,7 +174,7 @@ def test_dandelion_pp_single_message():
         rnd_node_weight, EdgeWeightGenerator("unweighted"), graph=H, seed=SEED
     )
     protocol = DandelionPlusPlusProtocol(net, 1 / 4, broadcast_mode="all", seed=SEED)
-    adv = Adversary(net, 0.2)
+    adv = Adversary(protocol, 0.2)
     msg = Message(0)
     # broadcast will happen in the 2nd step
     for i in range(11):
