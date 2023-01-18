@@ -88,7 +88,7 @@ def test_broadcast_single_message():
         rnd_node_weight, EdgeWeightGenerator("custom"), graph=G, seed=SEED
     )
     print(net_custom.edge_weights)
-    protocol = BroadcastProtocol(net_custom, seed=SEED)
+    protocol = BroadcastProtocol(net_custom, broadcast_mode="all", seed=SEED)
     adv = Adversary(net_custom, 1 / 3)
     assert 2 in adv.nodes
     assert 3 in adv.nodes
@@ -116,7 +116,7 @@ def test_broadcast_single_message():
 
 def test_dummy_adversary():
     net = Network(rnd_node_weight, rnd_edge_weight, graph=G, seed=SEED)
-    protocol = BroadcastProtocol(net, seed=SEED)
+    protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
     adv = Adversary(net, 1 / 3)
     # start a message from the middle
     msg = Message(0)
@@ -135,7 +135,7 @@ def test_dummy_adversary():
 
 def test_dandelion_line_graph():
     net = Network(rnd_node_weight, rnd_edge_weight, graph=G)
-    protocol = DandelionProtocol(net, 1 / 3, seed=SEED)
+    protocol = DandelionProtocol(net, 1 / 3, broadcast_mode="all", seed=SEED)
     AG = protocol.anonymity_graph
     assert AG.number_of_nodes() == net.num_nodes
     assert AG.number_of_edges() == net.num_nodes
@@ -143,7 +143,7 @@ def test_dandelion_line_graph():
 
 def test_dandelion_pp_line_graph():
     net = Network(rnd_node_weight, rnd_edge_weight, graph=G)
-    protocol = DandelionPlusPlusProtocol(net, 1 / 3, seed=SEED)
+    protocol = DandelionPlusPlusProtocol(net, 1 / 3, broadcast_mode="all", seed=SEED)
     AG = protocol.anonymity_graph
     assert AG.number_of_nodes() == net.num_nodes
     assert AG.number_of_edges() == 2 * net.num_nodes
@@ -154,7 +154,7 @@ def test_dandelion_single_message():
     net = Network(
         rnd_node_weight, EdgeWeightGenerator("unweighted"), graph=H, seed=SEED
     )
-    protocol = DandelionProtocol(net, 1 / 4, seed=SEED)
+    protocol = DandelionProtocol(net, 1 / 4, broadcast_mode="all", seed=SEED)
     adv = Adversary(net, 0.2)
     msg = Message(0)
     # broadcast will happen in the 2nd step
@@ -173,7 +173,7 @@ def test_dandelion_pp_single_message():
     net = Network(
         rnd_node_weight, EdgeWeightGenerator("unweighted"), graph=H, seed=SEED
     )
-    protocol = DandelionPlusPlusProtocol(net, 1 / 4, seed=SEED)
+    protocol = DandelionPlusPlusProtocol(net, 1 / 4, broadcast_mode="all", seed=SEED)
     adv = Adversary(net, 0.2)
     msg = Message(0)
     # broadcast will happen in the 2nd step

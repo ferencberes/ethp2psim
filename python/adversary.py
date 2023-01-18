@@ -76,7 +76,11 @@ class Adversary:
         self._sample_adversary_nodes(network, adversaries)
 
     def __repr__(self):
-        return "Adversary(ratio=%.2f, active=%s, use_node_weights=%s)" % (self.ratio, self.active, self.use_node_weights)
+        return "Adversary(ratio=%.2f, active=%s, use_node_weights=%s)" % (
+            self.ratio,
+            self.active,
+            self.use_node_weights,
+        )
 
     @property
     def candidates(self) -> list:

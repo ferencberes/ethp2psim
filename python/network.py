@@ -29,6 +29,8 @@ class NodeWeightGenerator:
 
     def generate(self, graph: nx.Graph) -> dict:
         """
+        Generate node weights for the nodes of the input graph.
+
         Parameters
         ----------
         graph : networkx.Graph
@@ -82,6 +84,8 @@ class EdgeWeightGenerator:
 
     def generate(self, graph: nx.Graph) -> dict:
         """
+        Generate edge weights (latency) for the edges of the input graph.
+
         Parameters
         ----------
         graph : networkx.Graph
@@ -161,9 +165,14 @@ class Network:
         else:
             self.graph = nx.random_regular_graph(k, num_nodes)
             self.k = k
-            
+
     def __repr__(self):
-        return "Network(nw_mode=%s, ew_mode=%s, num_nodes=%i, k=%i)" % (self._node_weight_generator.mode, self._edge_weight_generator.mode, self.num_nodes, self.k)
+        return "Network(nw_mode=%s, ew_mode=%s, num_nodes=%i, k=%i)" % (
+            self._node_weight_generator.mode,
+            self._edge_weight_generator.mode,
+            self.num_nodes,
+            self.k,
+        )
 
     @property
     def num_nodes(self) -> int:

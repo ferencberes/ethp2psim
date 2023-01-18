@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 ### run experiments ###
 
+
 def run_and_eval(
     network: Network,
     adversary: Adversary,
@@ -17,7 +18,7 @@ def run_and_eval(
     num_msg: int,
     coverage_threshold: float = 1.0,
     estimators: list = ["first_reach", "first_sent"],
-    q=np.arange(0.1, 1.0, 0.1)
+    q=np.arange(0.1, 1.0, 0.1),
 ) -> list:
     """
     Run and evaluate simulation with the predefined components
@@ -38,7 +39,7 @@ def run_and_eval(
         Estimator strategies for the adversary during performance evaluation
     q : list (Default: numpy.arange(0.1, 1.0, 0.1)))
            Node quantiles to calculate contact times
-           
+
     Examples
     --------
     >>> from network import *
@@ -47,7 +48,7 @@ def run_and_eval(
     >>> nw_gen = NodeWeightGenerator("random")
     >>> ew_gen = EdgeWeightGenerator("normal")
     >>> net = Network(nw_gen, ew_gen, 50, 5)
-    >>> protocol = BroadcastProtocol(net)
+    >>> protocol = BroadcastProtocol(net, broadcast_mode="all")
     >>> adversary = Adversary(net, 0.1)
     >>> reports = run_and_eval(net, adversary, protocol, 10, q=[0.1,0.2,0.5], estimators=["first_sent"])
     >>> len(reports)
@@ -85,7 +86,7 @@ def run_experiment(
         List of different configurations to be executed
     max_workers: int
         Maximum number of threads to use during execution
-        
+
     Examples
     --------
     >>> from network import *
@@ -95,7 +96,7 @@ def run_experiment(
     ...     nw_gen = NodeWeightGenerator("random")
     ...     ew_gen = EdgeWeightGenerator("normal")
     ...     net = Network(nw_gen, ew_gen, 50, 5)
-    ...     protocol = DandelionProtocol(net, spreading_proba=config["proba"])
+    ...     protocol = DandelionProtocol(net, spreading_proba=config["proba"], broadcast_mode="all")
     ...     adversary = Adversary(net, 0.1)
     ...     return run_and_eval(net, adversary, protocol, 10, estimators=["first_sent"])
     >>> probas = [0.5,0.25]
@@ -117,17 +118,19 @@ def run_experiment(
     results_df = pd.DataFrame(results)
     return results_df
 
+
 ### postprocess experimental results ###
+
 
 def shorten_protocol_name(x: str) -> str:
     """
     Use this function to get shorter protocol names that look better for visualization
-    
+
     Parameters
     ----------
     x: str
         Protocol name
-        
+
     Examples
     --------
     >>> shorten_protocol_name("BroadcastProtocol(broadcast_mode=sqrt)")
@@ -139,19 +142,23 @@ def shorten_protocol_name(x: str) -> str:
         val = val[:-1]
     return val
 
+
 def extract_config_columns(df: pd.DataFrame) -> pd.DataFrame:
     tmp_df = df.copy()
     # extract adversary parameters
     adv_col = "adversary"
-    tmp_df["adversary_ratio"] = tmp_df[adv_col].apply(lambda x: float(str(x).split("ratio=")[1].split(",")[0]))
+    tmp_df["adversary_ratio"] = tmp_df[adv_col].apply(
+        lambda x: float(str(x).split("ratio=")[1].split(",")[0])
+    )
     # extract protocol parameters
     protocol_col = "protocol"
     tmp_df["broadcast_mode"] = tmp_df[protocol_col].apply(
         lambda x: "sqrt" if "sqrt" in x else "all"
     )
     tmp_df[protocol_col] = tmp_df[protocol_col].apply(shorten_protocol_name)
-    
+
     return tmp_df
+
 
 def prepare_results_for_visualization(df: pd.DataFrame) -> pd.DataFrame:
     return df.drop(["inverse_rank", "entropy"], axis=1).melt(

@@ -99,7 +99,7 @@ class BroadcastProtocol(Protocol):
     """
 
     def __init__(
-        self, network: Network, broadcast_mode: str = None, seed: Optional[int] = None
+        self, network: Network, broadcast_mode: str = "sqrt", seed: Optional[int] = None
     ):
         super(BroadcastProtocol, self).__init__(network)
         avg_degree = np.mean(list(dict(network.graph.degree()).values()))
@@ -153,7 +153,7 @@ class DandelionProtocol(BroadcastProtocol):
         self,
         network: Network,
         spreading_proba: float,
-        broadcast_mode: str = None,
+        broadcast_mode: str = "sqrt",
         seed: Optional[int] = None,
     ):
         super(DandelionProtocol, self).__init__(network, broadcast_mode, seed)
@@ -236,7 +236,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
         self,
         network: Network,
         spreading_proba: float,
-        broadcast_mode: str = None,
+        broadcast_mode: str = "sqrt",
         seed: Optional[int] = None,
     ):
         super(DandelionPlusPlusProtocol, self).__init__(
@@ -276,3 +276,34 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
             ]
             receiver_node = self._rng.choice(anonimity_graph_neighbors, size=1)[0]
             return [self.get_new_event(node, receiver_node, pe, False)], False
+
+
+class TOREnhancedProtocol(BroadcastProtocol):
+    """
+    Message propagation is first based on an anonymity phase that is followed by a spreading phase
+
+    Parameters
+    ----------
+    network : network.Network
+        Represent the underlying P2P network used for message passing
+    num_arms: int (Default: 1)
+        Number of arms for message propagation
+    num_hops : int (Default: 2)
+        Number of hops (intermediary nodes) on each arm. Intermediary nodes relay the message to the final node on each arm that is the broadcaster node.
+    broadcast_mode : str
+        Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
+    seed: int (optional)
+        Random seed (disabled by default)
+    """
+
+    def __init__(
+        self,
+        network: Network,
+        num_arms: int = 1,
+        num_hops: int = 2,
+        broadcast_mode: str = "sqrt",
+        seed: Optional[int] = None,
+    ):
+        super(TOREnhancedProtocol, self).__init__(network, broadcast_mode, seed)
+        self.num_arms = num_arms
+        self.num_hops = num_hops
