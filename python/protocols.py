@@ -20,6 +20,8 @@ class ProtocolEvent:
         Number of hops from the source to the receiver node
     spreading_phase: bool
         Flag to indicate whether the message entered the spreading phase
+    path : list
+        Remaining path for the message (only used in TOREnhancedProtocol)
     """
 
     def __init__(
@@ -29,12 +31,14 @@ class ProtocolEvent:
         delay: float,
         hops: int,
         spreading_phase: bool = False,
+        path: list = None,
     ):
         self.sender = sender
         self.receiver = receiver
         self.delay = delay
         self.hops = hops
         self.spreading_phase = spreading_phase
+        self.path = path
 
     def __lt__(self, other):
         if self.delay < other.delay:
@@ -43,11 +47,12 @@ class ProtocolEvent:
             return False
 
     def __repr__(self):
-        return "ProtocolEvent(%i, %i, %f, %i)" % (
+        return "ProtocolEvent(%i, %i, %f, %i, %s)" % (
             self.sender,
             self.receiver,
             self.delay,
             self.hops,
+            self.path,
         )
 
 
@@ -62,7 +67,12 @@ class Protocol:
         pass
 
     def get_new_event(
-        self, sender: int, receiver: int, pe: ProtocolEvent, spreading_phase: bool
+        self,
+        sender: int,
+        receiver: int,
+        pe: ProtocolEvent,
+        spreading_phase: bool,
+        path: list = None,
     ) -> ProtocolEvent:
         """
         Calculate parameters for the propagated message
@@ -80,7 +90,7 @@ class Protocol:
         """
         elapsed_time = pe.delay + self.network.get_edge_weight(sender, receiver)
         return ProtocolEvent(
-            sender, receiver, elapsed_time, pe.hops + 1, spreading_phase
+            sender, receiver, elapsed_time, pe.hops + 1, spreading_phase, path
         )
 
 
@@ -307,3 +317,60 @@ class TOREnhancedProtocol(BroadcastProtocol):
         super(TOREnhancedProtocol, self).__init__(network, broadcast_mode, seed)
         self.num_arms = num_arms
         self.num_hops = num_hops
+        self.init_tor_network()
+
+    def init_tor_network(self):
+        """
+        Examples
+        --------
+        >>> from network import *
+        >>> nw_generator = NodeWeightGenerator("random")
+        >>> ew_generator = EdgeWeightGenerator("normal")
+        >>> net = Network(nw_generator, ew_generator, num_nodes=1000, k=50)
+        >>> num_edges = net.graph.number_of_edges()
+        >>> tor = TOREnhancedProtocol(net, 1, 3)
+        >>> net.num_edges > num_edges
+        True
+        """
+        self.tor_network = {}
+        tor_edges = []
+        for node in self.network.nodes:
+            self.tor_network[node] = []
+            for _ in range(self.num_arms):
+                arm_nodes = self.network.sample_random_nodes(
+                    self.num_hops + 1, replace=False, exclude=[node]
+                )
+                self.tor_network[node].append(arm_nodes)
+                tor_edges.append((node, arm_nodes[0]))
+                for i in range(self.num_hops):
+                    tor_edges.append((arm_nodes[i], arm_nodes[i + 1]))
+        G = nx.Graph()
+        G.add_edges_from(tor_edges)
+        # print(G.number_of_nodes(), G.number_of_edges())
+        # TODO: later store channels apart from the p2p network
+        self.network.update(G)
+        # return G
+
+    def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
+        """Propagate message based on protocol rules"""
+        print(pe)
+        if pe.spreading_phase:
+            return super(TOREnhancedProtocol, self).propagate(pe)
+        else:
+            node = pe.receiver
+            path = pe.path
+            if path is None:
+                # message is at starting node: start each arm
+                return [
+                    self.get_new_event(node, arm[0], pe, False, arm)
+                    for arm in self.tor_network[node]
+                ], False
+            else:
+                if len(path) > 1:
+                    # intermediary node in the tor network
+                    return [
+                        self.get_new_event(node, path[1], pe, False, path[1:])
+                    ], False
+                else:
+                    # broadcaster node in the tor network
+                    return super(TOREnhancedProtocol, self).propagate(pe)

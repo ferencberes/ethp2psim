@@ -21,7 +21,7 @@ class Message:
         # we store events when given nodes saw the message
         self.history = {}
         self.broadcasters = set()
-        self.queue = [ProtocolEvent(self.source, self.source, 0.0, 0)]
+        self.queue = [ProtocolEvent(self.source, self.source, 0.0, 0, False, None)]
 
     def __repr__(self):
         return "Message(%s, %i)" % (self.mid, self.source)
