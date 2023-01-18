@@ -151,9 +151,9 @@ class Network:
     ):
         self._rng = np.random.default_rng(seed)
         self._generate_graph(num_nodes, k, graph)
-        self._node_weight_generator = node_weight_gen
+        self.node_weight_generator = node_weight_gen
         self._set_node_weights()
-        self._edge_weight_generator = edge_weight_gen
+        self.edge_weight_generator = edge_weight_gen
         self._set_edge_weights()
 
     def _generate_graph(
@@ -168,8 +168,8 @@ class Network:
 
     def __repr__(self):
         return "Network(nw_mode=%s, ew_mode=%s, num_nodes=%i, k=%i)" % (
-            self._node_weight_generator.mode,
-            self._edge_weight_generator.mode,
+            self.node_weight_generator.mode,
+            self.edge_weight_generator.mode,
             self.num_nodes,
             self.k,
         )
@@ -187,16 +187,18 @@ class Network:
         return list(self.graph.nodes())
 
     def _set_node_weights(self) -> NoReturn:
-        self.node_weights = self._node_weight_generator.generate(self.graph)
+        self.node_weights = self.node_weight_generator.generate(self.graph)
 
     def _set_edge_weights(self) -> NoReturn:
-        self.edge_weights = self._edge_weight_generator.generate(self.graph)
+        self.edge_weights = self.edge_weight_generator.generate(self.graph)
         nx.set_edge_attributes(
             self.graph,
             {edge: {"latency": value} for edge, value in self.edge_weights.items()},
         )
 
-    def get_edge_weight(self, node1: int, node2: int) -> Union[float, None]:
+    def get_edge_weight(
+        self, node1: int, node2: int, external=None
+    ) -> Union[float, None]:
         """
         Get edge weight for node pair
 
@@ -223,7 +225,12 @@ class Network:
         link = (node1, node2)
         if not link in self.edge_weights:
             link = (node2, node1)
-        return self.edge_weights.get(link, None)
+        if link in self.edge_weights:
+            return self.edge_weights[link]
+        elif external is not None:
+            return external.get_edge_weight(node1, node2)
+        else:
+            return None
 
     def sample_nodes(self, adversaries: List[int]) -> List[int]:
         """
@@ -328,16 +335,16 @@ class Network:
         undirected_G = graph.to_undirected()
         self.graph.update(undirected_G.edges(data=True), undirected_G.nodes())
         # update node weight: for centrality metrics every node weight must be updated
-        new_node_weights = self._node_weight_generator.generate(self.graph)
+        new_node_weights = self.node_weight_generator.generate(self.graph)
         for node, weight in new_node_weights.items():
             if (
                 reset_node_weights
                 or (self.node_weights.get(node) is None)
-                or self._node_weight_generator.mode in ["degree", "betweenness"]
+                or self.node_weight_generator.mode in ["degree", "betweenness"]
             ):
                 self.node_weights[node] = weight
         # update edge weights
-        new_edge_weights = self._edge_weight_generator.generate(self.graph)
+        new_edge_weights = self.edge_weight_generator.generate(self.graph)
         for link, weight in new_edge_weights.items():
             if reset_edge_weights or (self.get_edge_weight(link[0], link[1]) is None):
                 self.edge_weights[link] = weight

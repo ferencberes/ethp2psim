@@ -61,6 +61,20 @@ class Protocol:
 
     def __init__(self, network: Network):
         self.network = network
+        self.anonymity_network = None
+
+    @property
+    def anonymity_graph(self):
+        return None if self.anonymity_network is None else self.anonymity_network.graph
+
+    def change_anonimity_graph(self) -> NoReturn:
+        """Initialize or re-initialize anonymity graph for the anonymity phase of Dandelion, Dandelion++ or TOREnhanced protocols"""
+        G = self._generate_anonymity_graph()
+        self.anonymity_network = Network(
+            self.network.node_weight_generator,
+            self.network.edge_weight_generator,
+            graph=G,
+        )
 
     def propagate(self, pe: ProtocolEvent):
         """Propagate message based on protocol rules"""
@@ -88,7 +102,9 @@ class Protocol:
         spreading_phase : float
             Set whether the spreading phase starts at the receiver node
         """
-        elapsed_time = pe.delay + self.network.get_edge_weight(sender, receiver)
+        elapsed_time = pe.delay + self.network.get_edge_weight(
+            sender, receiver, self.anonymity_network
+        )
         return ProtocolEvent(
             sender, receiver, elapsed_time, pe.hops + 1, spreading_phase, path
         )
@@ -124,6 +140,9 @@ class BroadcastProtocol(Protocol):
 
     def __repr__(self):
         return "BroadcastProtocol(broadcast_mode=%s)" % self.broadcast_mode
+
+    def _generate_anonymity_graph(self) -> nx.Graph:
+        raise RuntimeError("Invalid call for BroadcastProtocol!")
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
@@ -182,12 +201,7 @@ class DandelionProtocol(BroadcastProtocol):
             self.broadcast_mode,
         )
 
-    def change_anonimity_graph(self) -> NoReturn:
-        """Initialize or re-initialize anonymity graph for the anonymity phase of the Dandelion++ protocol"""
-        self.anonymity_graph = self._approximate_anonymity_graph()
-        self.network.update(self.anonymity_graph)
-
-    def _approximate_anonymity_graph(self) -> nx.Graph:
+    def _generate_anonymity_graph(self) -> nx.Graph:
         """Approximate line graph used for the anonymity phase of the Dandelion protocol. This is the original algorithm described in the Dandelion paper. Link: https://arxiv.org/pdf/1701.04439.pdf"""
         # parameter of the algorithm
         k = 3
@@ -259,7 +273,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
             self.broadcast_mode,
         )
 
-    def _approximate_anonymity_graph(self) -> nx.Graph:
+    def _generate_anonymity_graph(self) -> nx.Graph:
         """Approximates a directed 4-regular graph in a fully-distributed fashion. See Algorithm 2 in the original Dandelion++ paper https://arxiv.org/pdf/1805.11060.pdf"""
         # This is going to be our anonymity graph
         AG = nx.DiGraph()
@@ -317,9 +331,9 @@ class TOREnhancedProtocol(BroadcastProtocol):
         super(TOREnhancedProtocol, self).__init__(network, broadcast_mode, seed)
         self.num_arms = num_arms
         self.num_hops = num_hops
-        self.init_tor_network()
+        self.change_anonimity_graph()
 
-    def init_tor_network(self):
+    def _generate_anonymity_graph(self) -> nx.Graph:
         """
         Examples
         --------
@@ -329,7 +343,9 @@ class TOREnhancedProtocol(BroadcastProtocol):
         >>> net = Network(nw_generator, ew_generator, num_nodes=1000, k=50)
         >>> num_edges = net.graph.number_of_edges()
         >>> tor = TOREnhancedProtocol(net, 1, 3)
-        >>> net.num_edges > num_edges
+        >>> net.num_edges == num_edges
+        True
+        >>> tor.anonymity_network.num_edges > 0
         True
         """
         self.tor_network = {}
@@ -346,10 +362,7 @@ class TOREnhancedProtocol(BroadcastProtocol):
                     tor_edges.append((arm_nodes[i], arm_nodes[i + 1]))
         G = nx.Graph()
         G.add_edges_from(tor_edges)
-        # print(G.number_of_nodes(), G.number_of_edges())
-        # TODO: later store channels apart from the p2p network
-        self.network.update(G)
-        # return G
+        return G
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
