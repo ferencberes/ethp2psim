@@ -95,7 +95,7 @@ class Adversary:
     ) -> NoReturn:
         """Randomly select given fraction of nodes to be adversaries unless the user defines the adversarial nodes"""
         if adversaries != None:
-            self.nodes = network.sample_nodes(adversaries)
+            self.nodes = adversaries
         else:
             num_adversaries = int(len(self.candidates) * self.ratio)
             self.nodes = network.sample_random_nodes(
