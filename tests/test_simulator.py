@@ -7,6 +7,7 @@ from network import Network, NodeWeightGenerator, EdgeWeightGenerator
 from protocols import BroadcastProtocol, DandelionProtocol
 from adversary import Adversary
 from message import Message
+from experiments import *
 
 SEED = 43
 
@@ -92,3 +93,24 @@ def test_evaluators_with_random_seed():
     assert (reports["first_reach"]["ndcg"] - 0.2907) < 0.0001
     assert (reports["first_sent"]["ndcg"] - 0.3606) < 0.0001
     assert (reports["dummy"]["ndcg"] - 0.2180) < 0.0001
+    
+def test_first_reach_vs_first_sent():
+    G = nx.DiGraph()
+    G.add_nodes_from([1, 2, 3])
+    G.add_weighted_edges_from([(1, 2, 0.9), (1, 3, 1.84), (2, 3, 0.85)], weight="latency")
+
+    net = Network(rnd_node_weight, EdgeWeightGenerator("custom"), graph=G)
+    protocol = BroadcastProtocol(net, "all", seed=44)
+    adv = Adversary(protocol, ratio=0.0, adversaries=[3])
+    sim = Simulator(adv, 1, messages=[Message(1)])
+
+    assert 3 in sim.adversary.nodes
+    assert len(sim.messages)==1
+
+    new_reports = run_and_eval(sim)
+
+    sim.messages[0].flush_queue(sim.adversary)
+
+    print(new_reports)
+    assert sim.adversary.predict_msg_source("first_sent").iloc[0][1]==1 
+    assert sim.adversary.predict_msg_source("first_reach").iloc[0][2]==1
