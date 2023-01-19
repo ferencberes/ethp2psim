@@ -27,7 +27,7 @@ class NodeWeightGenerator:
                 "Choose 'node_weight' from values ['random', 'stake', 'degree', 'betweenness']!"
             )
 
-    def generate(self, graph: nx.Graph) -> dict:
+    def generate(self, graph: nx.Graph, rng: Optional[np.random._generator.Generator] = None) -> dict:
         """
         Generate node weights for the nodes of the input graph.
 
@@ -35,6 +35,8 @@ class NodeWeightGenerator:
         ----------
         graph : networkx.Graph
             Provide graph to generate node weights
+        rng : Optional[np.random._generator.Generator]
+            Random number generator
 
         Examples
         --------
@@ -45,13 +47,15 @@ class NodeWeightGenerator:
         >>> len(nw_gen.generate(G))
         3
         """
+        if rng is None:
+            rng = self._rng
         nodes = graph.nodes
         if self.mode == "random":
             # nodes are weighted uniformly at random
-            weights = dict(zip(nodes, self._rng.random(size=len(nodes))))
+            weights = dict(zip(nodes, rng.random(size=len(nodes))))
         elif self.mode == "stake":
             # nodes are weighted by their staked ether ratio
-            weights = self._rng.choice(self._staked_eth.weights, size=len(nodes))
+            weights = rng.choice(self._staked_eth.weights, size=len(nodes))
             weights = weights / np.sum(weights)
             weights = dict(zip(nodes, weights))
         elif self.mode == "degree":
@@ -82,7 +86,7 @@ class EdgeWeightGenerator:
                 "Choose 'edge_weight' from values ['random', 'normal', 'custom', 'unweighted']!"
             )
 
-    def generate(self, graph: nx.Graph) -> dict:
+    def generate(self, graph: nx.Graph, rng: Optional[np.random._generator.Generator] = None) -> dict:
         """
         Generate edge weights (latency) for the edges of the input graph.
 
@@ -90,6 +94,8 @@ class EdgeWeightGenerator:
         ----------
         graph : networkx.Graph
             Provide graph to generate connections latencies
+        rng : Optional[np.random._generator.Generator]
+            Random number generator
 
         Examples
         --------
@@ -100,16 +106,18 @@ class EdgeWeightGenerator:
         >>> len(ew_gen.generate(G))
         4
         """
+        if rng is None:
+            rng = self._rng
         weights = {}
         edges = graph.edges
         if self.mode == "random":
             # set p2p latencies uniformly at random
-            weights = dict(zip(edges, 1000 * self._rng.random(size=len(edges))))
+            weights = dict(zip(edges, 1000 * rng.random(size=len(edges))))
         elif self.mode == "normal":
             # set p2p latencies according to Table 2: https://arxiv.org/pdf/1801.03998.pdf
             # negative latency values are prohibited
             weights = dict(
-                zip(edges, np.abs(self._rng.normal(loc=171, scale=76, size=len(edges))))
+                zip(edges, np.abs(rng.normal(loc=171, scale=76, size=len(edges))))
             )
         elif self.mode == "unweighted":
             weights = dict(zip(edges, np.ones(len(edges))))
@@ -187,10 +195,10 @@ class Network:
         return list(self.graph.nodes())
 
     def _set_node_weights(self) -> NoReturn:
-        self.node_weights = self.node_weight_generator.generate(self.graph)
+        self.node_weights = self.node_weight_generator.generate(self.graph, self._rng)
 
     def _set_edge_weights(self) -> NoReturn:
-        self.edge_weights = self.edge_weight_generator.generate(self.graph)
+        self.edge_weights = self.edge_weight_generator.generate(self.graph, self._rng)
         nx.set_edge_attributes(
             self.graph,
             {edge: {"latency": value} for edge, value in self.edge_weights.items()},
@@ -327,7 +335,7 @@ class Network:
         undirected_G = graph.to_undirected()
         self.graph.update(undirected_G.edges(data=True), undirected_G.nodes())
         # update node weight: for centrality metrics every node weight must be updated
-        new_node_weights = self.node_weight_generator.generate(self.graph)
+        new_node_weights = self.node_weight_generator.generate(self.graph, self._rng)
         for node, weight in new_node_weights.items():
             if (
                 reset_node_weights
@@ -336,7 +344,7 @@ class Network:
             ):
                 self.node_weights[node] = weight
         # update edge weights
-        new_edge_weights = self.edge_weight_generator.generate(self.graph)
+        new_edge_weights = self.edge_weight_generator.generate(self.graph, self._rng)
         for link, weight in new_edge_weights.items():
             if reset_edge_weights or (self.get_edge_weight(link[0], link[1]) is None):
                 self.edge_weights[link] = weight

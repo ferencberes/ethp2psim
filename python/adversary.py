@@ -64,7 +64,7 @@ class Adversary:
     def __init__(
         self,
         protocol: Protocol,
-        ratio: float,
+        ratio: float=0.1,
         active: bool = False,
         use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
@@ -100,6 +100,7 @@ class Adversary:
         """Randomly select given fraction of nodes to be adversaries unless the user defines the adversarial nodes"""
         if adversaries != None:
             self.nodes = adversaries
+            self.ratio = len(adversaries) / len(self.candidates)
         else:
             num_adversaries = int(len(self.candidates) * self.ratio)
             self.nodes = network.sample_random_nodes(

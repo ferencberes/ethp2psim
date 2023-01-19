@@ -64,18 +64,21 @@ def test_contact_time_quantiles():
     assert mean_contact_times[1] == 9
 
 
-def test_evaluators():
+def test_evaluators_with_random_seed():
+    seed = 42
     num_msg = 10
     net = Network(
-        NodeWeightGenerator("stake"),
+        NodeWeightGenerator("random"),
         EdgeWeightGenerator("normal"),
-        500,
-        3,
+        100,
+        20,
+        seed=seed
     )
-    protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
-    adv = Adversary(protocol, 0.1)
-    sim = Simulator(adv, num_msg, True)
-    sim.run(0.9)
+    dp = DandelionProtocol(net, 0.5, seed=seed)
+    adv = Adversary(dp, 0.1, seed=seed)
+    sim = Simulator(adv, num_msg, seed=seed, verbose=False)
+    sim.run()
+    reports = {}
     for estimator in ["first_reach", "first_sent", "shortest_path", "dummy"]:
         evaluator = Evaluator(sim, estimator)
         results = [
@@ -86,4 +89,9 @@ def test_evaluators():
         ]
         for res in results:
             assert len(res) == num_msg
-        assert len(evaluator.get_report()) == 6
+        reports[estimator] = evaluator.get_report()
+        assert len(reports[estimator]) == 6
+    # due to fixing random seeds the results are reproducible
+    assert (reports["first_reach"]["ndcg"] - 0.2907) < 0.0001
+    assert (reports["first_sent"]["ndcg"] - 0.3606) < 0.0001
+    assert (reports["dummy"]["ndcg"] - 0.2180) < 0.0001

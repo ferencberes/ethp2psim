@@ -59,7 +59,10 @@ class ProtocolEvent:
 class Protocol:
     """Abstraction for different message passing protocols"""
 
-    def __init__(self, network: Network):
+    def __init__(self, network: Network, seed: Optional[int] = None
+    ):
+        self._rng = np.random.default_rng(seed)
+        self._seed = seed
         self.network = network
         self.anonymity_network = None
 
@@ -74,6 +77,7 @@ class Protocol:
             self.network.node_weight_generator,
             self.network.edge_weight_generator,
             graph=G,
+            seed=self._seed
         )
 
     def propagate(self, pe: ProtocolEvent):
@@ -127,7 +131,7 @@ class BroadcastProtocol(Protocol):
     def __init__(
         self, network: Network, broadcast_mode: str = "sqrt", seed: Optional[int] = None
     ):
-        super(BroadcastProtocol, self).__init__(network)
+        super(BroadcastProtocol, self).__init__(network, seed)
         avg_degree = np.mean(list(dict(network.graph.degree()).values()))
         if avg_degree < 9.0 and broadcast_mode == "sqrt":
             raise ValueError(
@@ -136,7 +140,6 @@ class BroadcastProtocol(Protocol):
             )
         else:
             self.broadcast_mode = broadcast_mode
-        self._rng = np.random.default_rng(seed)
 
     def __repr__(self):
         return "BroadcastProtocol(broadcast_mode=%s)" % self.broadcast_mode

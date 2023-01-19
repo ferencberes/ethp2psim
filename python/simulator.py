@@ -21,6 +21,9 @@ class Simulator:
     use_node_weights : bool
         sample message sources with respect to node weights
     messages : Optional[List[Message]]
+        Set messages manually
+    seed: int (optional)
+        Random seed (disabled by default)
     """
 
     def __init__(
@@ -29,8 +32,10 @@ class Simulator:
         num_msg: Optional[int] = 10,
         use_node_weights: bool = False,
         messages: Optional[List[Message]] = None,
+        seed: Optional[int] = None,
         verbose: bool = False,
     ):
+        self._rng = np.random.default_rng(seed)
         if num_msg > 10:
             self.verbose = False
         else:
@@ -48,6 +53,7 @@ class Simulator:
                     replace=True,
                     use_weights=use_node_weights,
                     exclude=self.adversary.nodes,
+                    rng=self._rng
                 )
             ]
         else:
