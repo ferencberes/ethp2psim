@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
-from protocols import ProtocolEvent, Protocol
+from protocols import ProtocolEvent, Protocol, DandelionProtocol
 from network import Network
 from typing import Optional, NoReturn, Iterable, Union, List
 
@@ -198,3 +198,60 @@ class Adversary:
             raise ValueError(
                 "Choose 'estimator' from values ['first_reach', 'shortest_path', 'dummy']!"
             )
+            
+class DandelionAdversary(Adversary):
+    """
+    Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic
+
+    Parameters
+    ----------
+    protocol : protocol.Protocol
+        protocol that determines the rules of message passing
+    ratio : float
+        Fraction of adversary nodes in the P2P network
+    active : bool
+        Turn on to enable adversary nodes to deny message propagation
+    use_node_weights : bool
+        Sample adversary nodes with respect to node weights
+    adversaries: List[int]
+        Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
+    """
+
+    def __init__(
+        self,
+        protocol: Protocol,
+        ratio: float,
+        active: bool = False,
+        use_node_weights: bool = False,
+        adversaries: Optional[List[int]] = None,
+    ):
+        super(Adversary, self).__init__(protocol, ratio, active, use_node_weights, adversaries)
+
+    def __repr__(self):
+        return "DandelionAdversary(ratio=%.2f, active=%s, use_node_weights=%s)" % (
+            self.ratio,
+            self.active,
+            self.use_node_weights,
+        )
+
+    @property
+    def network(self):
+        return self.protocol.network
+    
+    @property
+    def candidates(self) -> list:
+        return list(self.network.graph.nodes())
+    
+    
+    def predict_msg_source(self, dandelionProtocol: DandelionProtocol) -> pd.DataFrame:
+        """
+        Predict source nodes for each message in a run of the Dandelion Protocol
+
+        We implement the adversarial strategy against the Dandelion Protocol described by Sharma et al. https://arxiv.org/pdf/2201.11860.pdf See page 5 for a description of the adversary.
+
+        Parameters
+        ----------
+        dandelionProtocol : The instantiation of the DandelionProtocol that the adversary tries to deanonymize 
+
+        """
+        
