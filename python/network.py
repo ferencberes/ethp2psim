@@ -232,19 +232,6 @@ class Network:
         else:
             return None
 
-    def sample_nodes(self, adversaries: List[int]) -> List[int]:
-        """
-        Sample network nodes defined by the user/simulator
-
-        Parameters
-        ----------
-        adversaries : list[int]
-            The list of nodes/adversaries the user wants to set for the simulation
-        """
-        nodes = list(self.graph.nodes())
-        res_list = [nodes[i] for i in adversaries]
-        return list(np.array(res_list))
-
     def sample_random_nodes(
         self,
         count: int,
