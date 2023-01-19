@@ -59,8 +59,7 @@ class ProtocolEvent:
 class Protocol:
     """Abstraction for different message passing protocols"""
 
-    def __init__(self, network: Network, seed: Optional[int] = None
-    ):
+    def __init__(self, network: Network, seed: Optional[int] = None):
         self._rng = np.random.default_rng(seed)
         self._seed = seed
         self.network = network
@@ -77,7 +76,7 @@ class Protocol:
             self.network.node_weight_generator,
             self.network.edge_weight_generator,
             graph=G,
-            seed=self._seed
+            seed=self._seed,
         )
 
     def propagate(self, pe: ProtocolEvent):

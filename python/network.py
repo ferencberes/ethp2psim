@@ -27,7 +27,9 @@ class NodeWeightGenerator:
                 "Choose 'node_weight' from values ['random', 'stake', 'degree', 'betweenness']!"
             )
 
-    def generate(self, graph: nx.Graph, rng: Optional[np.random._generator.Generator] = None) -> dict:
+    def generate(
+        self, graph: nx.Graph, rng: Optional[np.random._generator.Generator] = None
+    ) -> dict:
         """
         Generate node weights for the nodes of the input graph.
 
@@ -86,7 +88,9 @@ class EdgeWeightGenerator:
                 "Choose 'edge_weight' from values ['random', 'normal', 'custom', 'unweighted']!"
             )
 
-    def generate(self, graph: nx.Graph, rng: Optional[np.random._generator.Generator] = None) -> dict:
+    def generate(
+        self, graph: nx.Graph, rng: Optional[np.random._generator.Generator] = None
+    ) -> dict:
         """
         Generate edge weights (latency) for the edges of the input graph.
 
@@ -165,7 +169,11 @@ class Network:
         self._set_edge_weights()
 
     def _generate_graph(
-        self, num_nodes: int, k: int, graph: Optional[nx.Graph] = None, seed: Optional[int] = None
+        self,
+        num_nodes: int,
+        k: int,
+        graph: Optional[nx.Graph] = None,
+        seed: Optional[int] = None,
     ) -> NoReturn:
         if graph is not None:
             self.graph = graph.copy()
@@ -246,7 +254,7 @@ class Network:
         replace: bool,
         use_weights: bool = False,
         exclude: Optional[List[int]] = None,
-        rng: Optional[np.random._generator.Generator] = None
+        rng: Optional[np.random._generator.Generator] = None,
     ) -> List[int]:
         """
         Sample network nodes uniformly at random

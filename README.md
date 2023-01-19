@@ -81,7 +81,7 @@ nx.draw(dp.anonymity_graph, node_size=20)
 
 Finally, initilaize a passive **adversary** that controls random 10% of all nodes:
 ```python
-adv = Adversary(net, 0.1, active=False)
+adv = Adversary(dp, 0.1, active=False)
 ```
 You could also use an active adversary (by setting `active=True`) that refuse to propagate received messages.
 
@@ -92,7 +92,7 @@ In this experiment, let's **simulate** 10 random messages for the same P2P netwo
 First, initialize the simulator by setting the protocol, the adversary, the number of simulated messages, and how the message source nodes are sampled.
 ```python
 from simulator import Simulation
-sim = Simulator(dp, adv, num_msg=10, use_node_weights=True, verbose=False)
+sim = Simulator(adv, num_msg=10, use_node_weights=True, verbose=False)
 ```
 Due to the `use_node_weights=True` setting, source nodes for messages are randomly sampled with respect to their staked Ether amount in accordance with the formerly prepared `NodeWeightGenerator`.
 
