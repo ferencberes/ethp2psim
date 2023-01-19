@@ -12,21 +12,18 @@ from tqdm import tqdm
 
 
 def run_and_eval(
-    adversary: Adversary,
-    num_msg: int,
+    simulator: Simulator,
     coverage_threshold: float = 1.0,
     estimators: list = ["first_reach", "first_sent"],
     q=np.arange(0.1, 1.0, 0.1),
 ) -> list:
     """
-    Run and evaluate simulation with the predefined components
+    Run and evaluate simulator
 
     Parameters
     ----------
-    adversary: Adversary
-        Predefined adversary that observes messages during the simulation
-    num_msg: int
-        Number of messages to simulate
+    simulator: simulator.Simulator
+        Simulator to be executed
     coverage_threshold: float
         Fraction of nodes the messages must reach in the simulation
     estimators: list
@@ -39,29 +36,30 @@ def run_and_eval(
     >>> from network import *
     >>> from protocols import BroadcastProtocol
     >>> from adversary import Adversary
+    >>> from simulator import Simulator
     >>> nw_gen = NodeWeightGenerator("random")
     >>> ew_gen = EdgeWeightGenerator("normal")
     >>> net = Network(nw_gen, ew_gen, 50, 5)
     >>> protocol = BroadcastProtocol(net, broadcast_mode="all")
     >>> adversary = Adversary(protocol, 0.1)
-    >>> reports = run_and_eval(adversary, 10, q=[0.1,0.2,0.5], estimators=["first_sent"])
+    >>> simulator = Simulator(adversary, 10)
+    >>> reports = run_and_eval(simulator, q=[0.1,0.2,0.5], estimators=["first_sent"])
     >>> len(reports)
     1
     >>> len(reports[0]["mean_contact_time_quantiles"])
     3
     """
-    sim = Simulator(adversary, num_msg, verbose=False)
-    sim.run(coverage_threshold=coverage_threshold)
-    mean_contact_times, std_contact_times = sim.node_contact_time_quantiles(q=q)
+    simulator.run(coverage_threshold=coverage_threshold)
+    mean_contact_times, std_contact_times = simulator.node_contact_time_quantiles(q=q)
     reports = []
     for estimator in estimators:
-        evaluator = Evaluator(sim, estimator)
+        evaluator = Evaluator(simulator, estimator)
         report = evaluator.get_report()
         report["mean_contact_time_quantiles"] = list(mean_contact_times)
         report["std_contact_time_quantiles"] = list(std_contact_times)
-        report["network"] = str(adversary.protocol.network)
-        report["protocol"] = str(adversary.protocol)
-        report["adversary"] = str(adversary)
+        report["adversary"] = str(simulator.adversary)
+        report["protocol"] = str(simulator.adversary.protocol)
+        report["network"] = str(simulator.adversary.protocol.network)
         reports.append(report)
     return reports
 
@@ -86,13 +84,15 @@ def run_experiment(
     >>> from network import *
     >>> from protocols import DandelionProtocol
     >>> from adversary import Adversary
+    >>> from simulator import Simulator
     >>> def single_experiment(config: dict):
     ...     nw_gen = NodeWeightGenerator("random")
     ...     ew_gen = EdgeWeightGenerator("normal")
     ...     net = Network(nw_gen, ew_gen, 50, 5)
     ...     protocol = DandelionProtocol(net, spreading_proba=config["proba"], broadcast_mode="all")
     ...     adversary = Adversary(protocol, 0.1)
-    ...     return run_and_eval(adversary, 10, estimators=["first_sent"])
+    ...     simulator = Simulator(adversary, 10)
+    ...     return run_and_eval(simulator, estimators=["first_sent"])
     >>> probas = [0.5,0.25]
     >>> queries = [{"proba":p} for p in probas]
     >>> results = run_experiment(single_experiment, queries)

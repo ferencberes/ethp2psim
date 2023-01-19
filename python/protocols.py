@@ -176,6 +176,21 @@ class DandelionProtocol(BroadcastProtocol):
         Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
     seed: int (optional)
         Random seed (disabled by default)
+
+    Examples
+    --------
+    >>> from network import *
+    >>> nw_generator = NodeWeightGenerator("random")
+    >>> ew_generator = EdgeWeightGenerator("normal")
+    >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
+    >>> num_edges = net.graph.number_of_edges()
+    >>> dandelion = DandelionProtocol(net, spreading_proba=0.5, broadcast_mode='all')
+    >>> dandelion.anonymity_network.num_edges == net.num_nodes
+    True
+
+    References
+    ----------
+    Shaileshh Bojja Venkatakrishnan, Giulia Fanti, and Pramod Viswanath. 2017. Dandelion: Redesigning the Bitcoin Network for Anonymity. In Proceedings of the 2017 ACM SIGMETRICS / International Conference on Measurement and Modeling of Computer Systems (SIGMETRICS '17 Abstracts). Association for Computing Machinery, New York, NY, USA, 57. https://doi.org/10.1145/3078505.3078528
     """
 
     def __init__(
@@ -254,6 +269,21 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
         Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
     seed: int (optional)
         Random seed (disabled by default)
+
+    Examples
+    --------
+    >>> from network import *
+    >>> nw_generator = NodeWeightGenerator("random")
+    >>> ew_generator = EdgeWeightGenerator("normal")
+    >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
+    >>> num_edges = net.graph.number_of_edges()
+    >>> dandelion_pp = DandelionPlusPlusProtocol(net, spreading_proba=0.5, broadcast_mode='all')
+    >>> dandelion_pp.anonymity_network.num_edges == (2 * net.num_nodes)
+    True
+
+    References
+    ----------
+    Giulia Fanti, Shaileshh Bojja Venkatakrishnan, Surya Bakshi, Bradley Denby, Shruti Bhargava, Andrew Miller, and Pramod Viswanath. 2018. Dandelion++: Lightweight Cryptocurrency Networking with Formal Anonymity Guarantees. Proc. ACM Meas. Anal. Comput. Syst. 2, 2, Article 29 (June 2018), 35 pages. https://doi.org/10.1145/3224424
     """
 
     def __init__(
@@ -274,7 +304,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
         )
 
     def _generate_anonymity_graph(self) -> nx.Graph:
-        """Approximates a directed 4-regular graph in a fully-distributed fashion. See Algorithm 2 in the original Dandelion++ paper https://arxiv.org/pdf/1805.11060.pdf"""
+        """Approximates a directed 4-regular graph in a fully-distributed fashion. See Algorithm 2 in the Dandelion++ paper."""
         # This is going to be our anonymity graph
         AG = nx.DiGraph()
         AG.add_nodes_from(self.network.nodes)
@@ -289,7 +319,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
         return AG
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
-        """Propagate messages based on the Dandelion++ protocol rules. See Algorithm 5 in the original Dandelion++ paper. Link: https://arxiv.org/pdf/1805.11060.pdf"""
+        """Propagate messages based on the Dandelion++ protocol rules. See Algorithm 5 in Dandelion++ paper."""
         if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
             return BroadcastProtocol.propagate(self, pe)
         else:
@@ -318,6 +348,17 @@ class TOREnhancedProtocol(BroadcastProtocol):
         Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
     seed: int (optional)
         Random seed (disabled by default)
+
+    Examples
+    --------
+    >>> from network import *
+    >>> nw_generator = NodeWeightGenerator("random")
+    >>> ew_generator = EdgeWeightGenerator("normal")
+    >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
+    >>> num_edges = net.graph.number_of_edges()
+    >>> tor = TOREnhancedProtocol(net, num_arms=2, num_hops=3, broadcast_mode='all')
+    >>> tor.anonymity_network.num_edges > 2 * net.num_nodes
+    True
     """
 
     def __init__(
@@ -334,20 +375,6 @@ class TOREnhancedProtocol(BroadcastProtocol):
         self.change_anonimity_graph()
 
     def _generate_anonymity_graph(self) -> nx.Graph:
-        """
-        Examples
-        --------
-        >>> from network import *
-        >>> nw_generator = NodeWeightGenerator("random")
-        >>> ew_generator = EdgeWeightGenerator("normal")
-        >>> net = Network(nw_generator, ew_generator, num_nodes=1000, k=50)
-        >>> num_edges = net.graph.number_of_edges()
-        >>> tor = TOREnhancedProtocol(net, 1, 3)
-        >>> net.num_edges == num_edges
-        True
-        >>> tor.anonymity_network.num_edges > 0
-        True
-        """
         self.tor_network = {}
         tor_edges = []
         for node in self.network.nodes:

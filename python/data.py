@@ -21,6 +21,7 @@ class GoerliTestnet:
         if not os.path.exists(filename):
             url = "https://info.ilab.sztaki.hu/~fberes/eth/goerliTopology.edgelist"
             _ = wget.download(url)
+            print()
         self.graph = nx.read_edgelist(filename)
 
 

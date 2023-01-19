@@ -96,7 +96,7 @@ def test_broadcast_single_message():
     msg = Message(0)
     receiver_order = [0, 1, 3, 4, 5, 2]
     for i, receiver in enumerate(receiver_order):
-        msg.process(protocol, adv)
+        msg.process(adv)
         assert receiver in msg.history
         assert len(msg.history) == i + 1
     assert msg.history[0][0].hops == 0
@@ -120,9 +120,9 @@ def test_dummy_adversary():
     adv = Adversary(protocol, 1 / 3)
     # start a message from the middle
     msg = Message(0)
-    msg.process(protocol, adv)
-    msg.process(protocol, adv)
-    msg.process(protocol, adv)
+    msg.process(adv)
+    msg.process(adv)
+    msg.process(adv)
     # test dummy estimator
     predictions = adv.predict_msg_source(estimator="dummy")
     print(predictions)
@@ -159,7 +159,7 @@ def test_dandelion_single_message():
     msg = Message(0)
     # broadcast will happen in the 2nd step
     for i in range(11):
-        ratio, broadcast, _ = msg.process(protocol, adv)
+        ratio, broadcast, _ = msg.process(adv)
         print(i, ratio, broadcast)
         if i < 1:
             assert not broadcast
@@ -178,7 +178,7 @@ def test_dandelion_pp_single_message():
     msg = Message(0)
     # broadcast will happen in the 2nd step
     for i in range(11):
-        ratio, broadcast, _ = msg.process(protocol, adv)
+        ratio, broadcast, _ = msg.process(adv)
         print(i, ratio, broadcast)
         if i < 1:
             assert not broadcast

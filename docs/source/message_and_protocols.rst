@@ -1,6 +1,8 @@
 Message spreading with protocols
 ================================
 
+At the hearth of message spreading we have the :class:`message.Message` class that represents objects traveling on the P2P network (e.g., block proposal, attestation, simple transaction).
+
 .. automodule:: message
    :members:
    :inherited-members:

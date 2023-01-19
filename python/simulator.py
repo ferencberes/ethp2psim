@@ -14,7 +14,7 @@ class Simulator:
 
     Parameters
     ----------
-    adv : adversary.Adversary
+    adversary : adversary.Adversary
         adversary that observe messages in the P2P network
     num_msg : Optional[int] (Default: 10)
         number of messages to simulate
@@ -25,18 +25,17 @@ class Simulator:
 
     def __init__(
         self,
-        adv: Adversary,
+        adversary: Adversary,
         num_msg: Optional[int] = 10,
         use_node_weights: bool = False,
         messages: Optional[List[Message]] = None,
-        verbose: bool = True,
+        verbose: bool = False,
     ):
         if num_msg > 10:
             self.verbose = False
         else:
             self.verbose = verbose
-        self.adversary = adv
-        self.protocol = self.adversary.protocol
+        self.adversary = adversary
         self.use_node_weights = use_node_weights
         if messages != None:
             self._messages = messages
@@ -44,7 +43,7 @@ class Simulator:
             # NOTE: by default adversary nodes don't send messages in the simulation - they only observe
             self._messages = [
                 Message(sender)
-                for sender in self.protocol.network.sample_random_nodes(
+                for sender in self.adversary.protocol.network.sample_random_nodes(
                     num_msg,
                     replace=True,
                     use_weights=use_node_weights,
@@ -82,9 +81,7 @@ class Simulator:
             num_trials = 0
             while node_coverage < coverage_threshold and num_trials < max_trials:
                 old_node_coverage = node_coverage
-                node_coverage, spreading_phase, stop = msg.process(
-                    self.protocol, self.adversary
-                )
+                node_coverage, spreading_phase, stop = msg.process(self.adversary)
                 if stop:
                     break
                 if node_coverage > old_node_coverage:
@@ -151,7 +148,7 @@ class Evaluator:
 
     @property
     def message_spread_ratios(self):
-        N = self.simulator.protocol.network.num_nodes
+        N = self.simulator.adversary.protocol.network.num_nodes
         return [len(msg.history) / N for msg in self.simulator.messages]
 
     @property
@@ -177,7 +174,7 @@ class Evaluator:
                 ranks.append(self.proba_ranks.loc[msg.mid, msg.source])
             else:
                 # what to do with unseen messages? random rank might be better...
-                ranks.append(self.simulator.protocol.network.num_nodes)
+                ranks.append(self.simulator.adversary.protocol.network.num_nodes)
         return np.array(ranks)
 
     @property
@@ -199,7 +196,7 @@ class Evaluator:
 
     @property
     def entropies(self):
-        num_nodes = self.simulator.protocol.network.num_nodes
+        num_nodes = self.simulator.adversary.protocol.network.num_nodes
         rnd_entropy = entropy(1.0 / num_nodes * np.ones(num_nodes), base=2)
         entropies = []
         for msg in self.simulator.messages:

@@ -56,19 +56,17 @@ class Message:
             self._update_history(record)
             _ = self._update_adversary(record, adv)
 
-    def process(
-        self, protocol: Protocol, adv: Adversary
-    ) -> Iterable[Union[float, bool]]:
+    # TODO: protocol can be eliminated! it is stored within the adversary!
+    def process(self, adv: Adversary) -> Iterable[Union[float, bool]]:
         """
-        Propagate message based on the given protocol
+        Propagate message based on the adversary. Note that adversary also contains the protocol.
 
         Parameters
         ----------
-        protocol : protocols.Protocol
-            Protocol that defines message spreading
         adv : adversary.Adversary
             Adversary that records observed messages on the P2P network
         """
+        protocol = adv.protocol
         # stop propagation if every node received the message
         stop = False
         if len(self.history) < protocol.network.num_nodes:

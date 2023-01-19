@@ -85,7 +85,7 @@ class Adversary:
     @property
     def network(self):
         return self.protocol.network
-    
+
     @property
     def candidates(self) -> list:
         return list(self.network.graph.nodes())

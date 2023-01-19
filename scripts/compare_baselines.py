@@ -23,15 +23,15 @@ def run_single_experiment(config):
         )
         num_msg = int(config["network_size"] * config["msg_fraction"])
     protocols = [BroadcastProtocol(net, broadcast_mode=config["broadcast_mode"])]
-    for broadcast_proba in config["dandelion_broadcast_probas"]:
+    for spreading_proba in config["dandelion_spreading_probas"]:
         protocols.append(
             DandelionProtocol(
-                net, broadcast_proba, broadcast_mode=config["broadcast_mode"]
+                net, spreading_proba, broadcast_mode=config["broadcast_mode"]
             )
         )
         protocols.append(
             DandelionPlusPlusProtocol(
-                net, broadcast_proba, broadcast_mode=config["broadcast_mode"]
+                net, spreading_proba, broadcast_mode=config["broadcast_mode"]
             )
         )
     single_run_results = []
@@ -39,7 +39,8 @@ def run_single_experiment(config):
         adv = Adversary(
             protocol, ratio=config["adversary_ratio"], active=config["active_adversary"]
         )
-        new_reports = run_and_eval(adv, num_msg)
+        sim = Simulator(adv, num_msg, verbose=False)
+        new_reports = run_and_eval(sim)
         single_run_results += new_reports
     # print(config["adversary_ratio"])
     return single_run_results
@@ -52,7 +53,7 @@ parser.add_argument(
     "--network_size",
     type=int,
     default=500,
-    help="P2P network size (Default: 0). If you specify 0 then Goerli Testnet is used.",
+    help="P2P network size (Default: 500). If you specify 0 then Goerli Testnet is used.",
 )
 parser.add_argument(
     "--degree",
@@ -88,7 +89,7 @@ parser.add_argument(
     help="Define whether a node sends message to all neighbors or just a square root amount of them (Default: sqrt)",
 )
 parser.add_argument(
-    "--dandelion_broadcast_probas",
+    "--dandelion_spreading_probas",
     nargs="+",
     type=float,
     default=[],

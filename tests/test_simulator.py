@@ -19,7 +19,7 @@ def test_dummy():
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
     adv = Adversary(protocol, 0.334)
     sim = Simulator(adv, 3)
-    assert sim.protocol.network.num_nodes == 10
+    assert sim.adversary.protocol.network.num_nodes == 10
     assert len(sim.messages) == 3
 
 
