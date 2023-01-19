@@ -57,6 +57,8 @@ class Adversary:
         Sample adversary nodes with respect to node weights
     adversaries: List[int]
         Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
+    seed: int (optional)
+        Random seed (disabled by default)
     """
 
     def __init__(
@@ -66,7 +68,9 @@ class Adversary:
         active: bool = False,
         use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
+        seed: Optional[int] = None,
     ):
+        self._rng = np.random.default_rng(seed)
         self.ratio = ratio
         self.protocol = protocol
         self.active = active
@@ -99,7 +103,7 @@ class Adversary:
         else:
             num_adversaries = int(len(self.candidates) * self.ratio)
             self.nodes = network.sample_random_nodes(
-                num_adversaries, use_weights=self.use_node_weights, replace=False
+                num_adversaries, use_weights=self.use_node_weights, replace=False, rng=self._rng
             )
 
     def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:

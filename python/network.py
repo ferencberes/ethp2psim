@@ -150,20 +150,20 @@ class Network:
         seed: Optional[int] = None,
     ):
         self._rng = np.random.default_rng(seed)
-        self._generate_graph(num_nodes, k, graph)
+        self._generate_graph(num_nodes, k, graph, seed)
         self.node_weight_generator = node_weight_gen
         self._set_node_weights()
         self.edge_weight_generator = edge_weight_gen
         self._set_edge_weights()
 
     def _generate_graph(
-        self, num_nodes: int, k: int, graph: Optional[nx.Graph] = None
+        self, num_nodes: int, k: int, graph: Optional[nx.Graph] = None, seed: Optional[int] = None
     ) -> NoReturn:
         if graph is not None:
             self.graph = graph.copy()
             self.k = -1
         else:
-            self.graph = nx.random_regular_graph(k, num_nodes)
+            self.graph = nx.random_regular_graph(k, num_nodes, seed)
             self.k = k
 
     def __repr__(self):
@@ -251,6 +251,7 @@ class Network:
         replace: bool,
         use_weights: bool = False,
         exclude: Optional[List[int]] = None,
+        rng: Optional[np.random._generator.Generator] = None
     ) -> List[int]:
         """
         Sample network nodes uniformly at random
@@ -263,8 +264,10 @@ class Network:
             Whether the sample is with or without replacement
         use_weights : bool
             Set to sample nodes with respect to their weights
-        exclude : list
+        exclude : Optional[list]
             List of nodes to exclude from the sample
+        rng : Optional[np.random._generator.Generator]
+            Random number generator
 
         Examples
         --------
@@ -279,6 +282,8 @@ class Network:
         >>> 4 in candidates
         False
         """
+        if rng is None:
+            rng = self._rng
         nodes = list(self.graph.nodes())
         weights = self.node_weights.copy()
         if exclude is not None:
@@ -289,9 +294,9 @@ class Network:
         sum_weights = np.sum(list(weights.values()))
         probas_arr = [weights[node] / sum_weights for node in nodes]
         if use_weights:
-            return list(self._rng.choice(nodes, count, replace=replace, p=probas_arr))
+            return list(rng.choice(nodes, count, replace=replace, p=probas_arr))
         else:
-            return list(self._rng.choice(nodes, count, replace=replace))
+            return list(rng.choice(nodes, count, replace=replace))
 
     def update(
         self,

@@ -227,7 +227,7 @@ class DandelionProtocol(BroadcastProtocol):
         for node in self.network.nodes:
             # pick k random targets from all nodes-{node}
             candidates = self.network.sample_random_nodes(
-                k, replace=False, exclude=[node]
+                k, replace=False, exclude=[node], rng=self._rng
             )
             # pick the smallest in-degree
             connectNode = candidates[0]
@@ -311,7 +311,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
         for node in self.network.nodes:
             # pick 2 random targets from all nodes-{node}
             candidates = self.network.sample_random_nodes(
-                2, replace=False, exclude=[node]
+                2, replace=False, exclude=[node], rng=self._rng
             )
             # make connections with the two selected nodes (latency generation is handled in network.Network.update())
             for candidate in candidates:
@@ -381,7 +381,7 @@ class TOREnhancedProtocol(BroadcastProtocol):
             self.tor_network[node] = []
             for _ in range(self.num_arms):
                 arm_nodes = self.network.sample_random_nodes(
-                    self.num_hops + 1, replace=False, exclude=[node]
+                    self.num_hops + 1, replace=False, exclude=[node], rng=self._rng
                 )
                 self.tor_network[node].append(arm_nodes)
                 tor_edges.append((node, arm_nodes[0]))

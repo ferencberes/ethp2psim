@@ -10,9 +10,8 @@ from message import Message
 
 SEED = 43
 
-rnd_node_weight = NodeWeightGenerator("random")
-rnd_edge_weight = EdgeWeightGenerator("random")
-
+rnd_node_weight = NodeWeightGenerator("random", seed=SEED)
+rnd_edge_weight = EdgeWeightGenerator("random", seed=SEED)
 
 def test_dummy():
     net = Network(rnd_node_weight, rnd_edge_weight, 10, 2)
