@@ -89,7 +89,7 @@ def test_broadcast_single_message():
     )
     print(net_custom.edge_weights)
     protocol = BroadcastProtocol(net_custom, broadcast_mode="all", seed=SEED)
-    adv = Adversary(protocol, adversaries=[2,3])
+    adv = Adversary(protocol, adversaries=[2, 3])
     # start a message from the middle
     msg = Message(0)
     receiver_order = [0, 1, 3, 4, 5, 2]
@@ -115,7 +115,7 @@ def test_broadcast_single_message():
 def test_dummy_adversary():
     net = Network(rnd_node_weight, rnd_edge_weight, graph=G, seed=SEED)
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
-    adv = Adversary(protocol, adversaries=[2,3])
+    adv = Adversary(protocol, adversaries=[2, 3])
     # start a message from the middle
     msg = Message(0)
     msg.process(adv)
@@ -152,13 +152,13 @@ def test_dandelion_single_message():
     net = Network(
         rnd_node_weight, EdgeWeightGenerator("unweighted"), graph=H, seed=SEED
     )
-    protocol = DandelionProtocol(net, 1 / 4, broadcast_mode="all", seed=SEED+1)
-    #print(protocol.anonymity_graph.edges())
+    protocol = DandelionProtocol(net, 1 / 4, broadcast_mode="all", seed=SEED + 1)
+    # print(protocol.anonymity_graph.edges())
     adv = Adversary(protocol)
     msg = Message(0)
     # broadcast will happen in the 5th step
     for i in range(13):
-        #print(msg.queue)
+        # print(msg.queue)
         ratio, broadcast, _ = msg.process(adv)
         print(i, ratio, broadcast)
         if i < 6:
@@ -173,7 +173,9 @@ def test_dandelion_pp_single_message():
     net = Network(
         rnd_node_weight, EdgeWeightGenerator("unweighted"), graph=H, seed=SEED
     )
-    protocol = DandelionPlusPlusProtocol(net, 1 / 4, broadcast_mode="all", seed=SEED+2)
+    protocol = DandelionPlusPlusProtocol(
+        net, 1 / 4, broadcast_mode="all", seed=SEED + 2
+    )
     adv = Adversary(protocol)
     msg = Message(0)
     # broadcast will happen in the 4th step

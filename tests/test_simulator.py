@@ -14,6 +14,7 @@ SEED = 43
 rnd_node_weight = NodeWeightGenerator("random", seed=SEED)
 rnd_edge_weight = EdgeWeightGenerator("random", seed=SEED)
 
+
 def test_dummy():
     net = Network(rnd_node_weight, rnd_edge_weight, 10, 2)
     protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
@@ -69,11 +70,7 @@ def test_evaluators_with_random_seed():
     seed = 42
     num_msg = 10
     net = Network(
-        NodeWeightGenerator("random"),
-        EdgeWeightGenerator("normal"),
-        100,
-        20,
-        seed=seed
+        NodeWeightGenerator("random"), EdgeWeightGenerator("normal"), 100, 20, seed=seed
     )
     dp = DandelionProtocol(net, 0.5, seed=seed)
     adv = Adversary(dp, 0.1, seed=seed)

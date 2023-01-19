@@ -53,7 +53,7 @@ class Simulator:
                     replace=True,
                     use_weights=use_node_weights,
                     exclude=self.adversary.nodes,
-                    rng=self._rng
+                    rng=self._rng,
                 )
             ]
         else:

@@ -64,7 +64,7 @@ class Adversary:
     def __init__(
         self,
         protocol: Protocol,
-        ratio: float=0.1,
+        ratio: float = 0.1,
         active: bool = False,
         use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
@@ -104,7 +104,10 @@ class Adversary:
         else:
             num_adversaries = int(len(self.candidates) * self.ratio)
             self.nodes = network.sample_random_nodes(
-                num_adversaries, use_weights=self.use_node_weights, replace=False, rng=self._rng
+                num_adversaries,
+                use_weights=self.use_node_weights,
+                replace=False,
+                rng=self._rng,
             )
 
     def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:
@@ -203,7 +206,8 @@ class Adversary:
             raise ValueError(
                 "Choose 'estimator' from values ['first_reach', 'shortest_path', 'dummy']!"
             )
-            
+
+
 class DandelionAdversary(Adversary):
     """
     Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic
@@ -230,7 +234,9 @@ class DandelionAdversary(Adversary):
         use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
     ):
-        super(Adversary, self).__init__(protocol, ratio, active, use_node_weights, adversaries)
+        super(Adversary, self).__init__(
+            protocol, ratio, active, use_node_weights, adversaries
+        )
 
     def __repr__(self):
         return "DandelionAdversary(ratio=%.2f, active=%s, use_node_weights=%s)" % (
@@ -242,12 +248,11 @@ class DandelionAdversary(Adversary):
     @property
     def network(self):
         return self.protocol.network
-    
+
     @property
     def candidates(self) -> list:
         return list(self.network.graph.nodes())
-    
-    
+
     def predict_msg_source(self, dandelionProtocol: DandelionProtocol) -> pd.DataFrame:
         """
         Predict source nodes for each message in a run of the Dandelion Protocol
@@ -256,7 +261,6 @@ class DandelionAdversary(Adversary):
 
         Parameters
         ----------
-        dandelionProtocol : The instantiation of the DandelionProtocol that the adversary tries to deanonymize 
+        dandelionProtocol : The instantiation of the DandelionProtocol that the adversary tries to deanonymize
 
         """
-        
