@@ -34,12 +34,30 @@ def run_single_experiment(config):
                 net, spreading_proba, broadcast_mode=config["broadcast_mode"]
             )
         )
+    # use the same adversary nodes for all protocols
+    num_adv_nodes = int(net.num_nodes * config["adversary_ratio"])
+    if config["adversary_centrality_metric"] != "none":
+        adv_nodes = net.get_central_nodes(
+            num_adv_nodes, config["adversary_centrality_metric"]
+        )
+    else:
+        adv_nodes = net.sample_random_nodes(num_adv_nodes, False)
+    # use the same messages for all protocols
+    messages = [
+        Message(sender)
+        for sender in net.sample_random_nodes(
+            num_msg,
+            replace=True,
+            use_weights=True,  # random or stake
+            exclude=adv_nodes,
+        )
+    ]
     single_run_results = []
     for protocol in protocols:
         adv = Adversary(
-            protocol, ratio=config["adversary_ratio"], active=config["active_adversary"]
+            protocol, active=config["active_adversary"], adversaries=adv_nodes
         )
-        sim = Simulator(adv, num_msg, verbose=False)
+        sim = Simulator(adv, messages=messages, verbose=False)
         new_reports = run_and_eval(sim)
         single_run_results += new_reports
     # print(config["adversary_ratio"])
@@ -106,6 +124,14 @@ parser.add_argument(
     "--active_adversary",
     action="store_true",
     help="Set to use active adversary in the experiment",
+)
+
+parser.add_argument(
+    "--adversary_centrality_metric",
+    type=str,
+    choices=["degree", "betweenness", "pagerank", "none"],
+    default="none",
+    help="Set metric to choose top central nodes to be adversaries.",
 )
 parser.add_argument(
     "--num_trials", type=int, default=1, help="Number of trials (Default: 1)"

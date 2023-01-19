@@ -10,22 +10,20 @@ class NodeWeightGenerator:
 
     Parameters
     ----------
-    mode: {'random', 'stake', 'degree', 'betweenness'}, default 'random'
-        Nodes are weighted either randomly, according to their staked Ethereum value or by their network centrality scores (i.e, degree, Betwenness)
+    mode: {'random', 'stake'}, default 'random'
+        Nodes are weighted either randomly, according to their staked Ethereum value
     seed: int (optional)
         Random seed (disabled by default)
     """
 
     def __init__(self, mode: str = "random", seed: Optional[int] = None):
         self._rng = np.random.default_rng(seed)
-        if mode in ["random", "stake", "degree", "betweenness"]:
+        if mode in ["random", "stake"]:
             self.mode = mode
             if self.mode == "stake":
                 self._staked_eth = StakedEthereumDistribution()
         else:
-            raise ValueError(
-                "Choose 'node_weight' from values ['random', 'stake', 'degree', 'betweenness']!"
-            )
+            raise ValueError("Choose 'node_weight' from values ['random', 'stake']!")
 
     def generate(
         self, graph: nx.Graph, rng: Optional[np.random._generator.Generator] = None
@@ -52,18 +50,14 @@ class NodeWeightGenerator:
         if rng is None:
             rng = self._rng
         nodes = graph.nodes
-        if self.mode == "random":
-            # nodes are weighted uniformly at random
-            weights = dict(zip(nodes, rng.random(size=len(nodes))))
-        elif self.mode == "stake":
+        if self.mode == "stake":
             # nodes are weighted by their staked ether ratio
             weights = rng.choice(self._staked_eth.weights, size=len(nodes))
             weights = weights / np.sum(weights)
             weights = dict(zip(nodes, weights))
-        elif self.mode == "degree":
-            weights = dict(nx.degree(graph))
-        elif self.mode == "betweenness":
-            weights = dict(nx.betweenness_centrality(graph))
+        else:
+            # nodes are weighted uniformly at random
+            weights = dict(zip(nodes, rng.random(size=len(nodes))))
         return weights
 
 
@@ -248,6 +242,37 @@ class Network:
         else:
             return None
 
+    def get_central_nodes(self, k: int, metric: str = "degree"):
+        """
+        Get top central nodes of the P2P network
+
+        Parameters
+        ----------
+        k : int
+            Number of central nodes to return
+        metric : str {'betweenness','pagerank','degree'}
+            Choose centrality metric
+
+        Examples
+        --------
+        >>> from data import GoerliTestnet
+        >>> nw_gen = NodeWeightGenerator('random')
+        >>> ew_gen = EdgeWeightGenerator('normal')
+        >>> goerli = GoerliTestnet()
+        >>> net = Network(nw_gen, ew_gen, graph=goerli.graph)
+        >>> net.get_central_nodes(3, 'degree')
+        ['192', '772', '661']
+        """
+        if metric == "betweenness":
+            scores = dict(nx.betweenness_centrality(self.graph))
+        elif metric == "pagerank":
+            weights = dict(nx.pagerank(self.graph))
+        else:
+            weights = dict(nx.degree(self.graph))
+        ordered_nodes = sorted(weights.items(), key=lambda x: x[1], reverse=True)
+        top_nodes, top_scores = zip(*ordered_nodes[:k])
+        return list(top_nodes)
+
     def sample_random_nodes(
         self,
         count: int,
@@ -326,30 +351,22 @@ class Network:
         >>> G1.add_edges_from([(0,1),(1,2),(2,0)])
         >>> G2 = nx.Graph()
         >>> G2.add_edges_from([(2,3),(3,4),(4,0)])
-        >>> nw_gen = NodeWeightGenerator('degree')
+        >>> nw_gen = NodeWeightGenerator('random')
         >>> ew_gen = EdgeWeightGenerator('normal')
         >>> net = Network(nw_gen, ew_gen, graph=G1)
         >>> net.num_nodes
         3
-        >>> net.node_weights[2]
-        2
         >>> net.update(G2)
         >>> net.num_nodes
         5
-        >>> net.node_weights[2]
-        3
         """
         # update structure
         undirected_G = graph.to_undirected()
         self.graph.update(undirected_G.edges(data=True), undirected_G.nodes())
-        # update node weight: for centrality metrics every node weight must be updated
+        # update node weight
         new_node_weights = self.node_weight_generator.generate(self.graph, self._rng)
         for node, weight in new_node_weights.items():
-            if (
-                reset_node_weights
-                or (self.node_weights.get(node) is None)
-                or self.node_weight_generator.mode in ["degree", "betweenness"]
-            ):
+            if reset_node_weights or (self.node_weights.get(node) is None):
                 self.node_weights[node] = weight
         # update edge weights
         new_edge_weights = self.edge_weight_generator.generate(self.graph, self._rng)

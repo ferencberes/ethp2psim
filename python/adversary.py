@@ -41,6 +41,7 @@ class EavesdropEvent:
         )
 
 
+# TODO: use_node_weights might not be needed!
 class Adversary:
     """
     Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic

@@ -37,7 +37,7 @@ def test_invalid_edge_weight():
 
 
 def test_custom_graph():
-    for nw in ["random", "stake", "degree", "betweenness"]:
+    for nw in ["random", "stake"]:
         for ew in ["random", "normal", "unweighted"]:
             net = Network(NodeWeightGenerator(nw), EdgeWeightGenerator(ew), graph=G)
             assert net.num_nodes == 6
@@ -46,9 +46,7 @@ def test_custom_graph():
 
 
 def test_graph_update():
-    net = Network(NodeWeightGenerator("degree"), EdgeWeightGenerator("custom"), graph=G)
-    # node 1 has degree 2
-    assert net.node_weights[1] == 2
+    net = Network(rnd_node_weight, EdgeWeightGenerator("custom"), graph=G)
     H = nx.Graph()
     H.add_weighted_edges_from([(1, 5, 0.9), (5, 6, 0.1), (4, 5, 0.2)], weight="latency")
     net.update(H, reset_edge_weights=False, reset_node_weights=False)
@@ -56,8 +54,6 @@ def test_graph_update():
     assert (net.get_edge_weight(1, 5) - 0.9) < 0.0001
     assert (net.get_edge_weight(5, 6) - 0.1) < 0.0001
     assert (net.get_edge_weight(4, 5) - 0.1) < 0.0001
-    # node degree weights are always updated despite being `reset_node_weights=False`
-    assert net.node_weights[1] == 3
 
 
 def test_graph_update_with_reset():
