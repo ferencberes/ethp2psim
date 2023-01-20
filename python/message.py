@@ -56,7 +56,6 @@ class Message:
             self._update_history(record)
             _ = self._update_adversary(record, adv)
 
-    # TODO: protocol can be eliminated! it is stored within the adversary!
     def process(self, adv: Adversary) -> Iterable[Union[float, bool]]:
         """
         Propagate message based on the adversary. Note that adversary also contains the protocol.
@@ -86,7 +85,6 @@ class Message:
                             # do not send message to node who previously broadcasted it
                             heapq.heappush(self.queue, event)
             else:
-                self.flush_queue(adv)
                 stop = True
         return (
             (len(self.history) / protocol.network.num_nodes),

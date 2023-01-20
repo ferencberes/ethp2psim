@@ -96,6 +96,8 @@ class Simulator:
                     num_trials += 1
                 if self.verbose:
                     print(msg.mid, node_coverage, num_trials)
+            # NOTE: flushing message queue is essetial to correctly calculate the deanonymization power of the adversary
+            msg.flush_queue(self.adversary)
             if self.verbose:
                 print()
             coverage_for_messages.append(node_coverage)
