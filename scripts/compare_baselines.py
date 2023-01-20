@@ -11,27 +11,28 @@ from experiments import run_and_eval, run_experiment
 
 
 def run_single_experiment(config):
+    seed = np.random.randint(10**5)
     nw_generator = NodeWeightGenerator(config["nw_gen_mode"])
     ew_generator = EdgeWeightGenerator(config["ew_gen_mode"])
     if config["network_size"] == 0:
         G = GoerliTestnet().graph
-        net = Network(nw_generator, ew_generator, graph=G)
+        net = Network(nw_generator, ew_generator, graph=G, seed=seed)
         num_msg = int(G.number_of_nodes() * config["msg_fraction"])
     else:
         net = Network(
-            nw_generator, ew_generator, config["network_size"], config["degree"]
+            nw_generator, ew_generator, config["network_size"], config["degree"], seed=seed
         )
         num_msg = int(config["network_size"] * config["msg_fraction"])
-    protocols = [BroadcastProtocol(net, broadcast_mode=config["broadcast_mode"])]
+    protocols = [BroadcastProtocol(net, broadcast_mode=config["broadcast_mode"], seed=seed)]
     for spreading_proba in config["dandelion_spreading_probas"]:
         protocols.append(
             DandelionProtocol(
-                net, spreading_proba, broadcast_mode=config["broadcast_mode"]
+                net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
             )
         )
         protocols.append(
             DandelionPlusPlusProtocol(
-                net, spreading_proba, broadcast_mode=config["broadcast_mode"]
+                net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
             )
         )
     # use the same adversary nodes for all protocols
@@ -42,25 +43,17 @@ def run_single_experiment(config):
         )
     else:
         adv_nodes = net.sample_random_nodes(num_adv_nodes, False)
-    # use the same messages for all protocols
-    messages = [
-        Message(sender)
-        for sender in net.sample_random_nodes(
-            num_msg,
-            replace=True,
-            use_weights=True,  # random or stake
-            exclude=adv_nodes,
-        )
-    ]
     single_run_results = []
     for protocol in protocols:
         adv = Adversary(
-            protocol, active=config["active_adversary"], adversaries=adv_nodes
+            protocol, active=config["active_adversary"], adversaries=adv_nodes, seed=seed
         )
-        sim = Simulator(adv, messages=messages, verbose=False)
+        # by fixing the seed we sample the same messages
+        sim = Simulator(adv, num_msg, seed=seed, verbose=False)
+        #print()
+        #print(sim.messages)
         new_reports = run_and_eval(sim)
         single_run_results += new_reports
-    # print(config["adversary_ratio"])
     return single_run_results
 
 
@@ -96,8 +89,8 @@ parser.add_argument(
 parser.add_argument(
     "--msg_fraction",
     type=float,
-    default=0.05,
-    help="Fraction of nodes that send message in one simulation (Default: 0.05)",
+    default=0.1,
+    help="Fraction of nodes that send message in one simulation (Default: 0.1)",
 )
 parser.add_argument(
     "--broadcast_mode",
@@ -136,12 +129,12 @@ parser.add_argument(
 parser.add_argument(
     "--num_trials", type=int, default=1, help="Number of trials (Default: 1)"
 )
-parser.add_argument(
-    "--max_threads",
-    type=int,
-    default=1,
-    help="Maximum number of threads used to parallelize the execution (Default: 1)",
-)
+#parser.add_argument(
+#    "--max_threads",
+#    type=int,
+#    default=1,
+#    help="Maximum number of threads used to parallelize the execution (Default: 1)",
+#)
 parser.add_argument(
     "--output_file_prefix",
     type=str,
@@ -154,7 +147,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     adversary_ratios = args.adversary_ratios
     num_trials = args.num_trials
-    max_threads = args.max_threads
+    max_threads = 1#args.max_threads
     if args.output_file_prefix != None:
         output_file_prefix = args.output_file_prefix
     else:
