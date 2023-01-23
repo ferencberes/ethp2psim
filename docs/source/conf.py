@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'ethsim'
+project = 'ethp2psim'
 copyright = '2023, Ferenc Beres, Istvan Andras Seres, Domokos Miklos Kelen'
 author = 'Ferenc Beres, Istvan Andras Seres, Domokos Miklos Kelen'
 release = '0.0.1'

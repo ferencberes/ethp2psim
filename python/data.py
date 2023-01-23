@@ -19,7 +19,7 @@ class GoerliTestnet:
     def __init__(self):
         filename = "goerliTopology.edgelist"
         if not os.path.exists(filename):
-            url = "https://info.ilab.sztaki.hu/~fberes/eth/goerliTopology.edgelist"
+            url = "https://info.ilab.sztaki.hu/~fberes/ethp2psim/goerliTopology.edgelist"
             _ = wget.download(url)
             print()
         self.graph = nx.read_edgelist(filename)
@@ -40,7 +40,7 @@ class StakedEthereumDistribution:
         filename = "stakedEthereumDistribution.npy"
         if not os.path.exists(filename):
             url = (
-                "https://info.ilab.sztaki.hu/~fberes/eth/stakedEthereumDistribution.npy"
+                "https://info.ilab.sztaki.hu/~fberes/ethp2psim/stakedEthereumDistribution.npy"
             )
             _ = wget.download(url)
         weights = np.load(filename, allow_pickle=True)

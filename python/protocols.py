@@ -22,6 +22,34 @@ class ProtocolEvent:
         Flag to indicate whether the message entered the spreading phase
     path : list
         Remaining path for the message (only used in TOREnhancedProtocol)
+        
+        
+    Examples
+    --------
+    In a tiny example we show that we record message spreading with ProtocolEvents.
+    
+    >>> from network import *
+    >>> from message import Message
+    >>> from adversary import Adversary
+    >>> import networkx as nx
+    >>> G = nx.Graph()
+    >>> G.add_edges_from([(1,2),(2,3),(1,3)])
+    >>> nw_gen = NodeWeightGenerator('stake')
+    >>> ew_gen = EdgeWeightGenerator('normal')
+    >>> seed = 42
+    >>> net = Network(nw_gen, ew_gen, graph=G, seed=seed)
+    >>> protocol = BroadcastProtocol(net, broadcast_mode='all', seed=seed)
+    >>> adversary = Adversary(protocol, adversaries=[3], seed=seed)
+    >>> msg = Message(1)
+    >>> for _ in range(3):
+    ...    _ = msg.process(adversary)
+    >>> msg.flush_queue(adversary)
+    >>> # message reached node 2 only from node 1
+    >>> msg.history[2]
+    [ProtocolEvent(1, 2, 228.034291, 1, None)]
+    >>> # and it reached node 3 from node 1 and node 3
+    >>> msg.history[3]
+    [ProtocolEvent(1, 3, 242.482918, 1, None), ProtocolEvent(2, 3, 250.755617, 2, None)]
     """
 
     def __init__(
@@ -83,7 +111,7 @@ class Protocol:
         """Propagate message based on protocol rules"""
         pass
 
-    def get_new_event(
+    def _get_new_event(
         self,
         sender: int,
         receiver: int,
@@ -125,6 +153,18 @@ class BroadcastProtocol(Protocol):
         Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor.
     seed: int (optional)
         Random seed (disabled by default)
+    
+    Examples
+    --------
+    The broadcast protocol has no anonymity graph.
+    
+    >>> from network import *
+    >>> nw_generator = NodeWeightGenerator("random")
+    >>> ew_generator = EdgeWeightGenerator("normal")
+    >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
+    >>> broadcast = BroadcastProtocol(net, broadcast_mode='all')
+    >>> broadcast.anonymity_network is None
+    True
     """
 
     def __init__(
@@ -160,7 +200,7 @@ class BroadcastProtocol(Protocol):
             receivers = neighbors
         for receiver in receivers:
             if receiver != pe.sender:
-                new_events.append(self.get_new_event(forwarder, receiver, pe, True))
+                new_events.append(self._get_new_event(forwarder, receiver, pe, True))
         return new_events, True
 
 
@@ -181,6 +221,8 @@ class DandelionProtocol(BroadcastProtocol):
 
     Examples
     --------
+    The anonymity graph is a line graph where the number of edges equals to the number of nodes.
+    
     >>> from network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
@@ -253,7 +295,7 @@ class DandelionProtocol(BroadcastProtocol):
             ]
             # assert len(anonimity_graph_neighbors) == 1
             return [
-                self.get_new_event(node, anonimity_graph_neighbors[0], pe, False)
+                self._get_new_event(node, anonimity_graph_neighbors[0], pe, False)
             ], False
 
 
@@ -274,6 +316,8 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
 
     Examples
     --------
+    The anonymity graph is an approximate four regular graph.
+    
     >>> from network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
@@ -331,7 +375,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
                 neigh for neigh in self.anonymity_graph.neighbors(node)
             ]
             receiver_node = self._rng.choice(anonimity_graph_neighbors, size=1)[0]
-            return [self.get_new_event(node, receiver_node, pe, False)], False
+            return [self._get_new_event(node, receiver_node, pe, False)], False
 
 
 class TOREnhancedProtocol(BroadcastProtocol):
@@ -404,14 +448,14 @@ class TOREnhancedProtocol(BroadcastProtocol):
             if path is None:
                 # message is at starting node: start each arm
                 return [
-                    self.get_new_event(node, arm[0], pe, False, arm)
+                    self._get_new_event(node, arm[0], pe, False, arm)
                     for arm in self.tor_network[node]
                 ], False
             else:
                 if len(path) > 1:
                     # intermediary node in the tor network
                     return [
-                        self.get_new_event(node, path[1], pe, False, path[1:])
+                        self._get_new_event(node, path[1], pe, False, path[1:])
                     ], False
                 else:
                     # broadcaster node in the tor network
