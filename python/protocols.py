@@ -75,11 +75,12 @@ class ProtocolEvent:
             return False
 
     def __repr__(self):
-        return "ProtocolEvent(%i, %i, %f, %i, %s)" % (
+        return "ProtocolEvent(%i, %i, %f, %i, %s, %s)" % (
             self.sender,
             self.receiver,
             self.delay,
             self.hops,
+            self.spreading_phase,
             self.path,
         )
 

@@ -254,7 +254,7 @@ class DandelionAdversary(Adversary):
     def candidates(self) -> list:
         return list(self.network.graph.nodes())
 
-    def predict_msg_source(self, dandelionProtocol: DandelionProtocol) -> pd.DataFrame:
+    def predict_msg_source(self, protocol: DandelionProtocol) -> pd.DataFrame:
         """
         Predict source nodes for each message in a run of the Dandelion Protocol
 
@@ -265,3 +265,42 @@ class DandelionAdversary(Adversary):
         dandelionProtocol : The instantiation of the DandelionProtocol that the adversary tries to deanonymize
 
         """
+        probabilities = {}
+        for i in self.captured_events:
+            probabilities[i.mid] = [0 for j in range(protocol.network.num_nodes)]
+    
+            heardFromStemmingPhase = []
+            firstBroadcaster = -1
+    
+            ## Who is the first node that reports to the adversary in the stem phase?
+            if not i.protocol_event.spreading_phase and (i.protocol_event.sender not in heardFromStemmingPhase) and (i.protocol_event.sender not in self.nodes):
+                heardFromStemmingPhase.append(i.protocol_event.sender)
+                continue
+            ## The first broadcaster the adversary knows about
+            if i.protocol_event.spreading_phase and firstBroadcaster==-1:
+                firstBroadcaster = i.protocol_event.sender
+    
+            shortestPathLength = sys.maxsize
+            shortestAdvPath = []
+            for k in self.nodes:
+                if heardFromStemmingPhase==[]:
+                    path = nx.shortest_path(protocol.anonymity_graph,k,firstBroadcaster)
+                else:
+                    path = nx.shortest_path(protocol.anonymity_graph,k,heardFromStemmingPhase[0])   
+                if len(path) < shortestPathLength and len(path)!=2:
+                    shortestAdvPath = path
+                    shortestPathLength = len(path)
+    
+        
+            probSum = 0 # See Equation 2 here: https://arxiv.org/pdf/2201.11860.pdf
+            for node in range(shortestPathLength):   
+                ## The broadcaster node is not the originator, since in Dandelion the message should have at least 1 hop
+                ## We also want to exclude adversarial nodes
+                if node!=0 and shortestAdvPath[shortestPathLength-node-1] not in self.nodes:
+                    probabilities[i.mid][shortestAdvPath[shortestPathLength-node-1]]=pow(protocol.spreading_proba,node)
+                    probSum+=pow(protocol.spreading_proba,node)
+          
+            for j in range(len(probabilities[i.mid])):
+                probabilities[i.mid][j]/=probSum
+            break
+        deanonProbas = pd.DataFrame.from_dict(probabilities, orient='index')
