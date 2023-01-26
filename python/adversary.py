@@ -18,6 +18,34 @@ class EavesdropEvent:
         Source node of the message
     protocol_event : protocols.ProtocolEvent
         Contains message spreading related information
+        
+    Examples
+    --------
+    In this small triangle graph, the triangle inequality does hold for the manually set channel latencies. That is why the message originating from node 1 reaches node 3 (the adversary) faster through node 2.
+    
+    >>> from network import *
+    >>> from message import Message
+    >>> from protocols import BroadcastProtocol
+    >>> from adversary import Adversary
+    >>> G = nx.DiGraph()
+    >>> G.add_nodes_from([1, 2, 3])
+    >>> G.add_weighted_edges_from([(1, 2, 0.9), (1, 3, 1.84), (2, 3, 0.85)], weight="latency")
+    >>> net = Network(NodeWeightGenerator("random"), EdgeWeightGenerator("custom"), graph=G)
+    >>> protocol = BroadcastProtocol(net, "all", seed=44)
+    >>> adv = Adversary(protocol, adversaries=[3])
+    >>> msg = Message(1)
+    >>> for _ in range(3):
+    ...    _ = msg.process(adv)
+    >>> msg.flush_queue(adv)
+    >>> # message reached node 3 from both nodes 1 and 2
+    >>> len(adv.captured_events)
+    2
+    >>> # message reached node 3 faster through node 2 (1.75 ms)
+    >>> adv.captured_events[0].protocol_event
+    ProtocolEvent(2, 3, 1.750000, 2, True, None)
+    >>> # message reached node 3 slower from node 1 (1.84 ms)
+    >>> adv.captured_events[1].protocol_event
+    ProtocolEvent(1, 3, 1.840000, 1, True, None)
     """
 
     def __init__(self, mid: str, source: int, pe: ProtocolEvent):
@@ -40,8 +68,6 @@ class EavesdropEvent:
             self.protocol_event,
         )
 
-
-# TODO: use_node_weights might not be needed!
 class Adversary:
     """
     Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic
@@ -54,12 +80,41 @@ class Adversary:
         Fraction of adversary nodes in the P2P network
     active : bool
         Turn on to enable adversary nodes to deny message propagation
-    use_node_weights : bool
-        Sample adversary nodes with respect to node weights
     adversaries: List[int]
         Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
     seed: int (optional)
         Random seed (disabled by default)
+        
+    Examples
+    --------
+    The simplest ways to select nodes controlled by the adversary is to randomly sample a given fraction (e.g, 20%) from all nodes.
+    
+    >>> from network import *
+    >>> from protocols import BroadcastProtocol
+    >>> from adversary import Adversary
+    >>> nw_gen = NodeWeightGenerator('stake')
+    >>> ew_gen = EdgeWeightGenerator('normal')
+    >>> net = Network(nw_gen, ew_gen, 10, 3)
+    >>> protocol = BroadcastProtocol(net, broadcast_mode='all')
+    >>> adversary = Adversary(protocol, 0.2)
+    >>> len(adversary.nodes)
+    2
+    
+    Another possible approach is to manually set adversarial nodes. For example, you can choose to set nodes with the highest degrees.
+    
+    >>> from network import *
+    >>> from protocols import BroadcastProtocol
+    >>> from adversary import Adversary
+    >>> seed = 42
+    >>> G = nx.barabasi_albert_graph(20, 3, seed=seed)
+    >>> nw_gen = NodeWeightGenerator('stake')
+    >>> ew_gen = EdgeWeightGenerator('normal')
+    >>> net = Network(nw_gen, ew_gen, graph=G, seed=seed)
+    >>> adv_nodes = net.get_central_nodes(4, 'degree')
+    >>> protocol = BroadcastProtocol(net, broadcast_mode='all', seed=seed)
+    >>> adversary = Adversary(protocol, adversaries=adv_nodes, seed=seed)
+    >>> adversary.nodes
+    [5, 0, 4, 6]
     """
 
     def __init__(
@@ -67,7 +122,6 @@ class Adversary:
         protocol: Protocol,
         ratio: float = 0.1,
         active: bool = False,
-        use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
         seed: Optional[int] = None,
     ):
@@ -75,16 +129,14 @@ class Adversary:
         self.ratio = ratio
         self.protocol = protocol
         self.active = active
-        self.use_node_weights = use_node_weights
         self.captured_events = []
         self.captured_msgs = set()
         self._sample_adversary_nodes(self.network, adversaries)
 
     def __repr__(self):
-        return "Adversary(ratio=%.2f, active=%s, use_node_weights=%s)" % (
+        return "Adversary(ratio=%.2f, active=%s)" % (
             self.ratio,
             self.active,
-            self.use_node_weights,
         )
 
     @property
@@ -106,13 +158,21 @@ class Adversary:
             num_adversaries = int(len(self.candidates) * self.ratio)
             self.nodes = network.sample_random_nodes(
                 num_adversaries,
-                use_weights=self.use_node_weights,
+                use_weights=False,
                 replace=False,
                 rng=self._rng,
             )
 
     def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:
-        """Adversary records the observed information"""
+        """
+        Adversary records the observed information.
+        
+        Parameters
+        ----------
+        ee : EavesdropEvent
+            EavesdropEvent that the adversary receives
+            
+        """
         self.captured_events.append(ee)
         self.captured_msgs.add(ee.mid)
 
@@ -153,7 +213,7 @@ class Adversary:
         probas_by_adversary = {}
         # precompute predictions for adversary nodes
         for a in active_adversary_nodes:
-            # TODO: later we can eliminate candidates where there are other adversaries on the shortest path! Handle the case when there are multiple adversaries on the path!
+            # NOTE: later we can eliminate candidates where there are other adversaries on the shortest path! Handle the case when there are multiple adversaries on the path!
             distances = nx.single_source_dijkstra(
                 self.network.graph, a, weight="latency"
             )[0]
@@ -193,6 +253,31 @@ class Adversary:
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
             * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
             * dummy: the probability is divided equally between non-adversary nodes.
+        
+        Examples
+        --------
+        In this small triangle graph, the triangle inequality does hold for the manually set channel latencies. That is why the adversary node 3 can correctly predicting node 1 to be the message source by using the first sent estimator heuristic.
+        
+        >>> from network import *
+        >>> from message import Message
+        >>> from protocols import BroadcastProtocol
+        >>> from adversary import Adversary
+        >>> G = nx.DiGraph()
+        >>> G.add_nodes_from([1, 2, 3])
+        >>> G.add_weighted_edges_from([(1, 2, 0.9), (1, 3, 1.84), (2, 3, 0.85)], weight="latency")
+        >>> net = Network(NodeWeightGenerator("random"), EdgeWeightGenerator("custom"), graph=G)
+        >>> protocol = BroadcastProtocol(net, "all", seed=44)
+        >>> adv = Adversary(protocol, adversaries=[3])
+        >>> msg = Message(1)
+        >>> for _ in range(3):
+        ...    _ = msg.process(adv)
+        >>> msg.flush_queue(adv)
+        >>> # first reach estimator thinks the message source is node 2 that is not true
+        >>> dict(adv.predict_msg_source(estimator='first_reach').iloc[0])
+        {1: 0.0, 2: 1.0, 3: 0.0}
+        >>> # first sent estimator is correct by saying that node 1 is the message source
+        >>> dict(adv.predict_msg_source(estimator='first_sent').iloc[0])
+        {1: 1.0, 2: 0.0, 3: 0.0}
         """
         if estimator in ["first_reach", "first_sent"]:
             _, _, received_from, predictions = self._find_first_contact(estimator)

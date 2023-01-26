@@ -46,10 +46,10 @@ class ProtocolEvent:
     >>> msg.flush_queue(adversary)
     >>> # message reached node 2 only from node 1
     >>> msg.history[2]
-    [ProtocolEvent(1, 2, 228.034291, 1, None)]
+    [ProtocolEvent(1, 2, 228.034291, 1, True, None)]
     >>> # and it reached node 3 from node 1 and node 3
     >>> msg.history[3]
-    [ProtocolEvent(1, 3, 242.482918, 1, None), ProtocolEvent(2, 3, 250.755617, 2, None)]
+    [ProtocolEvent(1, 3, 242.482918, 1, True, None), ProtocolEvent(2, 3, 250.755617, 2, True, None)]
     """
 
     def __init__(
