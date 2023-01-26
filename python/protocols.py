@@ -287,7 +287,8 @@ class DandelionProtocol(BroadcastProtocol):
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
-        if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
+        flip_coin = (0 < pe.hops) 
+        if pe.spreading_phase or (flip_coin and (self._rng.random() < self.spreading_proba)):
             return super(DandelionProtocol, self).propagate(pe)
         else:
             node = pe.receiver
@@ -367,7 +368,8 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate messages based on the Dandelion++ protocol rules. See Algorithm 5 in Dandelion++ paper."""
-        if pe.spreading_phase or (self._rng.random() < self.spreading_proba):
+        flip_coin = (0 < pe.hops) 
+        if pe.spreading_phase or (flip_coin and (self._rng.random() < self.spreading_proba)):
             return BroadcastProtocol.propagate(self, pe)
         else:
             node = pe.receiver
