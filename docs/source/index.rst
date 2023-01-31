@@ -38,6 +38,8 @@ The results show that using Dandelion(++) the adversary significantly loses from
    message_and_protocols
    adversary
    simulator
+   contributions
+   acknowledgements
 
 Indices and tables
 ==================
