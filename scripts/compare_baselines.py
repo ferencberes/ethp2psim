@@ -20,10 +20,16 @@ def run_single_experiment(config):
         num_msg = int(G.number_of_nodes() * config["msg_fraction"])
     else:
         net = Network(
-            nw_generator, ew_generator, config["network_size"], config["degree"], seed=seed
+            nw_generator,
+            ew_generator,
+            config["network_size"],
+            config["degree"],
+            seed=seed,
         )
         num_msg = int(config["network_size"] * config["msg_fraction"])
-    protocols = [BroadcastProtocol(net, broadcast_mode=config["broadcast_mode"], seed=seed)]
+    protocols = [
+        BroadcastProtocol(net, broadcast_mode=config["broadcast_mode"], seed=seed)
+    ]
     for spreading_proba in config["dandelion_spreading_probas"]:
         protocols.append(
             DandelionProtocol(
@@ -46,12 +52,15 @@ def run_single_experiment(config):
     single_run_results = []
     for protocol in protocols:
         adv = Adversary(
-            protocol, active=config["active_adversary"], adversaries=adv_nodes, seed=seed
+            protocol,
+            active=config["active_adversary"],
+            adversaries=adv_nodes,
+            seed=seed,
         )
         # by fixing the seed we sample the same messages
         sim = Simulator(adv, num_msg, seed=seed, verbose=False)
-        #print()
-        #print(sim.messages)
+        # print()
+        # print(sim.messages)
         new_reports = run_and_eval(sim)
         single_run_results += new_reports
     return single_run_results
@@ -129,12 +138,12 @@ parser.add_argument(
 parser.add_argument(
     "--num_trials", type=int, default=1, help="Number of trials (Default: 1)"
 )
-#parser.add_argument(
+# parser.add_argument(
 #    "--max_threads",
 #    type=int,
 #    default=1,
 #    help="Maximum number of threads used to parallelize the execution (Default: 1)",
-#)
+# )
 parser.add_argument(
     "--output_file_prefix",
     type=str,
@@ -147,7 +156,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     adversary_ratios = args.adversary_ratios
     num_trials = args.num_trials
-    max_threads = 1#args.max_threads
+    max_threads = 1  # args.max_threads
     if args.output_file_prefix != None:
         output_file_prefix = args.output_file_prefix
     else:

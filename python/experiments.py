@@ -154,7 +154,18 @@ def extract_config_columns(df: pd.DataFrame) -> pd.DataFrame:
     return tmp_df
 
 
-def prepare_results_for_visualization(df: pd.DataFrame, id_vars: list=["graph_model", "protocol", "adversary_ratio", "adversary_type", "adversary_centrality", "estimator", "broadcast_mode"]) -> pd.DataFrame:
+def prepare_results_for_visualization(
+    df: pd.DataFrame,
+    id_vars: list = [
+        "graph_model",
+        "protocol",
+        "adversary_ratio",
+        "adversary_type",
+        "adversary_centrality",
+        "estimator",
+        "broadcast_mode",
+    ],
+) -> pd.DataFrame:
     return df.drop(["inverse_rank", "entropy"], axis=1).melt(
         value_vars=["hit_ratio", "ndcg", "message_spread_ratio"],
         var_name="metric",

@@ -65,6 +65,7 @@ def test_contact_time_quantiles():
     assert mean_contact_times[0] == 6
     assert mean_contact_times[1] == 9
 
+
 """#tmp disable
 def test_evaluators_with_random_seed():
     seed = 42
@@ -94,6 +95,7 @@ def test_evaluators_with_random_seed():
     assert (reports["first_sent"]["ndcg"] - 0.3606) < 0.0001
     assert (reports["dummy"]["ndcg"] - 0.2180) < 0.0001
 """
+
 
 def test_first_reach_vs_first_sent():
     G = nx.DiGraph()

@@ -24,11 +24,11 @@ class Simulator:
         Set messages manually
     seed: int (optional)
         Random seed (disabled by default)
-        
+
     Examples
     --------
     Sample message sources with respect to stake distribution
-    
+
     >>> from network import *
     >>> from adversary import Adversary
     >>> from protocols import BroadcastProtocol
@@ -40,9 +40,9 @@ class Simulator:
     >>> simulator = Simulator(adversary, 20, use_node_weights=True)
     >>> len(simulator.messages)
     20
-    
+
     Set 5 messages originating from node 0
-    
+
     >>> from network import *
     >>> from message import Message
     >>> from adversary import Adversary
@@ -96,7 +96,7 @@ class Simulator:
     @property
     def messages(self):
         return self._messages
-    
+
     @property
     def message_sources(self):
         return [msg.source for msg in self.messages]
@@ -116,11 +116,11 @@ class Simulator:
             stop propagating a message if it reached the given fraction of network nodes
         max_trials : int
             stop propagating a message if it does not reach any new nodes within `max_trials` steps
-            
+
         Examples
         --------
         Run simulation until each message reaches 90% of all nodes
-        
+
         >>> from network import *
         >>> from adversary import Adversary
         >>> from protocols import BroadcastProtocol
@@ -170,11 +170,11 @@ class Simulator:
         ----------
         q : list (Default: numpy.arange(0.1, 1.0, 0.1)))
            Node quantiles
-           
+
         Examples
         --------
         Observe the mean and standard deviation of propagation times until the messages reach 50% and 95% of all nodes.
-        
+
         >>> from network import *
         >>> from adversary import Adversary
         >>> from protocols import BroadcastProtocol
@@ -223,11 +223,11 @@ class Evaluator:
         * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
         * first_sent: the node that sent the message the earliest to the receiver
         * dummy: the probability is divided equally between non-adversary nodes.
-        
+
     Examples
     --------
     Observe the complete evaluation pipeline below. First, initialize network, protocol, adversary. Then, simulate 20 messages with these components. Finally, query the report using the first sent estimator for the aversary.
-        
+
     >>> from network import *
     >>> from adversary import Adversary
     >>> from protocols import BroadcastProtocol

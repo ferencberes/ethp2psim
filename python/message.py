@@ -12,7 +12,7 @@ class Message:
     ----------
     source : int
         Source node of the message
-        
+
     Examples
     --------
     >>> from network import *
@@ -67,11 +67,11 @@ class Message:
         ----------
         adv : adversary.Adversary
             Adversary that records observed messages on the P2P network
-            
+
         Examples
         --------
         This step is important to showcase the true deanonymization power of the adversary as it should get every message ever sent to its nodes in the P2P network. Later, we will see that it has a huge relevance when the adversary tries to predict message sources using the 'first sent' heuristic.
-        
+
         >>> from network import *
         >>> from protocols import BroadcastProtocol
         >>> from adversary import Adversary
@@ -106,11 +106,11 @@ class Message:
         ----------
         adv : adversary.Adversary
             Adversary that records observed messages on the P2P network
-            
+
         Examples
         --------
         Here, we present the full picture for message propagation. The message is iteratively processed until it reaches the desired fraction of nodes. Flushing the queue of unprocessed messages is still an essential final step.
-        
+
         >>> from network import *
         >>> from protocols import BroadcastProtocol
         >>> from adversary import Adversary

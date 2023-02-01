@@ -22,12 +22,12 @@ class ProtocolEvent:
         Flag to indicate whether the message entered the spreading phase
     path : list
         Remaining path for the message (only used in TOREnhancedProtocol)
-        
-        
+
+
     Examples
     --------
     In a tiny example we show that we record message spreading with ProtocolEvents.
-    
+
     >>> from network import *
     >>> from message import Message
     >>> from adversary import Adversary
@@ -154,11 +154,11 @@ class BroadcastProtocol(Protocol):
         Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor.
     seed: int (optional)
         Random seed (disabled by default)
-    
+
     Examples
     --------
     The broadcast protocol has no anonymity graph.
-    
+
     >>> from network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
@@ -223,7 +223,7 @@ class DandelionProtocol(BroadcastProtocol):
     Examples
     --------
     The anonymity graph is a line graph where the number of edges equals to the number of nodes.
-    
+
     >>> from network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
@@ -287,8 +287,10 @@ class DandelionProtocol(BroadcastProtocol):
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
-        flip_coin = (0 < pe.hops) 
-        if pe.spreading_phase or (flip_coin and (self._rng.random() < self.spreading_proba)):
+        flip_coin = 0 < pe.hops
+        if pe.spreading_phase or (
+            flip_coin and (self._rng.random() < self.spreading_proba)
+        ):
             return super(DandelionProtocol, self).propagate(pe)
         else:
             node = pe.receiver
@@ -319,7 +321,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
     Examples
     --------
     The anonymity graph is an approximate four regular graph.
-    
+
     >>> from network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
@@ -368,8 +370,10 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate messages based on the Dandelion++ protocol rules. See Algorithm 5 in Dandelion++ paper."""
-        flip_coin = (0 < pe.hops) 
-        if pe.spreading_phase or (flip_coin and (self._rng.random() < self.spreading_proba)):
+        flip_coin = 0 < pe.hops
+        if pe.spreading_phase or (
+            flip_coin and (self._rng.random() < self.spreading_proba)
+        ):
             return BroadcastProtocol.propagate(self, pe)
         else:
             node = pe.receiver

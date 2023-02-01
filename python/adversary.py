@@ -18,11 +18,11 @@ class EavesdropEvent:
         Source node of the message
     protocol_event : protocols.ProtocolEvent
         Contains message spreading related information
-        
+
     Examples
     --------
     In this small triangle graph, the triangle inequality does hold for the manually set channel latencies. That is why the message originating from node 1 reaches node 3 (the adversary) faster through node 2.
-    
+
     >>> from network import *
     >>> from message import Message
     >>> from protocols import BroadcastProtocol
@@ -68,6 +68,7 @@ class EavesdropEvent:
             self.protocol_event,
         )
 
+
 class Adversary:
     """
     Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic
@@ -84,11 +85,11 @@ class Adversary:
         Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
     seed: int (optional)
         Random seed (disabled by default)
-        
+
     Examples
     --------
     The simplest ways to select nodes controlled by the adversary is to randomly sample a given fraction (e.g, 20%) from all nodes.
-    
+
     >>> from network import *
     >>> from protocols import BroadcastProtocol
     >>> from adversary import Adversary
@@ -99,9 +100,9 @@ class Adversary:
     >>> adversary = Adversary(protocol, 0.2)
     >>> len(adversary.nodes)
     2
-    
+
     Another possible approach is to manually set adversarial nodes. For example, you can choose to set nodes with the highest degrees.
-    
+
     >>> from network import *
     >>> from protocols import BroadcastProtocol
     >>> from adversary import Adversary
@@ -166,12 +167,12 @@ class Adversary:
     def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:
         """
         Adversary records the observed information.
-        
+
         Parameters
         ----------
         ee : EavesdropEvent
             EavesdropEvent that the adversary receives
-            
+
         """
         self.captured_events.append(ee)
         self.captured_msgs.add(ee.mid)
@@ -225,11 +226,11 @@ class Adversary:
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
             * first_sent: the node that sent the message the earliest to the receiver
             * dummy: the probability is divided equally between non-adversary nodes.
-        
+
         Examples
         --------
         In this small triangle graph, the triangle inequality does hold for the manually set channel latencies. That is why the adversary node 3 can correctly predicting node 1 to be the message source by using the first sent estimator heuristic.
-        
+
         >>> from network import *
         >>> from message import Message
         >>> from protocols import BroadcastProtocol
@@ -325,38 +326,51 @@ class DandelionAdversary(Adversary):
             if i.mid in probabilities.keys():
                 continue
             probabilities[i.mid] = [0 for j in range(protocol.network.num_nodes)]
-    
+
             heardFromStemmingPhase = []
             firstBroadcaster = -1
             ## Who is the first node that reports to the adversary in the stem phase?
-            if not i.protocol_event.spreading_phase and len(heardFromStemmingPhase)==0 and (i.protocol_event.sender not in self.nodes):
+            if (
+                not i.protocol_event.spreading_phase
+                and len(heardFromStemmingPhase) == 0
+                and (i.protocol_event.sender not in self.nodes)
+            ):
                 heardFromStemmingPhase.append(i.protocol_event.sender)
             ## The first broadcaster the adversary knows about
-            if i.protocol_event.spreading_phase and firstBroadcaster==-1:
+            if i.protocol_event.spreading_phase and firstBroadcaster == -1:
                 firstBroadcaster = i.protocol_event.sender
-    
+
             shortestPathLength = sys.maxsize
             shortestAdvPath = []
             for k in self.nodes:
-                if heardFromStemmingPhase==[]:
-                    path = nx.shortest_path(protocol.anonymity_graph,k,firstBroadcaster)
+                if heardFromStemmingPhase == []:
+                    path = nx.shortest_path(
+                        protocol.anonymity_graph, k, firstBroadcaster
+                    )
                 else:
-                    path = nx.shortest_path(protocol.anonymity_graph,k,heardFromStemmingPhase[0])   
-                if len(path) < shortestPathLength and len(path)!=2:
+                    path = nx.shortest_path(
+                        protocol.anonymity_graph, k, heardFromStemmingPhase[0]
+                    )
+                if len(path) < shortestPathLength and len(path) != 2:
                     shortestAdvPath = path
                     shortestPathLength = len(path)
-            print("First Broadcaster",firstBroadcaster)
-    
+            print("First Broadcaster", firstBroadcaster)
+
             print(shortestAdvPath)
-            probSum = 0 # See Equation 2 here: https://arxiv.org/pdf/2201.11860.pdf
-            for node in range(shortestPathLength):   
+            probSum = 0  # See Equation 2 here: https://arxiv.org/pdf/2201.11860.pdf
+            for node in range(shortestPathLength):
                 ## The broadcaster node is not the originator, since in Dandelion the message should have at least 1 hop
                 ## We also want to exclude adversarial nodes
-                if node!=0 and shortestAdvPath[shortestPathLength-node-1] not in self.nodes:
-                    probabilities[i.mid][shortestAdvPath[shortestPathLength-node-1]]=pow(protocol.spreading_proba,node)
-                    probSum+=pow(protocol.spreading_proba,node)
+                if (
+                    node != 0
+                    and shortestAdvPath[shortestPathLength - node - 1] not in self.nodes
+                ):
+                    probabilities[i.mid][
+                        shortestAdvPath[shortestPathLength - node - 1]
+                    ] = pow(protocol.spreading_proba, node)
+                    probSum += pow(protocol.spreading_proba, node)
 
             for j in range(len(probabilities[i.mid])):
-                probabilities[i.mid][j]/=probSum
-        deanonProbas = pd.DataFrame.from_dict(probabilities, orient='index')
+                probabilities[i.mid][j] /= probSum
+        deanonProbas = pd.DataFrame.from_dict(probabilities, orient="index")
         return deanonProbas
