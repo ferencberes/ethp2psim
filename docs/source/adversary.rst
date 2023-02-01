@@ -26,4 +26,4 @@ Finally, we introduce the :class:`adversary.EavesdropEvent` class that is used w
 
 .. autoclass:: adversary.EavesdropEvent
    
-So far, we have mostly shown how to interact with only one :class:`message.Message`. But you can only gain meaningful insights by simulation various messages at once. In the next section, we show how to do this with ease.
+So far, we have mostly shown how to interact with only one :class:`message.Message`. But you can only gain meaningful insights by simulating various messages at once. In the next section, we show how to do this with ease.

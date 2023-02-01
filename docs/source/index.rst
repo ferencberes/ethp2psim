@@ -18,6 +18,9 @@ Our simulator has the following major components that you can use to build up co
 
 Follow the :doc:`quickstart` for some introdunctionary examples on how to merge these components into a simulation!
 
+Motivation
+----------
+
 To highlight the potential in our simulator, we show the average fraction of messages (y-axis) deanomyzed by the adversary with respect to different factors:
 
 * i.) the fraction of P2P network nodes controlled by the adversary (x-axis)
@@ -29,6 +32,12 @@ To highlight the potential in our simulator, we show the average fraction of mes
 
 The results show that using Dandelion(++) the adversary significantly loses from its deanonymization power. Furthermore, in case of real-world Goerli testnet data and high-degree adversarial nodes the simple broadcasting would be a very bad choice as the adversary can easily predict the source node more than 50% of the messages. 
 
+Acknowledgements
+----------------
+
+The development of this simulator and our research was funded by the Ethereum Foundation's `Academic Grant Rounds 2022 <https://blog.ethereum.org/2022/07/29/academic-grants-grantee-announce>`_. 
+Thank you for your generous support!
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -39,7 +48,7 @@ The results show that using Dandelion(++) the adversary significantly loses from
    adversary
    simulator
    contributions
-   acknowledgements
+   
 
 Indices and tables
 ==================

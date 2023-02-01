@@ -24,6 +24,39 @@ class Simulator:
         Set messages manually
     seed: int (optional)
         Random seed (disabled by default)
+        
+    Examples
+    --------
+    Sample message sources with respect to stake distribution
+    
+    >>> from network import *
+    >>> from adversary import Adversary
+    >>> from protocols import BroadcastProtocol
+    >>> nw_gen = NodeWeightGenerator('stake')
+    >>> ew_gen = EdgeWeightGenerator('normal')
+    >>> net = Network(nw_gen, ew_gen, 10, 3)
+    >>> protocol = BroadcastProtocol(net, broadcast_mode='all')
+    >>> adversary = Adversary(protocol, 0.4)
+    >>> simulator = Simulator(adversary, 20, use_node_weights=True)
+    >>> len(simulator.messages)
+    20
+    
+    Set 5 messages originating from node 0
+    
+    >>> from network import *
+    >>> from message import Message
+    >>> from adversary import Adversary
+    >>> from protocols import BroadcastProtocol
+    >>> nw_gen = NodeWeightGenerator('stake')
+    >>> ew_gen = EdgeWeightGenerator('normal')
+    >>> net = Network(nw_gen, ew_gen, 10, 3)
+    >>> protocol = BroadcastProtocol(net, broadcast_mode='all')
+    >>> adversary = Adversary(protocol, 0.4)
+    >>> simulator = Simulator(adversary, messages=[Message(0) for _ in range(5)])
+    >>> len(simulator.messages)
+    5
+    >>> simulator.message_sources
+    [0, 0, 0, 0, 0]
     """
 
     def __init__(
@@ -63,6 +96,10 @@ class Simulator:
     @property
     def messages(self):
         return self._messages
+    
+    @property
+    def message_sources(self):
+        return [msg.source for msg in self.messages]
 
     def run(
         self,
@@ -79,6 +116,25 @@ class Simulator:
             stop propagating a message if it reached the given fraction of network nodes
         max_trials : int
             stop propagating a message if it does not reach any new nodes within `max_trials` steps
+            
+        Examples
+        --------
+        Run simulation until each message reaches 90% of all nodes
+        
+        >>> from network import *
+        >>> from adversary import Adversary
+        >>> from protocols import BroadcastProtocol
+        >>> seed = 42
+        >>> nw_gen = NodeWeightGenerator('stake')
+        >>> ew_gen = EdgeWeightGenerator('normal')
+        >>> net = Network(nw_gen, ew_gen, 10, 3, seed=seed)
+        >>> protocol = BroadcastProtocol(net, broadcast_mode='all', seed=seed)
+        >>> adversary = Adversary(protocol, 0.4, seed=seed)
+        >>> simulator = Simulator(adversary, 5, use_node_weights=True, seed=seed)
+        >>> len(simulator.messages)
+        5
+        >>> simulator.run(coverage_threshold=0.9)
+        [0.9, 0.9, 0.9, 0.9, 0.9]
         """
         coverage_for_messages = []
         for msg in tqdm(self.messages, disable=disable_progress_bar):
@@ -114,6 +170,28 @@ class Simulator:
         ----------
         q : list (Default: numpy.arange(0.1, 1.0, 0.1)))
            Node quantiles
+           
+        Examples
+        --------
+        Observe the mean and standard deviation of propagation times until the messages reach 50% and 95% of all nodes.
+        
+        >>> from network import *
+        >>> from adversary import Adversary
+        >>> from protocols import BroadcastProtocol
+        >>> seed = 42
+        >>> nw_gen = NodeWeightGenerator('stake')
+        >>> ew_gen = EdgeWeightGenerator('normal')
+        >>> net = Network(nw_gen, ew_gen, 10, 3, seed=seed)
+        >>> protocol = BroadcastProtocol(net, broadcast_mode='all', seed=seed)
+        >>> adversary = Adversary(protocol, 0.4, seed=seed)
+        >>> simulator = Simulator(adversary, 5, use_node_weights=True, seed=seed)
+        >>> _ = simulator.run()
+        >>> mean_t, std_t = simulator.node_contact_time_quantiles(q=[0.5,0.95])
+        >>> # messages on average reach 50% of all nodes within 273 milliseconds.
+        >>> mean_t
+        array([273.25546384, 460.11754328])
+        >>> std_t
+        array([24.51004285, 11.76789887])
         """
         if self._executed:
             contact_time_quantiles = []
@@ -140,11 +218,30 @@ class Evaluator:
     ----------
     simulator : Simulator
         Specify the simulation to evaluate
-    estimator : {'first_reach', 'shortest_path', 'dummy'}, default 'first_reach'
+    estimator : {'first_reach', 'first_sent', 'dummy'}, default 'first_reach'
         Define adversary stategy to predict source node for each message:
         * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
-        * shortest_path: predicted node probability is proportional (inverse distance) to the shortest weighted path length
+        * first_sent: the node that sent the message the earliest to the receiver
         * dummy: the probability is divided equally between non-adversary nodes.
+        
+    Examples
+    --------
+    Observe the complete evaluation pipeline below. First, initialize network, protocol, adversary. Then, simulate 20 messages with these components. Finally, query the report using the first sent estimator for the aversary.
+        
+    >>> from network import *
+    >>> from adversary import Adversary
+    >>> from protocols import BroadcastProtocol
+    >>> seed = 42
+    >>> nw_gen = NodeWeightGenerator('stake')
+    >>> ew_gen = EdgeWeightGenerator('normal')
+    >>> net = Network(nw_gen, ew_gen, 10, 3, seed=seed)
+    >>> protocol = BroadcastProtocol(net, broadcast_mode='all', seed=seed)
+    >>> adversary = Adversary(protocol, 0.4, seed=seed)
+    >>> simulator = Simulator(adversary, 20, use_node_weights=True, seed=seed)
+    >>> _ = simulator.run()
+    >>> evaluator = Evaluator(simulator, estimator='first_sent')
+    >>> evaluator.get_report()
+    {'estimator': 'first_sent', 'hit_ratio': 0.25, 'inverse_rank': 0.32499999999999996, 'entropy': 0.0, 'ndcg': 0.46679861973841597, 'message_spread_ratio': 1.0}
     """
 
     def __init__(self, simulator: Simulator, estimator: str = "first_reach"):
