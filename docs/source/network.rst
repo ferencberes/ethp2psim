@@ -7,17 +7,17 @@ How to create a P2P network?
 
 In this module, we provide two generators to assign weights to the nodes and edges of the peer-to-peer (P2P) network. By our terminology, edge weights represent communication latency on the channels (edges) of the P2P network, while node weights account for node relevance.
 
-.. autoclass:: network.NodeWeightGenerator
+.. autoclass:: ethp2psim.network.NodeWeightGenerator
    :members:
    :inherited-members:
 
-.. autoclass:: network.EdgeWeightGenerator
+.. autoclass:: ethp2psim.network.EdgeWeightGenerator
    :members:
    :inherited-members:
 
 Using these generators, we can initialize the P2P network that is a random regular graph by default but you can also specify any custom graph as input. All network related actions are accessed through the :class:`network.Network` object.
 
-.. autoclass:: network.Network
+.. autoclass:: ethp2psim.network.Network
    :members:
    :inherited-members:
 
@@ -26,7 +26,7 @@ Using real-world data
 
 In our experiments, we compare the random regular graph model for simulating transactions with the underlying structure of the Goerli testnet. It is a good example on how to implement and add benchmark graph datasets to the experiments.
    
-.. autoclass:: data.GoerliTestnet
+.. autoclass:: ethp2psim.data.GoerliTestnet
    :members:
    :inherited-members:
 

@@ -1,6 +1,6 @@
 import networkx as nx
 import numpy as np
-from data import StakedEthereumDistribution
+from .data import StakedEthereumDistribution
 from typing import Optional, NoReturn, Union, List
 
 
@@ -255,7 +255,7 @@ class Network:
 
         Examples
         --------
-        >>> from data import GoerliTestnet
+        >>> from .data import GoerliTestnet
         >>> nw_gen = NodeWeightGenerator('random')
         >>> ew_gen = EdgeWeightGenerator('normal')
         >>> goerli = GoerliTestnet()

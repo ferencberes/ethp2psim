@@ -1,4 +1,4 @@
-from network import Network
+from .network import Network
 import numpy as np
 import networkx as nx
 from typing import Optional, Iterable, NoReturn, Union
@@ -28,9 +28,9 @@ class ProtocolEvent:
     --------
     In a tiny example we show that we record message spreading with ProtocolEvents.
 
-    >>> from network import *
-    >>> from message import Message
-    >>> from adversary import Adversary
+    >>> from .network import *
+    >>> from .message import Message
+    >>> from .adversary import Adversary
     >>> import networkx as nx
     >>> G = nx.Graph()
     >>> G.add_edges_from([(1,2),(2,3),(1,3)])
@@ -159,7 +159,7 @@ class BroadcastProtocol(Protocol):
     --------
     The broadcast protocol has no anonymity graph.
 
-    >>> from network import *
+    >>> from .network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
     >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
@@ -224,7 +224,7 @@ class DandelionProtocol(BroadcastProtocol):
     --------
     The anonymity graph is a line graph where the number of edges equals to the number of nodes.
 
-    >>> from network import *
+    >>> from .network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
     >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
@@ -322,7 +322,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
     --------
     The anonymity graph is an approximate four regular graph.
 
-    >>> from network import *
+    >>> from .network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
     >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
@@ -404,7 +404,7 @@ class TOREnhancedProtocol(BroadcastProtocol):
 
     Examples
     --------
-    >>> from network import *
+    >>> from .network import *
     >>> nw_generator = NodeWeightGenerator("random")
     >>> ew_generator = EdgeWeightGenerator("normal")
     >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
