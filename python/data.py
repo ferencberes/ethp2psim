@@ -23,7 +23,6 @@ class GoerliTestnet:
                 "https://info.ilab.sztaki.hu/~fberes/ethp2psim/goerliTopology.edgelist"
             )
             _ = wget.download(url)
-            print()
         self.graph = nx.read_edgelist(filename)
 
 
