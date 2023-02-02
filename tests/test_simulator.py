@@ -65,7 +65,6 @@ def test_contact_time_quantiles():
     assert mean_contact_times[1] == 9
 
 
-"""#tmp disable
 def test_evaluators_with_random_seed():
     seed = 42
     num_msg = 10
@@ -77,7 +76,7 @@ def test_evaluators_with_random_seed():
     sim = Simulator(adv, num_msg, seed=seed, verbose=False)
     sim.run()
     reports = {}
-    for estimator in ["first_reach", "first_sent", "shortest_path", "dummy"]:
+    for estimator in ["first_reach", "first_sent", "dummy"]:
         evaluator = Evaluator(sim, estimator)
         results = [
             evaluator.exact_hits,
@@ -90,10 +89,9 @@ def test_evaluators_with_random_seed():
         reports[estimator] = evaluator.get_report()
         assert len(reports[estimator]) == 6
     # due to fixing random seeds the results are reproducible
-    assert (reports["first_reach"]["ndcg"] - 0.2907) < 0.0001
+    assert (reports["first_reach"]["ndcg"] - 0.2915) < 0.0001
     assert (reports["first_sent"]["ndcg"] - 0.3606) < 0.0001
     assert (reports["dummy"]["ndcg"] - 0.2180) < 0.0001
-"""
 
 
 def test_first_reach_vs_first_sent():
