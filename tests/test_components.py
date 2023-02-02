@@ -1,14 +1,14 @@
 import sys, os, pytest
-
 import networkx as nx
+
 from ethp2psim.network import Network, NodeWeightGenerator, EdgeWeightGenerator
 from ethp2psim.message import Message
 from ethp2psim.protocols import (
-    BroadcastProtocol,
-    DandelionProtocol,
-    DandelionPlusPlusProtocol,
+    BroadcastProtocol, 
+    DandelionProtocol, 
+    DandelionPlusPlusProtocol
 )
-from ethp2psim.adversary import Adversary
+from ethp2psim.adversary import Adversary, DandelionAdversary
 
 SEED = 43
 G = nx.Graph()
@@ -168,7 +168,6 @@ def test_dandelion_single_message():
     assert ratio == 1.0
 """
 
-
 def test_dandelion_pp_single_message():
     H = nx.complete_graph(10)
     net = Network(
@@ -188,3 +187,9 @@ def test_dandelion_pp_single_message():
         else:
             assert broadcast
     assert ratio == 1.0
+    
+def test_dandelion_adversary_error():
+    net = Network(rnd_node_weight, rnd_edge_weight, graph=G)
+    protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
+    with pytest.raises(ValueError):
+        adv = DandelionAdversary(protocol, 0.1)

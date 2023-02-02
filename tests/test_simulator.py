@@ -4,7 +4,7 @@ import networkx as nx
 from ethp2psim.simulator import Simulator, Evaluator
 from ethp2psim.network import Network, NodeWeightGenerator, EdgeWeightGenerator
 from ethp2psim.protocols import BroadcastProtocol, DandelionProtocol
-from ethp2psim.adversary import Adversary
+from ethp2psim.adversary import Adversary, DandelionAdversary
 from ethp2psim.message import Message
 from ethp2psim.experiments import *
 
@@ -12,7 +12,6 @@ SEED = 43
 
 rnd_node_weight = NodeWeightGenerator("random", seed=SEED)
 rnd_edge_weight = EdgeWeightGenerator("random", seed=SEED)
-
 
 def test_dummy():
     net = Network(rnd_node_weight, rnd_edge_weight, 10, 2)
@@ -118,3 +117,32 @@ def test_first_reach_vs_first_sent():
     print(new_reports)
     assert sim.adversary.predict_msg_source("first_sent").iloc[0][1] == 1
     assert sim.adversary.predict_msg_source("first_reach").iloc[0][2] == 1
+    
+def test_dandelion_adversary_stem_contact():
+    nw_generator = NodeWeightGenerator("random")
+    ew_generator = EdgeWeightGenerator("normal")
+    seed = 42
+    net = Network(nw_generator, ew_generator, num_nodes=10, k=3, seed=seed)
+    dp = DandelionProtocol(net, 0.5, seed=seed, broadcast_mode='all')
+    adv = DandelionAdversary(dp, adversaries=[0,8], seed=seed)
+    sim = Simulator(adv, messages=[Message(7), Message(3)], seed=seed, verbose=False)
+    sim.run()
+    predictions = adv.predict_msg_source(estimator='first_sent')
+    # check results for msg originating from node 7
+    probas0 = dict(predictions.iloc[0])
+    for node in range(10):
+        if node == 7:
+            assert (probas0[node] - 0.666667) < 0.0001
+        elif node == 9:
+            assert (probas0[node] - 0.333333) < 0.0001
+        else:
+            assert (probas0[0] - 0.0) < 0.0001
+    # check results for msg originating from node 3
+    probas0 = dict(predictions.iloc[0])
+    for node in range(10):
+        if node == 1:
+            assert (probas0[node] - 0.666667) < 0.0001
+        elif node == 3:
+            assert (probas0[node] - 0.333333) < 0.0001
+        else:
+            assert (probas0[0] - 0.0) < 0.0001
