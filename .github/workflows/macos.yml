@@ -13,7 +13,7 @@ jobs:
       strategy:
         matrix:
           os: [macos-latest]
-          python-version: ['3.8']
+          python-version: ['3.7','3.8','3.9','3.10']
       steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v1
@@ -23,6 +23,6 @@ jobs:
       - name: Run installation.
         run: |
           pip install .
-      - name: Test coverage.
+      - name: Run tests.
         run: |
          pytest --doctest-modules
