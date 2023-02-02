@@ -6,6 +6,7 @@ from .network import Network
 from typing import Optional, NoReturn, Iterable, Union, List
 from collections import deque
 
+
 class EavesdropEvent:
     """
     Information related to the observed message
@@ -203,7 +204,13 @@ class Adversary:
         empty_predictions = pd.DataFrame(
             arr, columns=self.candidates, index=list(self.captured_msgs)
         )
-        return contact_time, contact_node, received_from, contact_by_broadcast, empty_predictions
+        return (
+            contact_time,
+            contact_node,
+            received_from,
+            contact_by_broadcast,
+            empty_predictions,
+        )
 
     def _dummy_estimator(self) -> pd.DataFrame:
         N = len(self.candidates) - len(self.nodes)
@@ -283,7 +290,7 @@ class DandelionAdversary(Adversary):
         Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
     seed: int (optional)
         Random seed (disabled by default)
-        
+
     References
     ----------
     Shaileshh Bojja Venkatakrishnan, Giulia Fanti, and Pramod Viswanath. 2017. Dandelion: Redesigning the Bitcoin Network for Anonymity. In Proceedings of the 2017 ACM SIGMETRICS / International Conference on Measurement and Modeling of Computer Systems (SIGMETRICS '17 Abstracts). Association for Computing Machinery, New York, NY, USA, 57. https://doi.org/10.1145/3078505.3078528
@@ -304,16 +311,21 @@ class DandelionAdversary(Adversary):
         )
 
     def __repr__(self):
-        return super(DandelionAdversary, self).__repr__().replace("Adversary","DandelionAdversary")
+        return (
+            super(DandelionAdversary, self)
+            .__repr__()
+            .replace("Adversary", "DandelionAdversary")
+        )
 
-    
     def _find_candidates_on_line_graph(self, start_node: int):
         G = self.protocol.anonymity_graph.reverse(copy=True)
         q = deque([(start_node, 0)])
         candidates = []
         while len(q) > 0:
             candidate, weight = q.popleft()
-            next_weight = 1.0 if weight == 0 else weight*(1.0-self.protocol.spreading_proba)
+            next_weight = (
+                1.0 if weight == 0 else weight * (1.0 - self.protocol.spreading_proba)
+            )
             # do not process loops twice
             if candidate in candidates:
                 continue
@@ -324,9 +336,9 @@ class DandelionAdversary(Adversary):
                     # if node is not an adversary then add it to the queue
                     if not node in self.nodes:
                         q.append((node, next_weight))
-        #print(candidates)
+        # print(candidates)
         return candidates
-    
+
     def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
         """
         Predict source nodes for each message in a run of the Dandelion Protocol
@@ -338,14 +350,20 @@ class DandelionAdversary(Adversary):
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
             * first_sent: the node that sent the message the earliest to the receiver
             * dummy: the probability is divided equally between non-adversary nodes.
-            
+
         References
         ----------
         We implement the adversarial strategy against the Dandelion Protocol described by Sharma et al. https://arxiv.org/pdf/2201.11860.pdf See page 5 for a description of the adversary.
         """
         dummy_predictions = self._dummy_estimator()
         if estimator in ["first_reach", "first_sent"]:
-            _, contact_node, received_from, contact_by_broadcast, predictions = self._find_first_contact(estimator)
+            (
+                _,
+                contact_node,
+                received_from,
+                contact_by_broadcast,
+                predictions,
+            ) = self._find_first_contact(estimator)
             for msg in self.captured_msgs:
                 if contact_by_broadcast[msg]:
                     candidates = self._find_candidates_on_line_graph(received_from[msg])
@@ -365,5 +383,3 @@ class DandelionAdversary(Adversary):
                 "Choose 'estimator' from values ['first_reach', 'first_sent', 'dummy']!"
             )
         return predictions.fillna(0.0)
-        
-    

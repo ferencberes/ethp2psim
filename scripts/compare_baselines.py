@@ -1,4 +1,4 @@
-import sys, argparse, json
+import argparse, json
 from datetime import datetime as dt
 
 from ethp2psim.network import *
