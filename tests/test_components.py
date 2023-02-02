@@ -1,11 +1,14 @@
 import sys, os, pytest
-
-sys.path.insert(0, "%s/python" % os.getcwd())
 import networkx as nx
-from network import Network, NodeWeightGenerator, EdgeWeightGenerator
-from message import Message
-from protocols import BroadcastProtocol, DandelionProtocol, DandelionPlusPlusProtocol
-from adversary import Adversary, DandelionAdversary
+
+from ethp2psim.network import Network, NodeWeightGenerator, EdgeWeightGenerator
+from ethp2psim.message import Message
+from ethp2psim.protocols import (
+    BroadcastProtocol, 
+    DandelionProtocol, 
+    DandelionPlusPlusProtocol
+)
+from ethp2psim.adversary import Adversary, DandelionAdversary
 
 SEED = 43
 G = nx.Graph()
@@ -164,7 +167,6 @@ def test_dandelion_single_message():
             assert broadcast
     assert ratio == 1.0
 """
-
 
 def test_dandelion_pp_single_message():
     H = nx.complete_graph(10)

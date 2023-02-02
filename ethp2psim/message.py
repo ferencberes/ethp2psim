@@ -1,6 +1,6 @@
 import uuid, heapq
-from adversary import Adversary, EavesdropEvent
-from protocols import Protocol, ProtocolEvent
+from .adversary import Adversary, EavesdropEvent
+from .protocols import Protocol, ProtocolEvent
 from typing import Iterable, Union, NoReturn
 
 
@@ -15,9 +15,9 @@ class Message:
 
     Examples
     --------
-    >>> from network import *
-    >>> from protocols import BroadcastProtocol
-    >>> from adversary import Adversary
+    >>> from .network import *
+    >>> from .protocols import BroadcastProtocol
+    >>> from .adversary import Adversary
     >>> nw_gen = NodeWeightGenerator('stake')
     >>> ew_gen = EdgeWeightGenerator('normal')
     >>> # random 3 regular graph with 10 nodes
@@ -72,9 +72,9 @@ class Message:
         --------
         This step is important to showcase the true deanonymization power of the adversary as it should get every message ever sent to its nodes in the P2P network. Later, we will see that it has a huge relevance when the adversary tries to predict message sources using the 'first sent' heuristic.
 
-        >>> from network import *
-        >>> from protocols import BroadcastProtocol
-        >>> from adversary import Adversary
+        >>> from .network import *
+        >>> from .protocols import BroadcastProtocol
+        >>> from .adversary import Adversary
         >>> nw_gen = NodeWeightGenerator('stake')
         >>> ew_gen = EdgeWeightGenerator('normal')
         >>> # random 3 regular graph with 10 nodes
@@ -111,9 +111,9 @@ class Message:
         --------
         Here, we present the full picture for message propagation. The message is iteratively processed until it reaches the desired fraction of nodes. Flushing the queue of unprocessed messages is still an essential final step.
 
-        >>> from network import *
-        >>> from protocols import BroadcastProtocol
-        >>> from adversary import Adversary
+        >>> from .network import *
+        >>> from .protocols import BroadcastProtocol
+        >>> from .adversary import Adversary
         >>> nw_gen = NodeWeightGenerator('stake')
         >>> ew_gen = EdgeWeightGenerator('normal')
         >>> # random 3 regular graph with 10 nodes

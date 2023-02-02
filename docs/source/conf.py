@@ -52,6 +52,6 @@ master_doc = 'index'
 # NOTE: update path to see source code
 napoleon_use_param = True
 import sys, os
-source_dir = os.path.join(os.path.abspath(os.pardir), "..", "python")
+source_dir = os.path.join(os.path.abspath(os.pardir), "..")
 print(source_dir)
 sys.path.insert(0, source_dir)

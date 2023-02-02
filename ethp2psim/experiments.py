@@ -1,12 +1,12 @@
-from network import Network
-from adversary import Adversary
-from protocols import Protocol
-from simulator import Simulator, Evaluator
+from .network import Network
+from .adversary import Adversary
+from .protocols import Protocol
+from .simulator import Simulator, Evaluator
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable, List
 import pandas as pd
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 ### run experiments ###
 
@@ -33,10 +33,10 @@ def run_and_eval(
 
     Examples
     --------
-    >>> from network import *
-    >>> from protocols import BroadcastProtocol
-    >>> from adversary import Adversary
-    >>> from simulator import Simulator
+    >>> from .network import *
+    >>> from .protocols import BroadcastProtocol
+    >>> from .adversary import Adversary
+    >>> from .simulator import Simulator
     >>> nw_gen = NodeWeightGenerator("random")
     >>> ew_gen = EdgeWeightGenerator("normal")
     >>> net = Network(nw_gen, ew_gen, 50, 5)
@@ -81,10 +81,10 @@ def run_experiment(
 
     Examples
     --------
-    >>> from network import *
-    >>> from protocols import DandelionProtocol
-    >>> from adversary import Adversary
-    >>> from simulator import Simulator
+    >>> from .network import *
+    >>> from .protocols import DandelionProtocol
+    >>> from .adversary import Adversary
+    >>> from .simulator import Simulator
     >>> def single_experiment(config: dict):
     ...     nw_gen = NodeWeightGenerator("random")
     ...     ew_gen = EdgeWeightGenerator("normal")

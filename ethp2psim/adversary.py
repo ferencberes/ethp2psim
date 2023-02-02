@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 import networkx as nx
-from protocols import ProtocolEvent, Protocol, DandelionProtocol
-from network import Network
+from .protocols import ProtocolEvent, Protocol, DandelionProtocol
+from .network import Network
 from typing import Optional, NoReturn, Iterable, Union, List
 from collections import deque
 
@@ -23,10 +23,10 @@ class EavesdropEvent:
     --------
     In this small triangle graph, the triangle inequality does hold for the manually set channel latencies. That is why the message originating from node 1 reaches node 3 (the adversary) faster through node 2.
 
-    >>> from network import *
-    >>> from message import Message
-    >>> from protocols import BroadcastProtocol
-    >>> from adversary import Adversary
+    >>> from .network import *
+    >>> from .message import Message
+    >>> from .protocols import BroadcastProtocol
+    >>> from .adversary import Adversary
     >>> G = nx.DiGraph()
     >>> G.add_nodes_from([1, 2, 3])
     >>> G.add_weighted_edges_from([(1, 2, 0.9), (1, 3, 1.84), (2, 3, 0.85)], weight="latency")
@@ -90,9 +90,9 @@ class Adversary:
     --------
     The simplest ways to select nodes controlled by the adversary is to randomly sample a given fraction (e.g, 20%) from all nodes.
 
-    >>> from network import *
-    >>> from protocols import BroadcastProtocol
-    >>> from adversary import Adversary
+    >>> from .network import *
+    >>> from .protocols import BroadcastProtocol
+    >>> from .adversary import Adversary
     >>> nw_gen = NodeWeightGenerator('stake')
     >>> ew_gen = EdgeWeightGenerator('normal')
     >>> net = Network(nw_gen, ew_gen, 10, 3)
@@ -103,9 +103,9 @@ class Adversary:
 
     Another possible approach is to manually set adversarial nodes. For example, you can choose to set nodes with the highest degrees.
 
-    >>> from network import *
-    >>> from protocols import BroadcastProtocol
-    >>> from adversary import Adversary
+    >>> from .network import *
+    >>> from .protocols import BroadcastProtocol
+    >>> from .adversary import Adversary
     >>> seed = 42
     >>> G = nx.barabasi_albert_graph(20, 3, seed=seed)
     >>> nw_gen = NodeWeightGenerator('stake')
@@ -233,10 +233,10 @@ class Adversary:
         --------
         In this small triangle graph, the triangle inequality does hold for the manually set channel latencies. That is why the adversary node 3 can correctly predicting node 1 to be the message source by using the first sent estimator heuristic.
 
-        >>> from network import *
-        >>> from message import Message
-        >>> from protocols import BroadcastProtocol
-        >>> from adversary import Adversary
+        >>> from .network import *
+        >>> from .message import Message
+        >>> from .protocols import BroadcastProtocol
+        >>> from .adversary import Adversary
         >>> G = nx.DiGraph()
         >>> G.add_nodes_from([1, 2, 3])
         >>> G.add_weighted_edges_from([(1, 2, 0.9), (1, 3, 1.84), (2, 3, 0.85)], weight="latency")

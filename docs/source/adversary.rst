@@ -12,7 +12,7 @@ Node selection
 
 See the examples below on how to select adversarial nodes uniformly at random or by network centrality.
 
-.. autoclass:: adversary.Adversary
+.. autoclass:: ethp2psim.adversary.Adversary
 
 
 Predict message sources
@@ -20,10 +20,10 @@ Predict message sources
 
 Next, let's observe how to query the adversary for possible message sources.
 
-.. autofunction:: adversary.Adversary.predict_msg_source
+.. autofunction:: ethp2psim.adversary.Adversary.predict_msg_source
 
-Finally, we introduce the :class:`adversary.EavesdropEvent` class that is used within the :class:`adversary.Adversary` to store information observed by the adversary.
+Finally, we introduce the :class:`ethp2psim.adversary.EavesdropEvent` class that is used within the :class:`ethp2psim.adversary.Adversary` to store information observed by the adversary.
 
-.. autoclass:: adversary.EavesdropEvent
+.. autoclass:: ethp2psim.adversary.EavesdropEvent
    
-So far, we have mostly shown how to interact with only one :class:`message.Message`. But you can only gain meaningful insights by simulating various messages at once. In the next section, we show how to do this with ease.
+So far, we have mostly shown how to interact with only one :class:`ethp2psim.message.Message`. But you can only gain meaningful insights by simulating various messages at once. In the next section, we show how to do this with ease.

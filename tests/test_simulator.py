@@ -1,19 +1,17 @@
 import sys, os
 import networkx as nx
 
-sys.path.insert(0, "%s/python" % os.getcwd())
-from simulator import Simulator, Evaluator
-from network import Network, NodeWeightGenerator, EdgeWeightGenerator
-from protocols import BroadcastProtocol, DandelionProtocol
-from adversary import Adversary, DandelionAdversary
-from message import Message
-from experiments import *
+from ethp2psim.simulator import Simulator, Evaluator
+from ethp2psim.network import Network, NodeWeightGenerator, EdgeWeightGenerator
+from ethp2psim.protocols import BroadcastProtocol, DandelionProtocol
+from ethp2psim.adversary import Adversary, DandelionAdversary
+from ethp2psim.message import Message
+from ethp2psim.experiments import *
 
 SEED = 43
 
 rnd_node_weight = NodeWeightGenerator("random", seed=SEED)
 rnd_edge_weight = EdgeWeightGenerator("random", seed=SEED)
-
 
 def test_dummy():
     net = Network(rnd_node_weight, rnd_edge_weight, 10, 2)
