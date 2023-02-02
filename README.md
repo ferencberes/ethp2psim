@@ -4,6 +4,7 @@
 [![CI for MacOS without Codecov sync](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml/badge.svg)](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml)
 [![codecov](https://codecov.io/gh/ferencberes/ethp2psim/branch/main/graph/badge.svg?token=6871LSZKSK)](https://codecov.io/gh/ferencberes/ethp2psim)
 [![Documentation Status](https://readthedocs.org/projects/ethp2psim/badge/?version=latest)](https://ethp2psim.readthedocs.io/en/latest/?badge=latest)
+[![Python versions](pybadge.svg)
 
 **WARNING: This repository is still under active development. Currently, we're putting into place the last features. Please, do not consider our code to be ready for public use until we make our first release. Kind regards: The collaborators**
 
