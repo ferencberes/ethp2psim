@@ -5,7 +5,7 @@ Peer-to-peer (P2P) network
 How to create a P2P network?
 ----------------------------
 
-In this module, we provide two generators to assign weights to the nodes and edges of the peer-to-peer (P2P) network. By our terminology, edge weights represent communication latency on the channels (edges) of the P2P network, while node weights account for node relevance.
+In this module, we provide two generators to assign weights to the nodes and edges of the peer-to-peer (P2P) network. By our terminology, edge weights represent communication latency on the communication channels (edges) of the P2P network, while node weights account for node relevance (i.e., portion of staked ether).
 
 .. autoclass:: ethp2psim.network.NodeWeightGenerator
    :members:
@@ -15,7 +15,7 @@ In this module, we provide two generators to assign weights to the nodes and edg
    :members:
    :inherited-members:
 
-Using these generators, we can initialize the P2P network that is a random regular graph by default but you can also specify any custom graph as input. All network related actions are accessed through the :class:`network.Network` object.
+Using these generators, we can initialize the P2P network that is a random regular graph by default but you can also specify any custom graph as input, for instance, you can use the actual Ethereum P2P graph or some testnet's P2P graph for your measurements. All network related actions are accessed through the :class:`network.Network` object.
 
 .. autoclass:: ethp2psim.network.Network
    :members:
@@ -43,4 +43,4 @@ As a summary, let's observe how to mimic the structure and properties of the rea
   goerli = GoerliTestnet()
   net = Network(nw_gen, ew_gen, graph=goerli.graph)
   
-Next, let's discuss how to propagate messages over the P2P network using different message passing protocols.
+Next, let's discuss how to propagate messages over the P2P network using different message-passing protocols.

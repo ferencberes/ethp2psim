@@ -1,12 +1,13 @@
 Adversarial settings
 ====================
 
-In our experiments, the main goal of the adversary is to predict the source node for each message sent on the P2P network. To obtain these predictions, it is constantly eavesdroping over network traffic through a fixed set of nodes that are controlled by this entity. In our implementation, you can use the :class:`adversary.Adversary` class to setup an adversary with various capabilities:
+In our experiments, the main goal of the adversary is to predict the source node for each message sent on the P2P network. The adversary is constantly eavesdropping on network traffic through a fixed set of nodes controlled by this entity to obtain these predictions. In our implementation, you can use the :class:`adversary.Adversary` class to set up an adversary with various capabilities:
 
-#. You can set the **fraction of nodes** that the adversary controls
-#. You can explicitly set the most **central nodes** (e.g., highest degree, PageRank or Betwenness) to be adversaries. Intuitively, central nodes are reached by messages faster than nodes on the periphery.
-#. You can set an adversary to be **active** that won't propagate or broadcast messages further. This way you can test the resilience of different protocols against malicious nodes that refuse to comply with the pre-defined rules of message spreading. 
-
+#. You can set the **fraction of nodes** that the adversary controls.
+#. You can explicitly set the most **central nodes** (e.g., nodes with the highest degree, PageRank or Betweenness centrality) to be adversaries. Intuitively, central nodes are reached by messages faster than nodes on the periphery.
+#. You can set an adversary to be **active** that won't propagate or broadcast messages further. This way, you can test the resilience of different protocols against malicious nodes that refuse to comply with the pre-defined rules of message spreading.
+#. You can choose from various protocol-specific adversaries (e.g., :class:`ethp2psim.adversary.DandelionAdversary` ) that are more efficient than the baseline methods.
+ 
 Node selection
 --------------
 
