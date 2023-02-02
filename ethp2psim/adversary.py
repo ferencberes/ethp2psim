@@ -321,15 +321,18 @@ class DandelionAdversary(Adversary):
         G = self.protocol.anonymity_graph.reverse(copy=True)
         q = deque([(start_node, 0)])
         candidates = []
+        processed = []
         while len(q) > 0:
+            #print(q)
             candidate, weight = q.popleft()
-            next_weight = (
-                1.0 if weight == 0 else weight * (1.0 - self.protocol.spreading_proba)
-            )
             # do not process loops twice
-            if candidate in candidates:
+            if candidate in processed:
                 continue
             else:
+                processed.append(candidate)
+                next_weight = (
+                    1.0 if weight == 0 else weight * (1.0 - self.protocol.spreading_proba)
+                )
                 if candidate != start_node:
                     candidates.append((candidate, weight))
                 for node in G.neighbors(candidate):
@@ -365,6 +368,7 @@ class DandelionAdversary(Adversary):
                 predictions,
             ) = self._find_first_contact(estimator)
             for msg in self.captured_msgs:
+                #print(msg)
                 if contact_by_broadcast[msg]:
                     candidates = self._find_candidates_on_line_graph(received_from[msg])
                 else:

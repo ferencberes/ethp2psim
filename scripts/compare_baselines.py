@@ -35,11 +35,11 @@ def run_single_experiment(config):
                 net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
             )
         )
-        protocols.append(
-            DandelionPlusPlusProtocol(
-                net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
-            )
-        )
+        #protocols.append(
+        #    DandelionPlusPlusProtocol(
+        #        net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
+        #    )
+        #)
     # use the same adversary nodes for all protocols
     num_adv_nodes = int(net.num_nodes * config["adversary_ratio"])
     if config["adversary_centrality_metric"] != "none":
@@ -50,12 +50,20 @@ def run_single_experiment(config):
         adv_nodes = net.sample_random_nodes(num_adv_nodes, False)
     single_run_results = []
     for protocol in protocols:
-        adv = Adversary(
-            protocol,
-            active=config["active_adversary"],
-            adversaries=adv_nodes,
-            seed=seed,
-        )
+        if isinstance(protocol, DandelionProtocol):
+            adv = DandelionAdversary(
+                protocol,
+                active=config["active_adversary"],
+                adversaries=adv_nodes,
+                seed=seed,
+            )
+        else:
+            adv = Adversary(
+                protocol,
+                active=config["active_adversary"],
+                adversaries=adv_nodes,
+                seed=seed,
+            )
         # by fixing the seed we sample the same messages
         sim = Simulator(adv, num_msg, seed=seed, verbose=False)
         # print()
