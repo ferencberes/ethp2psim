@@ -4,7 +4,7 @@ import networkx as nx
 from protocols import ProtocolEvent, Protocol, DandelionProtocol
 from network import Network
 from typing import Optional, NoReturn, Iterable, Union, List
-
+from collections import deque
 
 class EavesdropEvent:
     """
@@ -183,6 +183,7 @@ class Adversary:
         contact_time = {}
         received_from = {}
         contact_node = {}
+        contact_by_broadcast = {}
         for ee in self.captured_events:
             message_id = ee.mid
             sender = ee.sender
@@ -197,11 +198,12 @@ class Adversary:
                 contact_time[message_id] = timestamp
                 received_from[message_id] = sender
                 contact_node[message_id] = receiver
+                contact_by_broadcast[message_id] = ee.protocol_event.spreading_phase
         arr = np.zeros((len(self.captured_msgs), len(self.candidates)))
         empty_predictions = pd.DataFrame(
             arr, columns=self.candidates, index=list(self.captured_msgs)
         )
-        return contact_time, contact_node, received_from, empty_predictions
+        return contact_time, contact_node, received_from, contact_by_broadcast, empty_predictions
 
     def _dummy_estimator(self) -> pd.DataFrame:
         N = len(self.candidates) - len(self.nodes)
@@ -253,21 +255,21 @@ class Adversary:
         {1: 1.0, 2: 0.0, 3: 0.0}
         """
         if estimator in ["first_reach", "first_sent"]:
-            _, _, received_from, predictions = self._find_first_contact(estimator)
+            _, _, received_from, _, predictions = self._find_first_contact(estimator)
             for mid, node in received_from.items():
                 predictions.at[mid, node] = 1.0
-            return predictions
         elif estimator == "dummy":
-            return self._dummy_estimator()
+            predictions = self._dummy_estimator()
         else:
             raise ValueError(
                 "Choose 'estimator' from values ['first_reach', 'first_sent', 'dummy']!"
             )
+        return predictions.fillna(0.0)
 
 
 class DandelionAdversary(Adversary):
     """
-    Abstraction for the entity that tries to deanonymize Ethereum addresses by observing p2p network traffic
+    Abstraction for the entity that tries to deanonymize Ethereum addresses when message passing is executed with the Dandelion protocol.
 
     Parameters
     ----------
@@ -277,40 +279,54 @@ class DandelionAdversary(Adversary):
         Fraction of adversary nodes in the P2P network
     active : bool
         Turn on to enable adversary nodes to deny message propagation
-    use_node_weights : bool
-        Sample adversary nodes with respect to node weights
     adversaries: List[int]
         Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
+    seed: int (optional)
+        Random seed (disabled by default)
+        
+    References
+    ----------
+    Shaileshh Bojja Venkatakrishnan, Giulia Fanti, and Pramod Viswanath. 2017. Dandelion: Redesigning the Bitcoin Network for Anonymity. In Proceedings of the 2017 ACM SIGMETRICS / International Conference on Measurement and Modeling of Computer Systems (SIGMETRICS '17 Abstracts). Association for Computing Machinery, New York, NY, USA, 57. https://doi.org/10.1145/3078505.3078528
     """
 
     def __init__(
         self,
         protocol: Protocol,
-        ratio: float,
+        ratio: float = 0.1,
         active: bool = False,
-        use_node_weights: bool = False,
         adversaries: Optional[List[int]] = None,
+        seed: Optional[int] = None,
     ):
-        super(Adversary, self).__init__(
-            protocol, ratio, active, use_node_weights, adversaries
+        if not isinstance(protocol, DandelionProtocol):
+            raise ValueError("The given protocol must be a DandelionProtocol!")
+        super(DandelionAdversary, self).__init__(
+            protocol, ratio, active, adversaries, seed
         )
 
     def __repr__(self):
-        return "DandelionAdversary(ratio=%.2f, active=%s, use_node_weights=%s)" % (
-            self.ratio,
-            self.active,
-            self.use_node_weights,
-        )
+        return super(DandelionAdversary, self).__repr__().replace("Adversary","DandelionAdversary")
 
-    @property
-    def network(self):
-        return self.protocol.network
-
-    @property
-    def candidates(self) -> list:
-        return list(self.network.graph.nodes())
-
-    def predict_msg_source(self, protocol: DandelionProtocol) -> pd.DataFrame:
+    
+    def _find_candidates_on_line_graph(self, start_node: int):
+        G = self.protocol.anonymity_graph.reverse(copy=True)
+        q = deque([(start_node, 0)])
+        candidates = []
+        while len(q) > 0:
+            candidate, weight = q.popleft()
+            next_weight = 1.0 if weight == 0 else weight*(1.0-self.protocol.spreading_proba)
+            # do not process loops twice
+            if candidate in candidates:
+                continue
+            else:
+                if candidate != start_node:
+                    candidates.append((candidate, weight))
+                for node in G.neighbors(candidate):
+                    # if node is not an adversary then add it to the queue
+                    if not node in self.nodes:
+                        q.append((node, next_weight))
+        return candidates
+    
+    def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
         """
         Predict source nodes for each message in a run of the Dandelion Protocol
 
@@ -318,59 +334,29 @@ class DandelionAdversary(Adversary):
 
         Parameters
         ----------
-        dandelionProtocol : The instantiation of the DandelionProtocol that the adversary tries to deanonymize
+        estimator : {'first_reach', 'first_sent'}, default 'first_reach'
+            Strategy to assign probabilities to network nodes:
+            * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
+            * first_sent: the node that sent the message the earliest to the receiver
+            * dummy: the probability is divided equally between non-adversary nodes.
 
         """
-        probabilities = {}
-        for i in self.captured_events:
-            if i.mid in probabilities.keys():
-                continue
-            probabilities[i.mid] = [0 for j in range(protocol.network.num_nodes)]
-
-            heardFromStemmingPhase = []
-            firstBroadcaster = -1
-            ## Who is the first node that reports to the adversary in the stem phase?
-            if (
-                not i.protocol_event.spreading_phase
-                and len(heardFromStemmingPhase) == 0
-                and (i.protocol_event.sender not in self.nodes)
-            ):
-                heardFromStemmingPhase.append(i.protocol_event.sender)
-            ## The first broadcaster the adversary knows about
-            if i.protocol_event.spreading_phase and firstBroadcaster == -1:
-                firstBroadcaster = i.protocol_event.sender
-
-            shortestPathLength = sys.maxsize
-            shortestAdvPath = []
-            for k in self.nodes:
-                if heardFromStemmingPhase == []:
-                    path = nx.shortest_path(
-                        protocol.anonymity_graph, k, firstBroadcaster
-                    )
+        if estimator in ["first_reach", "first_sent"]:
+            _, contact_node, received_from, contact_by_broadcast, predictions = self._find_first_contact(estimator)
+            for msg in self.captured_msgs:
+                if contact_by_broadcast[msg]:
+                    candidates = self._find_candidates_on_line_graph(received_from[msg])
                 else:
-                    path = nx.shortest_path(
-                        protocol.anonymity_graph, k, heardFromStemmingPhase[0]
-                    )
-                if len(path) < shortestPathLength and len(path) != 2:
-                    shortestAdvPath = path
-                    shortestPathLength = len(path)
-            print("First Broadcaster", firstBroadcaster)
-
-            print(shortestAdvPath)
-            probSum = 0  # See Equation 2 here: https://arxiv.org/pdf/2201.11860.pdf
-            for node in range(shortestPathLength):
-                ## The broadcaster node is not the originator, since in Dandelion the message should have at least 1 hop
-                ## We also want to exclude adversarial nodes
-                if (
-                    node != 0
-                    and shortestAdvPath[shortestPathLength - node - 1] not in self.nodes
-                ):
-                    probabilities[i.mid][
-                        shortestAdvPath[shortestPathLength - node - 1]
-                    ] = pow(protocol.spreading_proba, node)
-                    probSum += pow(protocol.spreading_proba, node)
-
-            for j in range(len(probabilities[i.mid])):
-                probabilities[i.mid][j] /= probSum
-        deanonProbas = pd.DataFrame.from_dict(probabilities, orient="index")
-        return deanonProbas
+                    candidates = self._find_candidates_on_line_graph(contact_node[msg])
+                nodes, weights = zip(*candidates)
+                weights = np.array(weights) / np.sum(weights)
+                predictions.loc[msg] = pd.Series(data=weights, index=nodes)
+        elif estimator == "dummy":
+            predictions = self._dummy_estimator()
+        else:
+            raise ValueError(
+                "Choose 'estimator' from values ['first_reach', 'first_sent', 'dummy']!"
+            )
+        return predictions.fillna(0.0)
+        
+    

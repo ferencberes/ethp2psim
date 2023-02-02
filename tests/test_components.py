@@ -5,7 +5,7 @@ import networkx as nx
 from network import Network, NodeWeightGenerator, EdgeWeightGenerator
 from message import Message
 from protocols import BroadcastProtocol, DandelionProtocol, DandelionPlusPlusProtocol
-from adversary import Adversary
+from adversary import Adversary, DandelionAdversary
 
 SEED = 43
 G = nx.Graph()
@@ -185,3 +185,9 @@ def test_dandelion_pp_single_message():
         else:
             assert broadcast
     assert ratio == 1.0
+    
+def test_dandelion_adversary_error():
+    net = Network(rnd_node_weight, rnd_edge_weight, graph=G)
+    protocol = BroadcastProtocol(net, broadcast_mode="all", seed=SEED)
+    with pytest.raises(ValueError):
+        adv = DandelionAdversary(protocol, 0.1)
