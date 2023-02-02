@@ -4,7 +4,6 @@
 *.ipynb_checkpoints/
 ethp2psim.egg-info
 */__pycache__
-*/__pycache__
 build
 .pytest_cache
 .coverage
