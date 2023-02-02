@@ -1,6 +1,6 @@
 # Quickstart
 
-Here, we show an example of how to simulate the Dandelion protocol in the case of the most basic adversarial setting (predict a node to be the message source if malicious nodes first heard of this message from the given node).
+Here, we show an example of how to simulate the [Dandelion protocol](https://arxiv.org/pdf/1701.04439.pdf) in the case of the most basic adversarial strategy (predict a node to be the message source if malicious nodes first heard of this message from the given node).
 
 
 ## Initialize simulation components
@@ -10,9 +10,9 @@ from ethp2psim.protocols import DandelionProtocol
 from ethp2psim.adversary import Adversary
 ```
 
-First, initialize re-usable **generators for edge and node weights**, e.g. 
-   * channel latency is sampled uniformly at random
-   * nodes have weights proportional to their staked Ether amount
+First, initialize re-usable **generators for edge and node weights**, e.g., 
+   * Edge weihts: weights on edges represent message-spreading latencies. Channel latency can be sampled uniformly at random or from other user-defined distributions.
+   * Node weights: nodes might have weights proportional to their staked Ether amount.
    
 ```python
 ew_gen = EdgeWeightGenerator("normal")
@@ -62,7 +62,7 @@ sim.run()
 
 ## Evaluate the simulation
 
-**Evaluate** the performance of the adversary for the given simulation. Here, you can choose different estimators for adversary performance evaluation (e.g., "first_sent", "first_reach", "dummy"):
+**Evaluate** the performance of the adversary's deanonymization power for the given simulation. Here, you can choose different estimators that the adversary uses during its deanonymization process. You can choose from the following adversarial strategies to evaluate your simulation: "first_sent", "first_reach", "dummy". See the following example:
 ```python
 from ethp2psim.simulator import Evaluator
 evaluator = Evaluator(sim, estimator="first_reach")
