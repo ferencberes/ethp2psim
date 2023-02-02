@@ -324,23 +324,26 @@ class DandelionAdversary(Adversary):
                     # if node is not an adversary then add it to the queue
                     if not node in self.nodes:
                         q.append((node, next_weight))
+        #print(candidates)
         return candidates
     
     def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
         """
         Predict source nodes for each message in a run of the Dandelion Protocol
 
-        We implement the adversarial strategy against the Dandelion Protocol described by Sharma et al. https://arxiv.org/pdf/2201.11860.pdf See page 5 for a description of the adversary.
-
         Parameters
         ----------
-        estimator : {'first_reach', 'first_sent'}, default 'first_reach'
+        estimator : {'first_reach', 'first_sent', 'dummy'}, default 'first_reach'
             Strategy to assign probabilities to network nodes:
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
             * first_sent: the node that sent the message the earliest to the receiver
             * dummy: the probability is divided equally between non-adversary nodes.
-
+            
+        References
+        ----------
+        We implement the adversarial strategy against the Dandelion Protocol described by Sharma et al. https://arxiv.org/pdf/2201.11860.pdf See page 5 for a description of the adversary.
         """
+        dummy_predictions = self._dummy_estimator()
         if estimator in ["first_reach", "first_sent"]:
             _, contact_node, received_from, contact_by_broadcast, predictions = self._find_first_contact(estimator)
             for msg in self.captured_msgs:
@@ -348,11 +351,15 @@ class DandelionAdversary(Adversary):
                     candidates = self._find_candidates_on_line_graph(received_from[msg])
                 else:
                     candidates = self._find_candidates_on_line_graph(contact_node[msg])
-                nodes, weights = zip(*candidates)
-                weights = np.array(weights) / np.sum(weights)
-                predictions.loc[msg] = pd.Series(data=weights, index=nodes)
+                # TODO: find out how is it possible to get empty candidate list!
+                if len(candidates) > 0:
+                    nodes, weights = zip(*candidates)
+                    weights = np.array(weights) / np.sum(weights)
+                    predictions.loc[msg] = pd.Series(data=weights, index=nodes)
+                else:
+                    predictions.loc[msg] = dummy_predictions.loc[msg]
         elif estimator == "dummy":
-            predictions = self._dummy_estimator()
+            predictions = dummy_predictions
         else:
             raise ValueError(
                 "Choose 'estimator' from values ['first_reach', 'first_sent', 'dummy']!"
