@@ -1,7 +1,7 @@
 # ethp2psim
 
-[![CI for Ubuntu with Codecov sync](https://github.com/ferencberes/ethsim/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/ferencberes/ethsim/actions/workflows/ubuntu.yml)
-[![CI for MacOS without Codecov sync](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml/badge.svg)](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml)
+[![CI for Ubuntu](https://github.com/ferencberes/ethsim/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/ferencberes/ethsim/actions/workflows/ubuntu.yml)
+[![CI for MacOS](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml/badge.svg)](https://github.com/ferencberes/ethsim/actions/workflows/macos.yml)
 [![codecov](https://codecov.io/gh/ferencberes/ethp2psim/branch/main/graph/badge.svg?token=6871LSZKSK)](https://codecov.io/gh/ferencberes/ethp2psim)
 [![Documentation Status](https://readthedocs.org/projects/ethp2psim/badge/?version=latest)](https://ethp2psim.readthedocs.io/en/latest/?badge=latest)
 ![Python versions](pybadge.svg)
@@ -23,23 +23,12 @@ pip install .
 
 ## Tests
 
-Run the following command at the root folder before pushing new commits to the repository!
+Run the following command at the root folder to make sure that your installation was successful:
 ```bash
 pytest --doctest-modules --cov
 ```
 **Please, always write tests for new code sections to maintain high code coverage!**
 
-## Source code formatting
-
-In this project, we use the [black](https://github.com/psf/black) Python code formatter.
-**Before each commit, please execute the following commands to maintain proper code formatting!**
-
-```bash
-black python
-black tests
-black scripts
-black *.ipynb
-```
 
 ## Quickstart
 
@@ -48,7 +37,6 @@ Here, we show an example of how to simulate the Dandelion protocol in the case o
 
 ### i.) Initialize simulation components
 ```python
-import sys
 from ethp2psim.network import Network, EdgeWeightGenerator, NodeWeightGenerator
 from ethp2psim.protocols import DandelionProtocol
 from ethp2psim.adversary import Adversary
@@ -114,6 +102,18 @@ print(evaluator.get_report())
 ```
 
 For more complex experiments, we prepared a [script](scripts/compare_baselines.py). You can observe the related results in this [notebook](Results.ipynb).
+
+## Source code formatting
+
+In this project, we use the [black](https://github.com/psf/black) Python code formatter.
+**Before each commit, please execute the following commands to maintain proper code formatting!**
+
+```bash
+black python
+black tests
+black scripts
+black *.ipynb
+```
 
 ## Documentation
 

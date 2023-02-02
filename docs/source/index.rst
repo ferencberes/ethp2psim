@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to ethp2psim's documentation!
-==================================
+=====================================
 
 In this Python package, we release our modular Ethereum transaction simulator to help better understand and compare different message-passing protocols in different adversarial settings.
 
@@ -47,6 +47,7 @@ Thank you for your generous support!
    message_and_protocols
    adversary
    simulator
+   experiments
    contributions
    
 
