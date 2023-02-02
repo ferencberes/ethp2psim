@@ -14,10 +14,10 @@ Create your conda environment:
 conda create -n ethsim python=3.8
 ```
 
-Activate your environment, then install Python dependencies:
+Activate your environment, then install the package along with requirements:
 ```bash
 conda activate ethsim
-pip install -r requirements.txt
+pip install .
 ```
 
 ## Tests
@@ -48,10 +48,9 @@ Here, we show an example of how to simulate the Dandelion protocol in the case o
 ### i.) Initialize simulation components
 ```python
 import sys
-sys.path.insert(0, "python")
-from network import Network, EdgeWeightGenerator, NodeWeightGenerator
-from protocols import DandelionProtocol
-from adversary import Adversary
+from ethp2psim.network import Network, EdgeWeightGenerator, NodeWeightGenerator
+from ethp2psim.protocols import DandelionProtocol
+from ethp2psim.adversary import Adversary
 ```
 
 First, initialize re-usable **generators for edge and node weights**, e.g. 

@@ -1,13 +1,12 @@
 import sys, argparse, json
 from datetime import datetime as dt
 
-sys.path.insert(0, "../python")
-from network import *
-from protocols import *
-from adversary import *
-from simulator import *
-from data import GoerliTestnet
-from experiments import run_and_eval, run_experiment
+from ethp2psim.network import *
+from ethp2psim.protocols import *
+from ethp2psim.adversary import *
+from ethp2psim.simulator import *
+from ethp2psim.data import GoerliTestnet
+from ethp2psim.experiments import run_and_eval, run_experiment
 
 
 def run_single_experiment(config):

@@ -5,11 +5,9 @@ Here, we show an example of how to simulate the Dandelion protocol in the case o
 
 ## Initialize simulation components
 ```python
-import sys
-sys.path.insert(0, "python")
-from network import Network, EdgeWeightGenerator, NodeWeightGenerator
-from protocols import DandelionProtocol
-from adversary import Adversary
+from ethp2psim.network import Network, EdgeWeightGenerator, NodeWeightGenerator
+from ethp2psim.protocols import DandelionProtocol
+from ethp2psim.adversary import Adversary
 ```
 
 First, initialize re-usable **generators for edge and node weights**, e.g. 
@@ -52,7 +50,7 @@ In this experiment, let's **simulate** 10 random messages for the same P2P netwo
 
 First, initialize the simulator by setting the protocol, the adversary, the number of simulated messages, and how the message source nodes are sampled.
 ```python
-from simulator import Simulation
+from ethp2psim.simulator import Simulation
 sim = Simulator(dp, adv, num_msg=10, use_node_weights=True, verbose=False)
 ```
 Due to the `use_node_weights=True` setting, source nodes for messages are randomly sampled with respect to their staked Ether amount in accordance with the formerly prepared `NodeWeightGenerator`.
@@ -66,7 +64,7 @@ sim.run()
 
 **Evaluate** the performance of the adversary for the given simulation. Here, you can choose different estimators for adversary performance evaluation (e.g., "first_sent", "first_reach", "dummy"):
 ```python
-from simulator import Evaluator
+from ethp2psim.simulator import Evaluator
 evaluator = Evaluator(sim, estimator="first_reach")
 print(evaluator.get_report())
 ```

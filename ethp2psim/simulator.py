@@ -1,10 +1,10 @@
 import numpy as np
 from tqdm.auto import tqdm
 from scipy.stats import entropy
-from message import Message
-from protocols import Protocol, DandelionProtocol
-from adversary import Adversary
-from network import Network
+from .message import Message
+from .protocols import Protocol, DandelionProtocol
+from .adversary import Adversary
+from .network import Network
 from typing import Optional, List, Iterable
 
 
@@ -29,9 +29,9 @@ class Simulator:
     --------
     Sample message sources with respect to stake distribution
 
-    >>> from network import *
-    >>> from adversary import Adversary
-    >>> from protocols import BroadcastProtocol
+    >>> from .network import *
+    >>> from .adversary import Adversary
+    >>> from .protocols import BroadcastProtocol
     >>> nw_gen = NodeWeightGenerator('stake')
     >>> ew_gen = EdgeWeightGenerator('normal')
     >>> net = Network(nw_gen, ew_gen, 10, 3)
@@ -43,10 +43,10 @@ class Simulator:
 
     Set 5 messages originating from node 0
 
-    >>> from network import *
-    >>> from message import Message
-    >>> from adversary import Adversary
-    >>> from protocols import BroadcastProtocol
+    >>> from .network import *
+    >>> from .message import Message
+    >>> from .adversary import Adversary
+    >>> from .protocols import BroadcastProtocol
     >>> nw_gen = NodeWeightGenerator('stake')
     >>> ew_gen = EdgeWeightGenerator('normal')
     >>> net = Network(nw_gen, ew_gen, 10, 3)
@@ -121,9 +121,9 @@ class Simulator:
         --------
         Run simulation until each message reaches 90% of all nodes
 
-        >>> from network import *
-        >>> from adversary import Adversary
-        >>> from protocols import BroadcastProtocol
+        >>> from .network import *
+        >>> from .adversary import Adversary
+        >>> from .protocols import BroadcastProtocol
         >>> seed = 42
         >>> nw_gen = NodeWeightGenerator('stake')
         >>> ew_gen = EdgeWeightGenerator('normal')
@@ -175,9 +175,9 @@ class Simulator:
         --------
         Observe the mean and standard deviation of propagation times until the messages reach 50% and 95% of all nodes.
 
-        >>> from network import *
-        >>> from adversary import Adversary
-        >>> from protocols import BroadcastProtocol
+        >>> from .network import *
+        >>> from .adversary import Adversary
+        >>> from .protocols import BroadcastProtocol
         >>> seed = 42
         >>> nw_gen = NodeWeightGenerator('stake')
         >>> ew_gen = EdgeWeightGenerator('normal')
@@ -228,9 +228,9 @@ class Evaluator:
     --------
     Observe the complete evaluation pipeline below. First, initialize network, protocol, adversary. Then, simulate 20 messages with these components. Finally, query the report using the first sent estimator for the aversary.
 
-    >>> from network import *
-    >>> from adversary import Adversary
-    >>> from protocols import BroadcastProtocol
+    >>> from .network import *
+    >>> from .adversary import Adversary
+    >>> from .protocols import BroadcastProtocol
     >>> seed = 42
     >>> nw_gen = NodeWeightGenerator('stake')
     >>> ew_gen = EdgeWeightGenerator('normal')
