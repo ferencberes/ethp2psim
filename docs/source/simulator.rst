@@ -35,3 +35,5 @@ Using the :class:`ethp2psim.simulator.Evaluator` is very straightforward:
 #. Finally, query the report from the evaluator that will be most useful when you want to compare simulations with different network topology, protocol or other setups.
    
 .. autoclass:: ethp2psim.simulator.Evaluator
+
+Now, you're good to go to run your own experiments. But, we encourage you to discover all the related resources in the next section that we prepared for you to ease your work.
