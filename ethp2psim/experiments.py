@@ -166,8 +166,8 @@ def prepare_results_for_visualization(
         "broadcast_mode",
     ],
 ) -> pd.DataFrame:
-    return df.drop(["inverse_rank", "entropy"], axis=1).melt(
-        value_vars=["hit_ratio", "ndcg", "message_spread_ratio"],
+    return df.melt(
+        value_vars=["hit_ratio", "inverse_rank", "ndcg", "entropy", "message_spread_ratio"],
         var_name="metric",
         id_vars=id_vars,
     )

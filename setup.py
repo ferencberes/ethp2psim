@@ -5,8 +5,8 @@ from distutils.core import setup
 setup(name='ethp2psim',
 	version='1.0',
 	description='Ethereum peer-to-peer network simulator',
-	author='Ferenc Béres',
-	author_email='fberes@sztaki.hu',
+	author='Ferenc Béres, Istvan Andras Seres, Domokos Miklos Kelen',
+	author_email='beres@sztaki.hu',
 	packages=['ethp2psim'],
 	install_requires=[
 		"numpy",
