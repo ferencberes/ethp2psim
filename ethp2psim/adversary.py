@@ -373,7 +373,7 @@ class DandelionAdversary(Adversary):
                     candidates = self._find_candidates_on_line_graph(received_from[msg])
                 else:
                     candidates = self._find_candidates_on_line_graph(contact_node[msg])
-                # TODO: find out how is it possible to get empty candidate list!
+                # Candidate list can be empty, when adversary hears the message from a source (i.e., 0 in-degree) node in the anonymity graph. This is an expected behavior. Suppose the first contact node happens to be a source (0 in-degree) in the anonymity graph. In that case, the adversary cannot say anything since it cannot backtrack in the anonymity graph and surely knows that the source node could not be the originator of the message since, in Dandelion(++), there is always at least one hop. This weird scenario can only occur if the adversary hears about the message only in the broadcast phase.
                 if len(candidates) > 0:
                     nodes, weights = zip(*candidates)
                     weights = np.array(weights) / np.sum(weights)
