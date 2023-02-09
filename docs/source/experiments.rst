@@ -42,5 +42,14 @@ In the following, we include some fascinating simulation results produced by eth
 ..  figure:: ../../figures/graph_model_comparision.png
 
     In this Figure, we observe how different graph topologies (random regular graph and a scale-free graph (Görli testnet's topology)) affects the adversary's deanonymization power measured by inverse_rank, hit_ratio and ndcg. We find that Görli testnet provides more privacy across all metrics. We also measure the percentage of users that see a broadcasted message. In the last row of this figure, one can see that a handful of nodes do not see all the broadcasted messages in case of the scale-free graph. We could attribute this phenomena to the hub and spoke structure of the Görli testnet. Some nodes in the spoke part of the network might not see all the broadcasted messages.
+    
+
+..  figure:: ../../figures/passive_vs_active_adversary_centrality_message_spread.png
+
+    In the simulations, we can consider two types of adversaries. A passive adversary follows the protocol and only logs the timestamp information when they received messages. However, an active adversary on top of logging information, does not forward any incoming messages. This is especially problematic in Dandelion(++). Imagine that an active adversary sits in the stem (anonymity) phase of Dandelion(++). In this case, the message will be never broadcasted. The more and more adversaries censor messages the larger the portion of messages that are not heard by nodes in the p2p graph. This is even more concerning, when the high-degree nodes are compromised. Note that the random regular graph is more robust against (active) adversaries.
+    
+..  figure:: ../../figures/passive_vs_active_adversary_inverse_rank.png
+
+    Once again, we see the low levels of privacy (measured in inverse_rank in this figure) provided by various privacy-enhanced routing algorithms. Generally speaking, active adversaries are more powerful in deanonymizing the messsage originators than passive adversaries. Deanonymization results are slightly better for the Görli testnet's topology, i.e., the adversary is less powerful on a scale-free graph. A random regular graph is more dense (has a higher number edges), hence, adversary can eavesdrop on more messages and can make a more informed guess about the originator of messages.
 
     
