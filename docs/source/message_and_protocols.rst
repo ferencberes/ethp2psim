@@ -19,7 +19,7 @@ Nonetheless, in the examples below, we showcase how a message originating from n
    :show-inheritance:
 
 How do protocols work?
--------------------
+----------------------
 
 Message spreading in detail is more technical. We use the :class:`ethp2psim.protocols.ProtocolEvent` class to track how a given message (:class:`ethp2psim.message.Message`) spreads over the nodes of the P2P network (:class:`ethp2psim.network.Network`). This is where we store valuable information (e.g., time delays and the number of hops from the message source) that are essential to evaluate the performance of different protocols in obfuscating message sources.
 
