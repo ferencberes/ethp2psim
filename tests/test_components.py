@@ -144,6 +144,8 @@ def test_dandelion_pp_line_graph():
     AG = protocol.anonymity_graph
     assert AG.number_of_nodes() == net.num_nodes
     assert AG.number_of_edges() == 2 * net.num_nodes
+    for v in AG.nodes:
+        assert AG.out_degree(v) == 2
 
 
 def test_dandelion_single_message():
