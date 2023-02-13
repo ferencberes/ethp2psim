@@ -323,7 +323,7 @@ class DandelionAdversary(Adversary):
         candidates = []
         processed = []
         while len(q) > 0:
-            #print(q)
+            # print(q)
             candidate, weight = q.popleft()
             # do not process loops twice
             if candidate in processed:
@@ -331,7 +331,9 @@ class DandelionAdversary(Adversary):
             else:
                 processed.append(candidate)
                 next_weight = (
-                    1.0 if weight == 0 else weight * (1.0 - self.protocol.spreading_proba)
+                    1.0
+                    if weight == 0
+                    else weight * (1.0 - self.protocol.spreading_proba)
                 )
                 if candidate != start_node:
                     candidates.append((candidate, weight))
@@ -368,7 +370,7 @@ class DandelionAdversary(Adversary):
                 predictions,
             ) = self._find_first_contact(estimator)
             for msg in self.captured_msgs:
-                #print(msg)
+                # print(msg)
                 if contact_by_broadcast[msg]:
                     candidates = self._find_candidates_on_line_graph(received_from[msg])
                 else:

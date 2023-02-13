@@ -29,8 +29,24 @@ A few interesting simulation results
 
 In the following, we include some fascinating simulation results produced by ethp2psim. You can create similar and more advanced measurements using this tool. The following examples might serve as some inspiration what you can build using this tool. Let's analyze some of the privacy-enhancing routing algorithms in various networks and adversarial settings!
 
+A discussion on performance metrics
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First, let's start with a simple experiment where we compare the deanonymization power of the adversary when it uses the first-reach or the first-sent heuristics to determine the source of each message. These estimator strategies are used to guess the first node that broadcasted a given message based on the observations of all adversarial nodes. In short, an adversary using the first-reach heuristic predicts a node to be the first broadcaster if it is the first node that it heard the message from. On the other hand, using channel latency information, a first-sent estimator tries to identify the neighbor that first sent the message to any of the adversarial nodes. Naturally, the two predictions might not coinside as the triangle inequality does not necessarily hold for P2P network latency.
+
+In this experiment, we use a random regular graph with 1000 nodes and 50 degree to compare the two heuristics against simple :class:`protocols.BroadcastProtocol` and :class:`protocols.DandelionProtocol`. Not surprisingly, our results show that the adversary with the first-sent estimator performs significantly better. However, we highlight that only the hit ratio, inverse rank and NDCG can reflect this behavior where ground truth information about message sources is compiled into the evaluation.    
+
+..  figure:: ../../figures/passive_estimator_check.png
+
+Unfortunately, entropy does not work this way. It only measures the uncertainty of the prediction but not its goodness.
+
+..  figure:: ../../figures/passive_estimator_entropy.png
+
+It is interesting to see how Dandelion can confuse the adversary compared to simple broadcasting in terms of hit ratio (e.g., first-sent performance drops from 0.5 to 0.3 in case of 10% adversarial nodes) which might indicate that it is an overly ambitious performance metric. Instead, **our recommendation is to use inverse rank or NDCG for evaluation**. These metrics can better reflect that despite the higher uncertainty introduced by Dandelion(++) the adversary can still make a good educated guess in knowledge of the anonymity graph. For example, it is quite shocking to see the change in inverse from 0.5 to 0.4, that is only 0.5 worse ranks on average for the predicted message source, in case of 10% adversarial nodes. 
+
 Comparing different network topologies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. _topology_results:
 
 In the Figure below, we observe how different graph topologies (random regular graph and a scale-free graph (Görli testnet's topology)) affects the adversary's deanonymization power measured by various different metrics (e.g., hit ratio, inverse rank, NDCG). The deanonymization performance is displayed with respect to the ratio of adversarial nodes (see the x-axis) in the P2P network.
 
@@ -47,7 +63,7 @@ Furthermore, we measure the percentage of nodes reached by a message in general.
 Broadcast settings
 ~~~~~~~~~~~~~~~~~~
 
-Next, observe the significant change in the results when a message is propagated to all neighbors, instead a random square root of them, during the broadcast phase. It is quite shocking that an adversary controling 10% of all nodes can be almost sure about the identity of the message source in case of simple :class:`protocols.BroadcastProtocol`. Clearly, Dandelion can significantly decrease the deanonymization performance of the adversary but it has a high price in terms of robustness detailed in the next section.
+Next, observe the significant change in the results when a message is propagated to all neighbors, instead :ref:`a random square root of them <topology_results>`, during the broadcast phase. It is quite shocking that an adversary controling 10% of all nodes can be almost sure about the identity of the message source in case of simple :class:`protocols.BroadcastProtocol`. Clearly, Dandelion can significantly decrease the deanonymization performance of the adversary but it has a high price in terms of robustness detailed in the next section.
 
 ..  figure:: ../../figures/broadcast_mode_inverse_rank.png
 

@@ -252,9 +252,12 @@ class Evaluator:
         self.proba_ranks = self.probas.rank(axis=1, ascending=False, method="first")
 
     @property
+    def num_nodes(self):
+        return self.simulator.adversary.protocol.network.num_nodes
+
+    @property
     def message_spread_ratios(self):
-        N = self.simulator.adversary.protocol.network.num_nodes
-        return [len(msg.history) / N for msg in self.simulator.messages]
+        return [len(msg.history) / self.num_nodes for msg in self.simulator.messages]
 
     @property
     def exact_hits(self):
@@ -278,8 +281,8 @@ class Evaluator:
             if msg.mid in self.probas.index:
                 ranks.append(self.proba_ranks.loc[msg.mid, msg.source])
             else:
-                # what to do with unseen messages? random rank might be better...
-                ranks.append(self.simulator.adversary.protocol.network.num_nodes)
+                # passive approach: let's suppose we make the worst prediction
+                ranks.append(self.num_nodes)
         return np.array(ranks)
 
     @property
@@ -292,17 +295,17 @@ class Evaluator:
         for msg in self.simulator.messages:
             # adversary might not see every message
             if msg.mid in self.probas.index:
-                ndcg = 1.0 / np.log2(1.0 + self.proba_ranks.loc[msg.mid, msg.source])
-                scores.append(ndcg)
+                rank = self.proba_ranks.loc[msg.mid, msg.source]
             else:
-                # what to do with unseen messages? random rank might be better...
-                scores.append(0.0)
+                # passive approach: let's suppose we make the worst prediction
+                rank = num_nodes
+            ndcg = 1.0 / np.log2(1.0 + rank)
+            scores.append(ndcg)
         return np.array(scores)
 
     @property
     def entropies(self):
-        num_nodes = self.simulator.adversary.protocol.network.num_nodes
-        rnd_entropy = entropy(1.0 / num_nodes * np.ones(num_nodes), base=2)
+        rnd_entropy = entropy(1.0 / self.num_nodes * np.ones(self.num_nodes), base=2)
         entropies = []
         for msg in self.simulator.messages:
             # adversary might not see every message

@@ -167,7 +167,13 @@ def prepare_results_for_visualization(
     ],
 ) -> pd.DataFrame:
     return df.melt(
-        value_vars=["hit_ratio", "inverse_rank", "ndcg", "entropy", "message_spread_ratio"],
+        value_vars=[
+            "hit_ratio",
+            "inverse_rank",
+            "ndcg",
+            "entropy",
+            "message_spread_ratio",
+        ],
         var_name="metric",
         id_vars=id_vars,
     )
