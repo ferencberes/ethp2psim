@@ -7,6 +7,8 @@
 ![Python versions](pybadge.svg)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ferencberes/ethp2psim/HEAD?labpath=EthP2PSimExamples.ipynb)
 
+**ethp2psim** is a network privacy simulator for the Ethereum peer-to-peer (p2p) network. It allows developers and researchers to implement, test, and evaluate the anonymity and privacy guarantees of various routing protocols (e.g., Dandelion(++)) and custom privacy-enhanced message routing protocols. *Issues, PRs, and contributions are welcome!* Let's make Ethereum private together!
+
 **WARNING: This repository is still under active development. Currently, we're putting into place the last features. Please, do not consider our code to be ready for public use until we make our first release. Kind regards: The collaborators**
 
 ## Installation
