@@ -6,6 +6,8 @@
 Welcome to ethp2psim's documentation!
 =====================================
 
+ethp2psim is a network privacy simulator for the Ethereum peer-to-peer (p2p) network. It allows developers and researchers to implement, test, and evaluate the anonymity and privacy guarantees of various routing protocols (e.g., Dandelion(++)) and custom privacy-enhanced message routing protocols. Issues, PRs, and contributions are welcome! Let's make Ethereum private together!
+
 In this Python package, we release our modular Ethereum transaction simulator to help better understand and compare different message-passing protocols in different adversarial settings.
 
 Our simulator has the following major components that you can use to build up complex simulations or to implement your own message-passing protocol:
