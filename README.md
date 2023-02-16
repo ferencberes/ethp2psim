@@ -5,6 +5,7 @@
 [![codecov](https://codecov.io/gh/ferencberes/ethp2psim/branch/main/graph/badge.svg?token=6871LSZKSK)](https://codecov.io/gh/ferencberes/ethp2psim)
 [![Documentation Status](https://readthedocs.org/projects/ethp2psim/badge/?version=latest)](https://ethp2psim.readthedocs.io/en/latest/?badge=latest)
 ![Python versions](pybadge.svg)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ferencberes/ethp2psim/HEAD?labpath=EthP2PSimExamples.ipynb)
 
 **WARNING: This repository is still under active development. Currently, we're putting into place the last features. Please, do not consider our code to be ready for public use until we make our first release. Kind regards: The collaborators**
 
@@ -32,7 +33,7 @@ pytest --doctest-modules --cov
 
 ## Quickstart
 
-Here, we show an example of how to simulate the Dandelion protocol in the case of the most basic adversarial setting (predict a node to be the message source if malicious nodes first heard of this message from the given node).
+Here, we show an example of how to simulate the Dandelion protocol in the case of the most basic adversarial setting (predict a node to be the message source if malicious nodes first heard of this message from the given node). You can also experiment with the code below online using [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ferencberes/ethp2psim/HEAD?labpath=EthP2PSimExamples.ipynb).
 
 For reproducability, **fix a random seed**:
 
