@@ -23,7 +23,7 @@ In this project, we use the [black](https://github.com/psf/black) Python code fo
 **Before each commit, please execute the following commands to maintain proper code formatting!**
 
 ```bash
-black python
+black ethp2psim
 black tests
 black scripts
 black *.ipynb
@@ -57,5 +57,7 @@ Always write a clear log message for your commits. One-line messages are fine fo
     > 
     > A paragraph describing what changed and its impact."
 
+
 Thanks,
+
 Ferenc, István, Domokos
