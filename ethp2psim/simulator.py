@@ -298,7 +298,7 @@ class Evaluator:
                 rank = self.proba_ranks.loc[msg.mid, msg.source]
             else:
                 # passive approach: let's suppose we make the worst prediction
-                rank = num_nodes
+                rank = self.num_nodes
             ndcg = 1.0 / np.log2(1.0 + rank)
             scores.append(ndcg)
         return np.array(scores)

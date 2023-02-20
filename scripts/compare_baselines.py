@@ -35,11 +35,11 @@ def run_single_experiment(config):
                 net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
             )
         )
-        # protocols.append(
-        #    DandelionPlusPlusProtocol(
-        #        net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
-        #    )
-        # )
+        protocols.append(
+            DandelionPlusPlusProtocol(
+                net, spreading_proba, broadcast_mode=config["broadcast_mode"], seed=seed
+            )
+        )
     # use the same set of adversarial nodes for all protocols
     num_adv_nodes = int(net.num_nodes * config["adversary_ratio"])
     if config["adversary_centrality_metric"] != "none":
