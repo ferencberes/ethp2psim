@@ -30,8 +30,6 @@ Run the following command at the root folder to make sure that your installation
 ```bash
 pytest --doctest-modules --cov
 ```
-**Please, always write tests for new code sections to maintain high code coverage!**
-
 
 ## Quickstart
 
@@ -110,36 +108,6 @@ print(evaluator.get_report())
 ```
 
 For more complex experiments, we prepared a [script](scripts/compare_baselines.py). You can observe the related results in this [notebook](Results.ipynb).
-
-## Source code formatting
-
-In this project, we use the [black](https://github.com/psf/black) Python code formatter.
-**Before each commit, please execute the following commands to maintain proper code formatting!**
-
-```bash
-black python
-black tests
-black scripts
-black *.ipynb
-```
-
-## Documentation
-
-Install every dependency that is needed to generate code documentation.
-The commands below need to be executed only once:
-
-```bash
-cd docs
-pip install -r requirements.txt
-```
-
-Then, you can update code documentation locally with the following command:
-```bash
-cd docs
-make html
-```
-
-A generated documentation resides in the `docs/build/html/` folder.
 
 ## Acknowledgements
 
