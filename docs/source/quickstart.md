@@ -11,7 +11,7 @@ from ethp2psim.protocols import DandelionProtocol
 from ethp2psim.adversary import DandelionAdversary
 ```
 
-For reproducability, **fix a random seed**:
+For reproducibility, **fix a random seed**:
 
 ```python
 seed = 42
@@ -32,7 +32,7 @@ net = Network(nw_gen, ew_gen, num_nodes=100, k=20, seed=seed)
 ```
 
 Next, initialize the Dandelion **protocol** where 
-   * A message is broadcasted with 40% probability in the stem (anonymity) phase, or it is further propagated on the line graph with 60% probability.  
+   * A message is broadcasted with a 40% probability in the stem (anonymity) phase or further propagated on the line graph with a 60% probability.
    * With the `broadcast_mode="sqrt"` the message is only sent to a randomly selected square root of neighbors in the spreading phase.
    
 ```python
@@ -45,7 +45,7 @@ import matplotlib.pyplot as plt
 nx.draw(dp.anonymity_graph, node_size=20)
 ```
 
-Finally, initilaize a passive **adversary** against the Dandelion protocol that controls random 10% of all nodes.
+Finally, initialize a passive **adversary** against the Dandelion protocol that controls a random 10% of all nodes.
 ```python
 adv = DandelionAdversary(dp, 0.1, active=False, seed=seed)
 ```

@@ -35,7 +35,7 @@ pytest --doctest-modules --cov
 
 Here, we show an example of how to simulate the Dandelion protocol in the case of the most basic adversarial setting (predict a node to be the message source if malicious nodes first heard of this message from the given node). You can also experiment with the code below online using [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ferencberes/ethp2psim/HEAD?labpath=EthP2PSimExamples.ipynb).
 
-For reproducability, **fix a random seed**:
+For reproducibility, **fix a random seed**:
 
 ```python
 seed = 42
@@ -63,7 +63,7 @@ net = Network(nw_gen, ew_gen, num_nodes=100, k=20, seed=seed)
 ```
 
 Next, initialize the Dandelion **protocol** where 
-   * A message is broadcasted with 40% probability in the stem (anonymity) phase, or it is further propagated on the line graph with 60% probability.  
+   * A message is broadcasted with a 40% probability in the stem (anonymity) phase or further propagated on the line graph with a 60% probability.
    * With the `broadcast_mode="sqrt"` the message is only sent to a randomly selected square root of neighbors in the spreading phase.
    
 ```python
@@ -76,7 +76,7 @@ import matplotlib.pyplot as plt
 nx.draw(dp.anonymity_graph, node_size=20)
 ```
 
-Finally, initilaize a passive **adversary** against the Dandelion protocol that controls random 10% of all nodes.
+Finally, initialize a passive **adversary** against the Dandelion protocol that controls a random 10% of all nodes.
 ```python
 adv = DandelionAdversary(dp, 0.1, active=False, seed=seed)
 ```
