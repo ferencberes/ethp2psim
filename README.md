@@ -5,7 +5,7 @@
 [![codecov](https://codecov.io/gh/ferencberes/ethp2psim/branch/main/graph/badge.svg?token=6871LSZKSK)](https://codecov.io/gh/ferencberes/ethp2psim)
 [![Documentation Status](https://readthedocs.org/projects/ethp2psim/badge/?version=latest)](https://ethp2psim.readthedocs.io/en/latest/?badge=latest)
 ![Python versions](pybadge.svg)
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ferencberes/ethp2psim/HEAD?labpath=EthP2PSimExamples.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ferencberes/ethp2psim/HEAD?labpath=ipython/EthP2PSimExamples.ipynb)
 
 **ethp2psim** is a network privacy simulator for the Ethereum peer-to-peer (p2p) network. It allows developers and researchers to implement, test, and evaluate the anonymity and privacy guarantees of various routing protocols (e.g., Dandelion(++)) and custom privacy-enhanced message routing protocols. *Issues, PRs, and contributions are welcome!* Let's make Ethereum private together!
 
