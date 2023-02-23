@@ -177,14 +177,12 @@ class Adversary:
         """
         self.captured_events.append(ee)
         self.captured_msgs.add(ee.mid)
-        
+
     def record_packet(self, pe: ProtocolEvent):
         """Record sent protocol events. Only relevant for OnionRoutingProtocol"""
         pass
 
-    def find_first_contact(
-        self, estimator: str
-    ) -> Iterable[Union[dict, pd.DataFrame]]:
+    def find_first_contact(self, estimator: str) -> Iterable[Union[dict, pd.DataFrame]]:
         contact_time = {}
         reference_time = {}
         received_from = {}
@@ -200,7 +198,9 @@ class Adversary:
                 )
             else:
                 timestamp = ee.protocol_event.delay
-            if (not message_id in contact_time) or timestamp < reference_time[message_id]:
+            if (not message_id in contact_time) or timestamp < reference_time[
+                message_id
+            ]:
                 reference_time[message_id] = timestamp
                 contact_time[message_id] = ee.protocol_event.delay
                 received_from[message_id] = sender
@@ -396,6 +396,7 @@ class DandelionAdversary(Adversary):
             )
         return predictions.fillna(0.0)
 
+
 class OnionRoutingAdversary(Adversary):
     def __init__(
         self,
@@ -412,7 +413,7 @@ class OnionRoutingAdversary(Adversary):
         )
         self.sent_packets = []
         self.received_packets = []
-        self.first_broadcaster_events = {} 
+        self.first_broadcaster_events = {}
 
     def __repr__(self):
         return (
@@ -420,7 +421,7 @@ class OnionRoutingAdversary(Adversary):
             .__repr__()
             .replace("Adversary", "OnionRoutingAdversary")
         )
-    
+
     def eavesdrop_msg(self, ee: EavesdropEvent) -> NoReturn:
         """
         Adversary records the observed information.
@@ -441,19 +442,21 @@ class OnionRoutingAdversary(Adversary):
             if len(path_info) == 1:
                 assert path_info[0] in self.nodes
                 self.first_broadcaster_events[ee.mid] = ee.protocol_event
-    
+
     def record_packet(self, pe: ProtocolEvent) -> NoReturn:
         """
         Record sent encrypted packages
-        
+
         Parameters
         ----------
         pe : ProtocolEvent
             Event sent by the adversary to the next relayer in the encrypted channel.
         """
         self.sent_packets.append(pe)
-        
-    def _track_first_broadcaster(self, mid: str, contact_time: dict, contact_node: dict, received_from: dict) -> Iterable[Union[int, float]]:
+
+    def _track_first_broadcaster(
+        self, mid: str, contact_time: dict, contact_node: dict, received_from: dict
+    ) -> Iterable[Union[int, float]]:
         """Guess first broadcaster (last relayer in the channel) for a given message based on adversary observations."""
         if mid in self.first_broadcaster_events:
             pe = self.first_broadcaster_events[mid]
@@ -467,32 +470,56 @@ class OnionRoutingAdversary(Adversary):
             u = received_from[mid]
             step = -1
         return (u, v, t, step)
-    
-    def _find_candidates(self, mid: str, prev_events: list, next_events: list, contact_time: dict, contact_node: dict, received_from: dict, estimator: str) -> List[Iterable[Union[int, float]]]:
+
+    def _find_candidates(
+        self,
+        mid: str,
+        prev_events: list,
+        next_events: list,
+        contact_time: dict,
+        contact_node: dict,
+        received_from: dict,
+        estimator: str,
+    ) -> List[Iterable[Union[int, float]]]:
         """Try to reconstruct encrypted channels based on received and sent packets information."""
-        def step_back(u:int, v:int, t:float, step:int):
-            return u, t - self.protocol.network.get_edge_weight(u, v, external=self.protocol.anonymity_network), step+1
+
+        def step_back(u: int, v: int, t: float, step: int):
+            return (
+                u,
+                t
+                - self.protocol.network.get_edge_weight(
+                    u, v, external=self.protocol.anonymity_network
+                ),
+                step + 1,
+            )
+
         predictions = []
-        queue = deque([self._track_first_broadcaster(mid, contact_time, contact_node, received_from)])
-        #print(queue)
+        queue = deque(
+            [
+                self._track_first_broadcaster(
+                    mid, contact_time, contact_node, received_from
+                )
+            ]
+        )
+        # print(queue)
         while len(queue) > 0:
             u, v, t, step = queue.popleft()
-            #print(u, v, t, step)
+            # print(u, v, t, step)
             v, t, step = step_back(u, v, t, step)
-            #print(v, t, step)
+            # print(v, t, step)
             is_adv = v in self.nodes
-            #print(is_adv)
+            # print(is_adv)
             contacts, candidates, timestamps = prev_events if is_adv else next_events
             if timestamps != None:
                 idx = (np.abs(np.array(timestamps) - t)).argmin()
-                #print('time', t, timestamps, idx, candidates)
+                # print('time', t, timestamps, idx, candidates)
                 # TODO: how to generalize this condition?
-                if np.abs(t-timestamps[idx]) < 1.0: # difference is less than 1ms
+                if np.abs(t - timestamps[idx]) < 1.0:  # difference is less than 1ms
                     queue.append((candidates[idx], v, t, step))
                 else:
-                    predictions.append((v,t,step))
+                    predictions.append((v, t, step))
         return predictions
-    
+
     def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
         """
         Predict source nodes for each message in a run of the Dandelion Protocol
@@ -505,6 +532,7 @@ class OnionRoutingAdversary(Adversary):
             * first_sent: the node that sent the message the earliest to the receiver
             * dummy: the probability is divided equally between non-adversary nodes.
         """
+
         def extract_timeline(packets: List[ProtocolEvent]):
             """Extract received or sent packets timeline for OnionRoutingAdversary"""
             if len(packets) > 0:
@@ -514,18 +542,36 @@ class OnionRoutingAdversary(Adversary):
                 # it can happen that no adversary was in the encrypted channel
                 out = [None, None, None]
             return out
-        contact_time, contact_node, received_from, _, predictions = self.find_first_contact(estimator)
+
+        (
+            contact_time,
+            contact_node,
+            received_from,
+            _,
+            predictions,
+        ) = self.find_first_contact(estimator)
         next_events = extract_timeline(self.sent_packets)
         prev_events = extract_timeline(self.received_packets)
-        #print(next_events)
-        #print(prev_events)
+        # print(next_events)
+        # print(prev_events)
         for mid in self.captured_msgs:
-            candidates = [record[0] for record in self._find_candidates(mid, prev_events, next_events, contact_time, contact_node, received_from, estimator)]
+            candidates = [
+                record[0]
+                for record in self._find_candidates(
+                    mid,
+                    prev_events,
+                    next_events,
+                    contact_time,
+                    contact_node,
+                    received_from,
+                    estimator,
+                )
+            ]
             if len(candidates) == 0:
                 # TODO: later handle that adversaries never start a message
                 candidates = self.candidates
                 # original source is surely not the assumed first broadcaster
                 candidates.remove(received_from[mid])
             for node in candidates:
-                predictions.at[mid, node] = 1.0/len(candidates)
+                predictions.at[mid, node] = 1.0 / len(candidates)
         return predictions.fillna(0.0)

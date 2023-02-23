@@ -154,7 +154,9 @@ class Message:
                         if not (event.receiver in self.broadcasters):
                             # do not send message to node who previously broadcasted it
                             heapq.heappush(self.queue, event)
-                            if (event.sender in adv.nodes) and (not self.spreading_phase):
+                            if (event.sender in adv.nodes) and (
+                                not self.spreading_phase
+                            ):
                                 adv.record_packet(event)
             else:
                 stop = True

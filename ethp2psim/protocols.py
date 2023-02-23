@@ -410,7 +410,7 @@ class OnionRoutingProtocol(BroadcastProtocol):
     >>> tor = OnionRoutingProtocol(net, num_relayers=3, broadcast_mode='all')
     >>> tor.anonymity_network.num_edges > net.num_nodes
     True
-    
+
     References
     ----------
     Find more details about the OnionRoutingProtocol in our manuscript:
@@ -429,15 +429,15 @@ class OnionRoutingProtocol(BroadcastProtocol):
         self._num_relayers = num_relayers
         self._tor_network = {}
         self.change_anonimity_graph()
-        
+
     @property
     def num_relayers(self):
         return self._num_relayers
-    
+
     @property
     def num_arms(self):
         return self._num_arms
-    
+
     @property
     def tor_network(self):
         return self._tor_network
@@ -453,7 +453,7 @@ class OnionRoutingProtocol(BroadcastProtocol):
                 )
                 tor_network[node].append(arm_nodes)
                 tor_edges.append((node, arm_nodes[0]))
-                for i in range(self.num_relayers-1):
+                for i in range(self.num_relayers - 1):
                     tor_edges.append((arm_nodes[i], arm_nodes[i + 1]))
         self._tor_network = tor_network
         G = nx.Graph()
@@ -462,7 +462,7 @@ class OnionRoutingProtocol(BroadcastProtocol):
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
-        #print(pe)
+        # print(pe)
         if pe.spreading_phase:
             return super(OnionRoutingProtocol, self).propagate(pe)
         else:
