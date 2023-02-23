@@ -240,6 +240,7 @@ class Network:
         elif external is not None:
             return external.get_edge_weight(node1, node2)
         else:
+            #print(link)
             return None
 
     def get_central_nodes(self, k: int, metric: str = "degree"):

@@ -3,8 +3,8 @@ import networkx as nx
 
 from ethp2psim.simulator import Simulator, Evaluator
 from ethp2psim.network import Network, NodeWeightGenerator, EdgeWeightGenerator
-from ethp2psim.protocols import BroadcastProtocol, DandelionProtocol
-from ethp2psim.adversary import Adversary, DandelionAdversary
+from ethp2psim.protocols import *
+from ethp2psim.adversary import *
 from ethp2psim.message import Message
 from ethp2psim.experiments import *
 
@@ -146,3 +146,22 @@ def test_dandelion_adversary_stem_contact():
             assert (probas0[node] - 0.333333) < 0.0001
         else:
             assert (probas0[0] - 0.0) < 0.0001
+            
+def test_onion_routing_predictions():
+    seed = 42
+    nw = NodeWeightGenerator('random', seed)
+    ew = EdgeWeightGenerator('random', seed)
+    net = Network(nw, ew, 20, 3, seed=seed)
+    assert net.num_nodes == 20
+    orp = OnionRoutingProtocol(net,  broadcast_mode='all', seed=seed)
+    assert orp.tor_network[9] == [[7, 5, 1]]
+    assert orp.tor_network[10] == [[1, 14, 9]]
+    assert orp.tor_network[3] == [[14, 15, 8]]
+    adv = OnionRoutingAdversary(orp, adversaries=[7,1,14], seed=seed)
+    msgs = [Message(9), Message(10), Message(3)]
+    sim = Simulator(adv, messages=msgs, seed=seed)
+    _ = sim.run()
+    predictions = adv.predict_msg_source(estimator="first_sent")
+    assert predictions.loc[msgs[0].mid, 9] == 1.0 # correct hit
+    assert predictions.loc[msgs[1].mid, 10] == 1.0 # correct hit
+    assert predictions.loc[msgs[2].mid, 8] == 1.0 # wrong hit - last relayer should never be predicted...

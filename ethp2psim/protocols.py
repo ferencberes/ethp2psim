@@ -21,7 +21,7 @@ class ProtocolEvent:
     spreading_phase: bool
         Flag to indicate whether the message entered the spreading phase
     path : list
-        Remaining path for the message (only used in TOREnhancedProtocol)
+        Remaining path for the message (only used in OnionRoutingProtocol)
 
 
     Examples
@@ -385,18 +385,16 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
             return [self._get_new_event(node, receiver_node, pe, False)], False
 
 
-class TOREnhancedProtocol(BroadcastProtocol):
+class OnionRoutingProtocol(BroadcastProtocol):
     """
-    Message propagation is first based on an anonymity phase that is followed by a spreading phase
+    Message propagation is first based on an anonymity phase that is followed by a spreading phase. During the anonymity phase the messages are propagated on pre-selected channels that contain multiple relayer nodes. The message source uses onion routing to encrypt the message with the public keys of relayer nodes. When an encrypted message reaches the last relayer in a given chain then it is broadcasted as a cleartext message. This is the start of the spreading phase.
 
     Parameters
     ----------
     network : network.Network
         Represent the underlying P2P network used for message passing
-    num_arms: int (Default: 1)
-        Number of arms for message propagation
-    num_hops : int (Default: 2)
-        Number of hops (intermediary nodes) on each arm. Intermediary nodes relay the message to the final node on each arm that is the broadcaster node.
+    num_relayers : int (Default: 2)
+        Number of hops (intermediary nodes) on each arm (currently only 1 arm is supported). Intermediary nodes relay the message to the final node on each arm that is the broadcaster node.
     broadcast_mode : str
         Use value 'sqrt' to broadcast the message only to a randomly selected square root of neighbors. Otherwise the message will be sent to every neighbor in the spreading phase.
     seed: int (optional)
@@ -409,46 +407,64 @@ class TOREnhancedProtocol(BroadcastProtocol):
     >>> ew_generator = EdgeWeightGenerator("normal")
     >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
     >>> num_edges = net.graph.number_of_edges()
-    >>> tor = TOREnhancedProtocol(net, num_arms=2, num_hops=3, broadcast_mode='all')
-    >>> tor.anonymity_network.num_edges > 2 * net.num_nodes
+    >>> tor = OnionRoutingProtocol(net, num_relayers=3, broadcast_mode='all')
+    >>> tor.anonymity_network.num_edges > net.num_nodes
     True
+    
+    References
+    ----------
+    Find more details about the OnionRoutingProtocol in our manuscript:
+    https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf
     """
 
     def __init__(
         self,
         network: Network,
-        num_arms: int = 1,
-        num_hops: int = 2,
+        num_relayers: int = 3,
         broadcast_mode: str = "sqrt",
         seed: Optional[int] = None,
     ):
-        super(TOREnhancedProtocol, self).__init__(network, broadcast_mode, seed)
-        self.num_arms = num_arms
-        self.num_hops = num_hops
+        super(OnionRoutingProtocol, self).__init__(network, broadcast_mode, seed)
+        self._num_arms = 1
+        self._num_relayers = num_relayers
+        self._tor_network = {}
         self.change_anonimity_graph()
+        
+    @property
+    def num_relayers(self):
+        return self._num_relayers
+    
+    @property
+    def num_arms(self):
+        return self._num_arms
+    
+    @property
+    def tor_network(self):
+        return self._tor_network
 
     def _generate_anonymity_graph(self) -> nx.Graph:
-        self.tor_network = {}
+        tor_network = {}
         tor_edges = []
         for node in self.network.nodes:
-            self.tor_network[node] = []
+            tor_network[node] = []
             for _ in range(self.num_arms):
                 arm_nodes = self.network.sample_random_nodes(
-                    self.num_hops + 1, replace=False, exclude=[node], rng=self._rng
+                    self.num_relayers, replace=False, exclude=[node], rng=self._rng
                 )
-                self.tor_network[node].append(arm_nodes)
+                tor_network[node].append(arm_nodes)
                 tor_edges.append((node, arm_nodes[0]))
-                for i in range(self.num_hops):
+                for i in range(self.num_relayers-1):
                     tor_edges.append((arm_nodes[i], arm_nodes[i + 1]))
+        self._tor_network = tor_network
         G = nx.Graph()
         G.add_edges_from(tor_edges)
         return G
 
     def propagate(self, pe: ProtocolEvent) -> Iterable[Union[list, bool]]:
         """Propagate message based on protocol rules"""
-        print(pe)
+        #print(pe)
         if pe.spreading_phase:
-            return super(TOREnhancedProtocol, self).propagate(pe)
+            return super(OnionRoutingProtocol, self).propagate(pe)
         else:
             node = pe.receiver
             path = pe.path
@@ -466,4 +482,4 @@ class TOREnhancedProtocol(BroadcastProtocol):
                     ], False
                 else:
                     # broadcaster node in the tor network
-                    return super(TOREnhancedProtocol, self).propagate(pe)
+                    return super(OnionRoutingProtocol, self).propagate(pe)
