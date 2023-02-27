@@ -398,6 +398,26 @@ class DandelionAdversary(Adversary):
 
 
 class OnionRoutingAdversary(Adversary):
+    """
+    Abstraction for the entity that tries to deanonymize Ethereum addresses when message passing is executed with our Onion Routing protocol. The main restriction here is that adversary cannot differentiate between messages during the anonymity phase as they are encrypted.
+
+    Parameters
+    ----------
+    protocol : protocol.Protocol
+        protocol that determines the rules of message passing
+    ratio : float
+        Fraction of adversary nodes in the P2P network
+    active : bool
+        Turn on to enable adversary nodes to deny message propagation
+    adversaries: List[int]
+        Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
+    seed: int (optional)
+        Random seed (disabled by default)
+        
+    References
+    ----------
+    Domokos M. Kelen, Istvan Andras Seres, Ferenc Beres, Andras A. Benczur, Integrated Onion Routing for Peer-to-Peer Validator Privacy in the Ethereum Network, https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf
+    """
     def __init__(
         self,
         protocol: Protocol,
@@ -504,10 +524,10 @@ class OnionRoutingAdversary(Adversary):
         while len(queue) > 0:
             u, v, t, step = queue.popleft()
             v, t, step = step_back(u, v, t, step)
-            # print("step:", v, t, step)
+            #print("step:", v, t, step)
             is_adv = v in self.nodes
             events = prev_events if is_adv else next_events
-            # print(events)
+            #print(events)
             valid = False
             if (len(events) > 0) and v in events:
                 candidates, timestamps = events[v]
@@ -520,12 +540,12 @@ class OnionRoutingAdversary(Adversary):
                 queue.append((u, v, t, step))
             else:
                 predictions.append((v, t, step))
-        # print("preds:", predictions)
+        #print("preds:", predictions)
         return predictions
 
     def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
         """
-        Predict source nodes for each message in a run of the Dandelion Protocol
+        Predict originator for each message in a run of the OnionRoutingProtocol.
 
         Parameters
         ----------
@@ -534,6 +554,26 @@ class OnionRoutingAdversary(Adversary):
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
             * first_sent: the node that sent the message the earliest to the receiver
             * dummy: the probability is divided equally between non-adversary nodes.
+            
+        Examples
+        --------
+        >>> from ethp2psim.network import *
+        >>> from ethp2psim.message import Message
+        >>> from ethp2psim.simulator import Simulator
+        >>> seed = 42
+        >>> nw = NodeWeightGenerator("random", seed)
+        >>> ew = EdgeWeightGenerator("random", seed)
+        >>> net = Network(nw, ew, 20, 3, seed=seed)
+        >>> orp = OnionRoutingProtocol(net, broadcast_mode="all", seed=seed)
+        >>> assert orp.tor_network[9] == [[7, 5, 1]]
+        >>> adv = OnionRoutingAdversary(orp, adversaries=[7, 1], seed=seed)
+        >>> msgs = [Message(9)] # simulate a single message originating from node 9
+        >>> sim = Simulator(adv, messages=msgs, seed=seed)
+        >>> _ = sim.run()
+        >>> predictions = adv.predict_msg_source(estimator="first_sent")
+        >>> # the adversary could reconstruct the channel from node 1 and 7
+        >>> predictions.loc[msgs[0].mid, 9] # and it predicted node 9 to be the originator
+        1.0
         """
 
         def extract_timeline(packets: List[ProtocolEvent]):

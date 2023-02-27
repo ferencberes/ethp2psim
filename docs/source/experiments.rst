@@ -1,5 +1,5 @@
-Experimental results
-====================
+Experimental results with various protocols
+===========================================
 
 Here, we show some of our results that we achieved by running the simulator with various different parameters. But first, let's discover the tools that we prepared for you to help your experimentation with our package.
 

@@ -99,7 +99,7 @@ class Protocol:
         return None if self.anonymity_network is None else self.anonymity_network.graph
 
     def change_anonimity_graph(self) -> NoReturn:
-        """Initialize or re-initialize anonymity graph for the anonymity phase of Dandelion, Dandelion++ or TOREnhanced protocols"""
+        """Initialize or re-initialize anonymity graph for the anonymity phase of Dandelion, Dandelion++ or Onion Routing protocols"""
         G = self._generate_anonymity_graph()
         self.anonymity_network = Network(
             self.network.node_weight_generator,
@@ -387,7 +387,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
 
 class OnionRoutingProtocol(BroadcastProtocol):
     """
-    Message propagation is first based on an anonymity phase that is followed by a spreading phase. During the anonymity phase the messages are propagated on pre-selected channels that contain multiple relayer nodes. The message source uses onion routing to encrypt the message with the public keys of relayer nodes. When an encrypted message reaches the last relayer in a given chain then it is broadcasted as a cleartext message. This is the start of the spreading phase.
+    Message propagation is first based on an anonymity phase that is followed by a spreading phase. During the anonymity phase the messages are propagated on pre-selected channels that contain multiple relayer nodes. The message source uses Onion Routing to encrypt the message with the public keys of relayer nodes. When an encrypted message reaches the last relayer in a given chain then it is broadcasted as a cleartext message. This is the start of the spreading phase. 
 
     Parameters
     ----------
@@ -402,19 +402,22 @@ class OnionRoutingProtocol(BroadcastProtocol):
 
     Examples
     --------
+    In this small example, we show how you can access  encrypted channel(s) for each originator.  
+    
     >>> from .network import *
-    >>> nw_generator = NodeWeightGenerator("random")
-    >>> ew_generator = EdgeWeightGenerator("normal")
-    >>> net = Network(nw_generator, ew_generator, num_nodes=10, k=2)
+    >>> seed = 42
+    >>> nw_generator = NodeWeightGenerator("random", seed)
+    >>> ew_generator = EdgeWeightGenerator("normal", seed)
+    >>> net = Network(nw_generator, ew_generator, num_nodes=5, k=2, seed=seed)
     >>> num_edges = net.graph.number_of_edges()
-    >>> tor = OnionRoutingProtocol(net, num_relayers=3, broadcast_mode='all')
-    >>> tor.anonymity_network.num_edges > net.num_nodes
-    True
+    >>> tor = OnionRoutingProtocol(net, num_relayers=3, broadcast_mode='all', seed=seed)
+    >>> tor.tor_network
+    {0: [[3, 1, 4]], 1: [[0, 4, 2]], 2: [[1, 4, 3]], 4: [[2, 1, 0]], 3: [[1, 2, 0]]}
+
 
     References
     ----------
-    Find more details about the OnionRoutingProtocol in our manuscript:
-    https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf
+    Domokos M. Kelen, Istvan Andras Seres, Ferenc Beres, Andras A. Benczur, Integrated Onion Routing for Peer-to-Peer Validator Privacy in the Ethereum Network, https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf
     """
 
     def __init__(
@@ -425,18 +428,25 @@ class OnionRoutingProtocol(BroadcastProtocol):
         seed: Optional[int] = None,
     ):
         super(OnionRoutingProtocol, self).__init__(network, broadcast_mode, seed)
-        self._num_arms = 1
+        self._num_channels = 1
         self._num_relayers = num_relayers
         self._tor_network = {}
         self.change_anonimity_graph()
+        
+    def __repr__(self):
+        return "OnionRoutingProtocol(num_relayers=%i, num_channels=%i, broadcast_mode=%s)" % (
+            self.num_channels,
+            self.num_channels,
+            self.broadcast_mode,
+        )
 
     @property
     def num_relayers(self):
         return self._num_relayers
 
     @property
-    def num_arms(self):
-        return self._num_arms
+    def num_channels(self):
+        return self._num_channels
 
     @property
     def tor_network(self):
@@ -447,7 +457,7 @@ class OnionRoutingProtocol(BroadcastProtocol):
         tor_edges = []
         for node in self.network.nodes:
             tor_network[node] = []
-            for _ in range(self.num_arms):
+            for _ in range(self.num_channels):
                 arm_nodes = self.network.sample_random_nodes(
                     self.num_relayers, replace=False, exclude=[node], rng=self._rng
                 )
