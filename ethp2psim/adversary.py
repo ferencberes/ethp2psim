@@ -501,23 +501,26 @@ class OnionRoutingAdversary(Adversary):
                 )
             ]
         )
-        # print(queue)
         while len(queue) > 0:
             u, v, t, step = queue.popleft()
-            # print(u, v, t, step)
             v, t, step = step_back(u, v, t, step)
-            # print(v, t, step)
+            #print("step:", v, t, step)
             is_adv = v in self.nodes
-            # print(is_adv)
-            contacts, candidates, timestamps = prev_events if is_adv else next_events
-            if timestamps != None:
+            events = prev_events if is_adv else next_events
+            #print(events)
+            valid = False
+            if (len(events) > 0) and v in events:
+                candidates, timestamps = events[v]
                 idx = (np.abs(np.array(timestamps) - t)).argmin()
-                # print('time', t, timestamps, idx, candidates)
-                # TODO: how to generalize this condition?
+                u = candidates[idx]
+                # NOTE: how to generalize this condition?
                 if np.abs(t - timestamps[idx]) < 1.0:  # difference is less than 1ms
-                    queue.append((candidates[idx], v, t, step))
-                else:
-                    predictions.append((v, t, step))
+                    valid = True
+            if valid:
+                queue.append((u, v, t, step))
+            else:
+                predictions.append((v, t, step))
+        #print("preds:", predictions)
         return predictions
 
     def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
@@ -535,12 +538,14 @@ class OnionRoutingAdversary(Adversary):
 
         def extract_timeline(packets: List[ProtocolEvent]):
             """Extract received or sent packets timeline for OnionRoutingAdversary"""
-            if len(packets) > 0:
-                events = [(pe.receiver, pe.sender, pe.delay) for pe in packets]
-                out = list(zip(*events))
-            else:
-                # it can happen that no adversary was in the encrypted channel
-                out = [None, None, None]
+            timeline_by_node = {}
+            for pe in packets:
+                if not pe.receiver in timeline_by_node:
+                    timeline_by_node[pe.receiver] = []
+                timeline_by_node[pe.receiver].append((pe.sender, pe.delay))
+            out = {}
+            for key, val in timeline_by_node.items():
+                out[key] = list(zip(*val))
             return out
 
         (
