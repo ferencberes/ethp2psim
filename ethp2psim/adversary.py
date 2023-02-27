@@ -504,10 +504,10 @@ class OnionRoutingAdversary(Adversary):
         while len(queue) > 0:
             u, v, t, step = queue.popleft()
             v, t, step = step_back(u, v, t, step)
-            #print("step:", v, t, step)
+            # print("step:", v, t, step)
             is_adv = v in self.nodes
             events = prev_events if is_adv else next_events
-            #print(events)
+            # print(events)
             valid = False
             if (len(events) > 0) and v in events:
                 candidates, timestamps = events[v]
@@ -520,7 +520,7 @@ class OnionRoutingAdversary(Adversary):
                 queue.append((u, v, t, step))
             else:
                 predictions.append((v, t, step))
-        #print("preds:", predictions)
+        # print("preds:", predictions)
         return predictions
 
     def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
