@@ -1,3 +1,4 @@
+.. _onion_sect:
 Integrated Onion Routing for Peer-to-Peer Validator Privacy in the Ethereum Network
 ===================================================================================
 

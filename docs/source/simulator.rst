@@ -36,4 +36,11 @@ Using the :class:`ethp2psim.simulator.Evaluator` is very straightforward:
    
 .. autoclass:: ethp2psim.simulator.Evaluator
 
-Now, you're good to go to run your own experiments. But, we encourage you to discover all the related resources in the next section that we prepared for you to ease your work.
+What should be my next step?
+----------------------------
+
+Now, you're good to go to run your own experiments. Here, we propose two possible directions that you might want to consider:
+
+#. If you can't wait to play with **ethp2psim** then we recommend you to explore all related resources that we prepared for you to ease your work with complex simulations. Find related details in the :ref:`experiment_sect` section.
+
+#. On the other hand, if your are more interested in the theory of privacy-enhancing solutions for Ethereum then move to the next section. 

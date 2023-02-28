@@ -1,3 +1,4 @@
+.. _adversary_sect:
 Adversarial settings
 ====================
 

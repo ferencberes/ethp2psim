@@ -435,7 +435,7 @@ class OnionRoutingProtocol(BroadcastProtocol):
         
     def __repr__(self):
         return "OnionRoutingProtocol(num_relayers=%i, num_channels=%i, broadcast_mode=%s)" % (
-            self.num_channels,
+            self.num_relayers,
             self.num_channels,
             self.broadcast_mode,
         )

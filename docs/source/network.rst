@@ -5,7 +5,7 @@ Peer-to-peer (P2P) network
 How to create a P2P network?
 ----------------------------
 
-In this module, we provide two generators to assign weights to the nodes and edges of the peer-to-peer (P2P) network. By our terminology, edge weights represent communication latency on the communication channels (edges) of the P2P network, while node weights account for node relevance (i.e., portion of staked ether).
+In **ethp2psim**, we provide two generators to assign weights to the nodes and edges of the peer-to-peer (P2P) network. By our terminology, edge weights represent communication latency on the communication channels (edges) of the P2P network, while node weights account for node relevance (i.e., portion of staked ether).
 
 .. autoclass:: ethp2psim.network.NodeWeightGenerator
    :members:

@@ -1,3 +1,4 @@
+.. _experiment_sect:
 Experimental results with various protocols
 ===========================================
 
@@ -24,8 +25,8 @@ For example, run the following commands in parallel to save some execution time:
 This way you will be able to compare results based on 10 trials for a random regular graph with 1000 nodes and 50 degree and the underlying graph of the Goerli (Görli) testnet. Adversary performance will be evaluated for both highest degree and uniform random node sampling settings.
 
 
-A few interesting simulation results
-------------------------------------
+A few interesting results
+-------------------------
 
 In the following, we include some fascinating simulation results produced by ethp2psim. You can create similar and more advanced measurements using this tool. The following examples might serve as some inspiration what you can build using this tool. Let's analyze some of the privacy-enhancing routing algorithms in various networks and adversarial settings!
 

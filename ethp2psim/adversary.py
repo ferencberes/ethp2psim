@@ -557,6 +557,8 @@ class OnionRoutingAdversary(Adversary):
             
         Examples
         --------
+        In this small example, the adversary reconstructs the channel originating from node 9 from the two adversarial nodes (7 and 1).
+        
         >>> from ethp2psim.network import *
         >>> from ethp2psim.message import Message
         >>> from ethp2psim.simulator import Simulator
@@ -574,6 +576,23 @@ class OnionRoutingAdversary(Adversary):
         >>> # the adversary could reconstruct the channel from node 1 and 7
         >>> predictions.loc[msgs[0].mid, 9] # and it predicted node 9 to be the originator
         1.0
+        
+        Next, we evaluate a simulation with 20 random messages.
+        
+        >>> from ethp2psim.network import *
+        >>> from ethp2psim.message import Message
+        >>> from ethp2psim.simulator import *
+        >>> seed = 42
+        >>> nw = NodeWeightGenerator("random", seed)
+        >>> ew = EdgeWeightGenerator("random", seed)
+        >>> net = Network(nw, ew, 50, 10, seed=seed)
+        >>> orp = OnionRoutingProtocol(net, broadcast_mode="all", seed=seed)
+        >>> # adversary controls 10% of the network nodes
+        >>> adv = OnionRoutingAdversary(orp, 0.1, seed=seed)
+        >>> sim = Simulator(adv, 20, seed=seed)
+        >>> _ = sim.run()
+        >>> Evaluator(sim, estimator="first_sent").get_report()
+        {'estimator': 'first_sent', 'hit_ratio': 0.0, 'inverse_rank': 0.05774664045611379, 'entropy': 0.0, 'ndcg': 0.22931979405367153, 'message_spread_ratio': 1.0}
         """
 
         def extract_timeline(packets: List[ProtocolEvent]):

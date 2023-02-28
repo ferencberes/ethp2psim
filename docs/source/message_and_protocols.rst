@@ -50,4 +50,4 @@ In :class:`ethp2psim.protocols.DandelionPlusPlusProtocol`, the anonymity graph i
    :members:
    :inherited-members:
    
-In the next section, we show various ways on how to set up adversary nodes in the P2P network.
+In the next section, we show various ways on how to configure your adversary.
