@@ -387,7 +387,7 @@ class DandelionPlusPlusProtocol(DandelionProtocol):
 
 class OnionRoutingProtocol(BroadcastProtocol):
     """
-    Message propagation is first based on an anonymity phase that is followed by a spreading phase. During the anonymity phase the messages are propagated on pre-selected channels that contain multiple relayer nodes. The message source uses Onion Routing to encrypt the message with the public keys of relayer nodes. When an encrypted message reaches the last relayer in a given chain then it is broadcasted as a cleartext message. This is the start of the spreading phase. 
+    Message propagation is first based on an anonymity phase that is followed by a spreading phase. During the anonymity phase the messages are propagated on pre-selected channels that contain multiple relayer nodes. The message source uses Onion Routing to encrypt the message with the public keys of relayer nodes. When an encrypted message reaches the last relayer in a given chain then it is broadcasted as a cleartext message. This is the start of the spreading phase.
 
     Parameters
     ----------
@@ -402,8 +402,8 @@ class OnionRoutingProtocol(BroadcastProtocol):
 
     Examples
     --------
-    In this small example, we show how you can access  encrypted channel(s) for each originator.  
-    
+    In this small example, we show how you can access  encrypted channel(s) for each originator.
+
     >>> from .network import *
     >>> seed = 42
     >>> nw_generator = NodeWeightGenerator("random", seed)
@@ -432,12 +432,15 @@ class OnionRoutingProtocol(BroadcastProtocol):
         self._num_relayers = num_relayers
         self._tor_network = {}
         self.change_anonimity_graph()
-        
+
     def __repr__(self):
-        return "OnionRoutingProtocol(num_relayers=%i, num_channels=%i, broadcast_mode=%s)" % (
-            self.num_relayers,
-            self.num_channels,
-            self.broadcast_mode,
+        return (
+            "OnionRoutingProtocol(num_relayers=%i, num_channels=%i, broadcast_mode=%s)"
+            % (
+                self.num_relayers,
+                self.num_channels,
+                self.broadcast_mode,
+            )
         )
 
     @property

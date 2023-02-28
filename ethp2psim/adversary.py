@@ -413,11 +413,12 @@ class OnionRoutingAdversary(Adversary):
         Optional list of nodes that can be set to be adversaries instead of randomly selecting them.
     seed: int (optional)
         Random seed (disabled by default)
-        
+
     References
     ----------
     Domokos M. Kelen, Istvan Andras Seres, Ferenc Beres, Andras A. Benczur, Integrated Onion Routing for Peer-to-Peer Validator Privacy in the Ethereum Network, https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf
     """
+
     def __init__(
         self,
         protocol: Protocol,
@@ -524,10 +525,10 @@ class OnionRoutingAdversary(Adversary):
         while len(queue) > 0:
             u, v, t, step = queue.popleft()
             v, t, step = step_back(u, v, t, step)
-            #print("step:", v, t, step)
+            # print("step:", v, t, step)
             is_adv = v in self.nodes
             events = prev_events if is_adv else next_events
-            #print(events)
+            # print(events)
             valid = False
             if (len(events) > 0) and v in events:
                 candidates, timestamps = events[v]
@@ -540,7 +541,7 @@ class OnionRoutingAdversary(Adversary):
                 queue.append((u, v, t, step))
             else:
                 predictions.append((v, t, step))
-        #print("preds:", predictions)
+        # print("preds:", predictions)
         return predictions
 
     def predict_msg_source(self, estimator: str = "first_reach") -> pd.DataFrame:
@@ -554,11 +555,11 @@ class OnionRoutingAdversary(Adversary):
             * first_reach: the node from whom the adversary first heard the message is assigned 1.0 probability while every other node receives zero.
             * first_sent: the node that sent the message the earliest to the receiver
             * dummy: the probability is divided equally between non-adversary nodes.
-            
+
         Examples
         --------
         In this small example, the adversary reconstructs the channel originating from node 9 from the two adversarial nodes (7 and 1).
-        
+
         >>> from ethp2psim.network import *
         >>> from ethp2psim.message import Message
         >>> from ethp2psim.simulator import Simulator
@@ -576,9 +577,9 @@ class OnionRoutingAdversary(Adversary):
         >>> # the adversary could reconstruct the channel from node 1 and 7
         >>> predictions.loc[msgs[0].mid, 9] # and it predicted node 9 to be the originator
         1.0
-        
+
         Next, we evaluate a simulation with 20 random messages.
-        
+
         >>> from ethp2psim.network import *
         >>> from ethp2psim.message import Message
         >>> from ethp2psim.simulator import *
