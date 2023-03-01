@@ -105,7 +105,7 @@ evaluator = Evaluator(sim, estimator="first_sent")
 print(evaluator.get_report())
 ```
 
-For more complex experiments, we prepared a [script](scripts/compare_protocols.py). You can observe the related results in this [notebook](Results.ipynb).
+For more information on usage and experiments in the [documentation](https://ethp2psim.readthedocs.io/en/latest/?badge=latest).
 
 ## Motivation
 
