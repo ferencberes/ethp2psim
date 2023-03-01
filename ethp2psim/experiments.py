@@ -131,6 +131,7 @@ def shorten_protocol_name(x: str) -> str:
     'Broadcast'
     """
     val = x.replace("Protocol", "").replace("spreading_proba", "p")
+    val = val.split("num_channels")[0].replace("num_relayers", "relayers")
     val = val.split("broadcast")[0][:-1].replace("(", ": ")
     if val[-1] == ",":
         val = val[:-1]
