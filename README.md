@@ -9,8 +9,6 @@
 
 **ethp2psim** is a network privacy simulator for the Ethereum peer-to-peer (p2p) network. It allows developers and researchers to implement, test, and evaluate the anonymity and privacy guarantees of various routing protocols (e.g., Dandelion(++)) and custom privacy-enhanced message routing protocols. *Issues, PRs, and contributions are welcome!* Let's make Ethereum private together!
 
-**WARNING: This repository is still under active development. Currently, we're putting into place the last features. Please, do not consider our code to be ready for public use until we make our first release. Kind regards: The collaborators**
-
 ## Installation
 
 Create your conda environment:
@@ -108,6 +106,22 @@ print(evaluator.get_report())
 ```
 
 For more complex experiments, we prepared a [script](scripts/compare_protocols.py). You can observe the related results in this [notebook](Results.ipynb).
+
+## Motivation
+
+To highlight the potential in our simulator, we show the average fraction of messages (y-axis) deanomyzed by the adversary with respect to different factors:
+
+* the fraction of P2P network nodes controlled by the adversary (x-axis)
+* whether adversarial nodes are selected uniformly at random, or they control nodes with the highest degrees (see figure columns)
+* the network model (see figure rows) used to simulate the Ethereum P2P network (random regular with 1000 nodes vs. Goerli testnet with approximately 1500 nodes) 
+
+![motivation_figure](figures/passive_adversary_centrality_hit_ratio.png)
+
+The results show that using Dandelion(++) the adversary significantly loses from its deanonymization power compared to the case when only simple Broadcasting is used for message propagation. The results are even more promising for [our Onion Routing based protocol](https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf) ([related documentation](https://ethp2psim.readthedocs.io/en/latest/onion_routing.html)) that is affected less by the ratio of adversarial nodes in the P2P network.
+
+Furthermore, as the bottom-right figure shows, for the real-world Goerli testnet data and high-degree adversarial nodes the simple broadcasting would be a very bad choice as the adversary can easily predict the originator for more than 50% of the messages.
+
+You can find more interesting experiments in the [documentation](https://ethp2psim.readthedocs.io/en/latest/experiments.html).
 
 ## Acknowledgements
 

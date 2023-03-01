@@ -12,7 +12,7 @@ In this Python package, we release our modular Ethereum P2P transaction simulato
 
 #. The underlying **peer-to-peer (P2P) network** that is used for message propagation. A message can be a block proposal, an attestation or a simple transaction. By default, we use random regular graphs to simulate the Ethereum P2P network, but custom datasets or graphs can be easily integrated as well. For details, see the :ref:`network_sect` section.
 
-#. The **protocol** defines the exact rules for message passing. In the :ref:`protocols_sect` section, we introduce several baseline protocols that are implemented in our package. Furthermore, we propose an Onion Routing based protocol that has the potential to prevent any single party from linking the IP address and public key of the originator, if executed successfully. For more details, check out :ref:`onion_sect`.
+#. The **protocol** defines the exact rules for message propagation. In the :ref:`protocols_sect` section, we introduce several baseline protocols that are implemented in our package. Furthermore, we propose an Onion Routing based protocol that has the potential to prevent any single party from linking the IP address and public key of the originator, if executed successfully. For more details, check out our work: :ref:`onion_sect`.
 
 #. The **adversary** is constantly eavesdropping on network traffic by controlling a subset of the P2P network nodes. Its main goal is to predict the source node (the originator) for each message. In the :ref:`adversary_sect` section, we demonstrate various ways to configure your adversary.
 
@@ -29,7 +29,11 @@ To highlight the potential in our simulator, we show the average fraction of mes
    
 ..  figure:: ../../figures/passive_adversary_centrality_hit_ratio.png
 
-The results show that using Dandelion(++) the adversary significantly loses from its deanonymization power compared to the case when only simple Broadcasting is used for message propagation. Furthermore, in case of real-world Goerli testnet data and high-degree adversarial nodes the simple broadcasting would be a very bad choice as the adversary can easily predict the originator for more than 50% of the messages. 
+The results show that using Dandelion(++) the adversary significantly loses from its deanonymization power compared to the case when only simple Broadcasting is used for message propagation. The results are even more promising for :class:`ethp2psim.protocols.OnionRoutingProtocol` that is affected less by the ratio of adversarial nodes in the P2P network.
+
+Furthermore, as the bottom-right figure shows, for the real-world Goerli testnet data and high-degree adversarial nodes the simple broadcasting would be a very bad choice as the adversary can easily predict the originator for more than 50% of the messages.
+
+You can find more interesting experiments in the :ref:`experiment_sect` section.
 
 Acknowledgements
 ----------------

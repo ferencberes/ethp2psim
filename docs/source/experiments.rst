@@ -2,12 +2,12 @@
 Experimental results with various protocols
 ===========================================
 
-Here, we show some of our results that we achieved by running the simulator with various different parameters. But first, let's discover the tools that we prepared for you to help your experimentation with our package.
+Here, we show some of our results that we achieved by running the simulator with various different parameters. But first, let's discover the tools that we prepared for you to help your experimentation with our **ethp2psim**.
 
 Resources for running experiments
 ---------------------------------
 
-If you want to compare how well the adversary can deanonymize message sources for the :class:`protocols.BroadcastProtocol` and the :class:`protocols.DandelionProtocol` then we recommend you to use our  `Bash script <https://github.com/ferencberes/ethp2psim/blob/main/scripts/run_experiments.sh>`_. that have three parameters:
+If you want to compare how well the adversary can deanonymize message sources (or originators) for different message passing protocols (e.g.,  :class:`ethp2psim.protocols.BroadcastProtocol`, :class:`ethp2psim.protocols.DandelionProtocol`, :class:`ethp2psim.protocols.DandelionPlusPlusProtocol`, :class:`ethp2psim.protocols.OnionRoutingProtocol`) then we recommend you to use our  `Bash script <https://github.com/ferencberes/ethp2psim/blob/main/scripts/run_experiments.sh>`_. that have three parameters:
 
 #. The number of independent trials to use to gain insights. The mean deanonymization performance of the adversary will be reported with respect to these trials. Basically, the number of trials represents the number of different network and adversary settings in the experiment. In each setting, we simulate multiple messages (approximately 10% of the P2P nodes) over a fixed network and a fixed set of adversarial nodes.
 #. The size of the P2P :class:`network.Network` to simulate. If you set 0, then the script will load the :class:`data.GoerliTestnet`.
@@ -28,22 +28,24 @@ This way you will be able to compare results based on 10 trials for a random reg
 A few interesting results
 -------------------------
 
-In the following, we include some fascinating simulation results produced by ethp2psim. You can create similar and more advanced measurements using this tool. The following examples might serve as some inspiration what you can build using this tool. Let's analyze some of the privacy-enhancing routing algorithms in various networks and adversarial settings!
+In the following, we include some fascinating simulation results produced by **ethp2psim**. You can create similar and more advanced measurements using this tool. The following examples might serve as some inspiration to what you can build using this tool. Let's analyze some of the privacy-enhancing routing algorithms in various networks and adversarial settings!
 
 A discussion on performance metrics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-First, let's start with a simple experiment where we compare the deanonymization power of the adversary when it uses the first-reach or the first-sent heuristics to determine the source of each message. These estimator strategies are used to guess the first node that broadcasted a given message based on the observations of all adversarial nodes. In short, an adversary using the first-reach heuristic predicts a node to be the first broadcaster if it is the first node that it heard the message from. On the other hand, using channel latency information, a first-sent estimator tries to identify the neighbor that first sent the message to any of the adversarial nodes. Naturally, the two predictions might not coinside as the triangle inequality does not necessarily hold for P2P network latency.
+First, let's start with a simple experiment where we compare the deanonymization power of the adversary when it uses the first-reach or the first-sent heuristics to determine the originator for each message. These estimator strategies are used to guess the first node that broadcasted a given message based on the observations of all adversarial nodes. In short, an adversary using the first-reach heuristic predicts a node to be the first broadcaster if it is the first node that it heard the message from. On the other hand, using the channel latency information of adjacent channels, a first-sent estimator tries to identify the neighbor that first sent the message to any of the adversarial nodes. Naturally, the two predictions might not coincide as the triangle inequality does not necessarily hold for P2P network latency.
 
-In this experiment, we use a random regular graph with 1000 nodes and 50 degree to compare the two heuristics against simple :class:`protocols.BroadcastProtocol` and :class:`protocols.DandelionProtocol`. Not surprisingly, our results show that the adversary with the first-sent estimator performs significantly better. However, we highlight that only the hit ratio, inverse rank and NDCG can reflect this behavior where ground truth information about message sources is compiled into the evaluation.    
+In this experiment, we use a random regular graph with 1000 nodes and 50 degree to compare the two heuristics against multiple protocols. Not surprisingly, our results show that the adversary with the first-sent estimator performs significantly better. However, we highlight that only the hit ratio, inverse rank and NDCG can reflect this behavior where ground truth information about message sources is compiled into the evaluation.    
 
 ..  figure:: ../../figures/passive_estimator_check.png
 
-Unfortunately, entropy does not work this way. It only measures the uncertainty of the prediction but not its goodness.
+Unfortunately, entropy does not work this way. It only measures the uncertainty of the prediction but not its goodness. Nevertheless, the entropy for Dandelion++ is higher than for Dandelion. The entropy for the remaining protocols is basically zero as in the implementation only one node is predicted to be the originator with larger than zero probability for these protocols. A possible future work could be to better define the possible originator node sets for the adversary who is attacking these protocols.
 
 ..  figure:: ../../figures/passive_estimator_entropy.png
 
-It is interesting to see how Dandelion can confuse the adversary compared to simple broadcasting in terms of hit ratio (e.g., first-sent performance drops from 0.5 to 0.3 in case of 10% adversarial nodes) which might indicate that it is an overly ambitious performance metric. Instead, **our recommendation is to use inverse rank or NDCG for evaluation**. These metrics can better reflect that despite the higher uncertainty introduced by Dandelion(++) the adversary can still make a good educated guess in knowledge of the anonymity graph. For example, it is quite shocking to see the change in inverse from 0.5 to 0.4, that is only 0.5 worse ranks on average for the predicted message source, in case of 10% adversarial nodes. 
+It is interesting to see how Dandelion can confuse the adversary compared to simple broadcasting in terms of hit ratio (e.g., first-sent performance drops from 0.5 to 0.3 in case of 10% adversarial nodes) which might indicate that it is an overly ambitious performance metric. Instead, **our recommendation is to use inverse rank or NDCG for evaluation**. These metrics can better reflect that despite the higher uncertainty introduced by Dandelion(++) the adversary can still make a good educated guess in knowledge of the anonymity graph. For example, it is quite shocking to see the change in inverse rank from 0.5 to 0.4, that is only 0.5 worse ranks on average for the predicted message source, in case of 10% adversarial nodes.
+
+A possible solution to the problem could be :class:`ethp2psim.protocols.OnionRoutingProtocol` (`our work <https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf>`_ ) that uses enrypted messages in the anonymity phase to hide the originator from the adversary. Indeed, our results show that deanonymization performance remains low even for high adversarial node ratios.
 
 Comparing different network topologies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -64,14 +66,14 @@ Furthermore, we measure the percentage of nodes reached by a message in general.
 Broadcast settings
 ~~~~~~~~~~~~~~~~~~
 
-Next, observe the significant change in the results when a message is propagated to all neighbors, instead :ref:`a random square root of them <topology_results>`, during the broadcast phase. It is quite shocking that an adversary controling 10% of all nodes can be almost sure about the identity of the message source in case of simple :class:`protocols.BroadcastProtocol`. Clearly, Dandelion can significantly decrease the deanonymization performance of the adversary but it has a high price in terms of robustness detailed in the next section.
+Next, observe the significant change in the results when a message is propagated to all neighbors, instead :ref:`a random square root of them <topology_results>`, during the broadcast phase. It is quite shocking that an adversary controling 10% of all nodes can be almost sure about the identity of the message source in case of simple :class:`protocols.BroadcastProtocol`. Clearly, Dandelion(++) can significantly decrease the deanonymization performance of the adversary but it has a high price in terms of robustness detailed in the next section.
 
 ..  figure:: ../../figures/broadcast_mode_inverse_rank.png
 
 Robustness for active and passive adversary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    In our next experiment, we consider two types of adversaries. A passive adversary follows the protocol and only logs the timestamp information when its nodes encounter messages. However, an active adversary on top of logging information, does not forward incoming messages. Invthe next Figure, we show that this is especially problematic for Dandelion(++). Imagine that an active adversary sits in the stem (anonymity) phase of Dandelion(++). In this case, the message will be never broadcasted. The more and more adversaries censor messages the larger the portion of messages that are not heard by nodes in the P2P network. This is even more concerning, when the high-degree nodes are compromised (e.g., adversary_centrality='degree'). Note that the random regular graph is more robust against (active) adversaries.
+    In our next experiment, we consider two types of adversaries. A **passive adversary** that follows the protocol and only logs the timestamp information when its nodes encounter messages. We also implemented an **active adversary** that does not forward incoming messages. In the next Figure, we show that this is especially problematic for Dandelion(++). Imagine that an active adversary sits in the stem (anonymity) phase of Dandelion(++). Basically, if a message encounters an adversarial node on the line graph then it will be never broadcasted. The more and more adversaries censor messages the larger the portion of messages that are not heard by nodes in the P2P network. This is even more concerning, when the high-degree nodes are compromised (e.g., adversary_centrality='degree'). Note that the random regular graph is more robust against (active) adversaries.
 
 ..  figure:: ../../figures/passive_vs_active_adversary_centrality_message_spread.png
 
