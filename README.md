@@ -123,6 +123,12 @@ Furthermore, as the bottom-right figure shows, for the real-world Goerli testnet
 
 You can find more interesting experiments in the [documentation](https://ethp2psim.readthedocs.io/en/latest/experiments.html).
 
+## Useful resources
+
+- Our [detailed summary](ethp2psim_summary.pdf) for this project.
+- [Documentation](https://ethp2psim.readthedocs.io/en/latest/) of the source code with several examples and a few experimental results.
+- The [manuscript](https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf) of our proposed onion routing based protocol.
+
 ## Acknowledgements
 
 The development of this simulator and [our research](https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf) was funded by the Ethereum Foundation's [Academic Grant Rounds 2022](https://blog.ethereum.org/2022/07/29/academic-grants-grantee-announce). 
