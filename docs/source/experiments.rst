@@ -22,7 +22,7 @@ For example, run the following commands in parallel to save some execution time:
   bash run_experiments.sh 10 1000 degree
   bash run_experiments.sh 10 0 degree
 
-This way you will be able to compare results based on 10 trials for a random regular graph with 1000 nodes and 50 degree and the underlying graph of the Goerli (Görli) testnet. Adversary performance will be evaluated for both highest degree and uniform random node sampling settings.
+This way you will be able to compare results based on 10 trials for a random regular graph with 1000 nodes and 50 degree and the underlying graph of the Goerli (Goerli) testnet. Adversary performance will be evaluated for both highest degree and uniform random node sampling settings.
 
 
 A few interesting results
@@ -35,15 +35,15 @@ A discussion on performance metrics
 
 First, let's start with a simple experiment where we compare the deanonymization power of the adversary when it uses the first-reach or the first-sent heuristics to determine the originator for each message. These estimator strategies are used to guess the first node that broadcasted a given message based on the observations of all adversarial nodes. In short, an adversary using the first-reach heuristic predicts a node to be the first broadcaster if it is the first node that it heard the message from. On the other hand, using the channel latency information of adjacent channels, a first-sent estimator tries to identify the neighbor that first sent the message to any of the adversarial nodes. Naturally, the two predictions might not coincide as the triangle inequality does not necessarily hold for P2P network latency.
 
-In this experiment, we use a random regular graph with 1000 nodes and 50 degree to compare the two heuristics against multiple protocols. Not surprisingly, our results show that the adversary with the first-sent estimator performs significantly better. However, we highlight that only the hit ratio, inverse rank and NDCG can reflect this behavior where ground truth information about message sources is compiled into the evaluation.    
+In this experiment, we use a random regular graph with 1000 nodes and 50 degree to compare the two heuristics against multiple protocols. Not surprisingly, our results in the first Figure show that the adversary with the first-sent estimator performs significantly better. However, we highlight that only the hit ratio, inverse rank and NDCG can reflect this behavior where ground truth information about message sources is compiled into the evaluation.    
 
 ..  figure:: ../../figures/passive_estimator_check.png
 
-Unfortunately, entropy does not work this way. It only measures the uncertainty of the prediction but not its goodness. Nevertheless, the entropy for Dandelion++ is higher than for Dandelion. The entropy for the remaining protocols is basically zero as in the implementation only one node is predicted to be the originator with larger than zero probability for these protocols. A possible future work could be to better define the possible originator node sets for the adversary who is attacking these protocols.
+Unfortunately, entropy does not depend on the ground-truth. It only measures the uncertainty of the predicted distribution, but not its closeness to the ground-truth. Nevertheless, the entropy for Dandelion++ is higher than for Dandelion in the next Figure. The prediction entropy for broadcast to all and our Onion Routing based protocol is zero as the predicted distribution only contains the most likely candidate. A possible future work could include additional less-likely candidates as well in the prediction distribution, this way better reflecting the knowledge of the adversary.
 
 ..  figure:: ../../figures/passive_estimator_entropy.png
 
-It is interesting to see how Dandelion can confuse the adversary compared to simple broadcasting in terms of hit ratio (e.g., first-sent performance drops from 0.5 to 0.3 in case of 10% adversarial nodes) which might indicate that it is an overly ambitious performance metric. Instead, **our recommendation is to use inverse rank or NDCG for evaluation**. These metrics can better reflect that despite the higher uncertainty introduced by Dandelion(++) the adversary can still make a good educated guess in knowledge of the anonymity graph. For example, it is quite shocking to see the change in inverse rank from 0.5 to 0.4, that is only 0.5 worse ranks on average for the predicted message source, in case of 10% adversarial nodes.
+In the first Figure, it is interesting to see how Dandelion can confuse the adversary compared to simple broadcasting in terms of hit ratio (e.g., first-sent performance drops from 0.5 to 0.3 in case of 10% adversarial nodes) which might indicate that it is overly restrictive, as it doesn't contain information about much of the predicted distribution. Instead, **our recommendation is to use inverse rank or NDCG for evaluation**. These metrics can better reflect that despite the higher uncertainty introduced by Dandelion(++) the adversary can still make a good educated guess in knowledge of the current anonymity graph (i.e., line-graph for Dandelion). For example, in the first Figure, it is quite shocking to see the change in inverse rank from 0.5 to 0.4, which means that on average Dandelion improves only half a rank for the predicted message source, in case of 10% adversarial nodes.
 
 A possible solution to the problem could be :class:`ethp2psim.protocols.OnionRoutingProtocol` (`our work <https://info.ilab.sztaki.hu/~kdomokos/OnionRoutingP2PEthereumPrivacy.pdf>`_ ) that uses enrypted messages in the anonymity phase to hide the originator from the adversary. Indeed, our results show that deanonymization performance remains low even for high adversarial node ratios.
 
@@ -51,17 +51,17 @@ Comparing different network topologies
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. _topology_results:
 
-In the Figure below, we observe how different graph topologies (random regular graph and a scale-free graph (Görli testnet's topology)) affects the adversary's deanonymization power measured by various different metrics (e.g., hit ratio, inverse rank, NDCG). The deanonymization performance is displayed with respect to the ratio of adversarial nodes (see the x-axis) in the P2P network.
+In the Figure below, we observe how different graph topologies, such as a random regular graph and a scale-free graph (Goerli testnet's topology), affect the adversary's deanonymization power measured by various different metrics (e.g., hit ratio, inverse rank, NDCG). The deanonymization performance is displayed with respect to the ratio of adversarial nodes (see the x-axis) in the P2P network.
 
-Here, we make three main observations related to privacy:
+Here, we make four main observations related to privacy:
 
-#. Dandelion with the least forwarding probability provides the highest privacy among the considered protocols. 
-#. In general the Görli testnet provides more privacy across all metrics. 
-#. The achieved privacy is quite brittle in case of 0.2 adversary ratio: 0.5 inverse_rank for Dandelion means that the adversary outputs a vector of candidates and on average the true originator is put to the 2nd place.
+#. The achieved privacy is quite brittle in case of 0.2 adversary ratio: 0.5 inverse_rank for Dandelion with 0.5 broadcast probability means that the adversary outputs a vector of candidates and on average the true originator is put to the 2nd place.
+#. Dandelion(++) with the least broadcasting probability (p=0.125) provides the highest privacy among the considered Dandelion(++)-style protocols.
+#. The results are promising for our Onion Routing based protocol where the efficiency of the adversary is less affected by the ratio of adversarial nodes in the P2P network.
+#. In general the Goerli testnet exhibits more privacy across all metrics. 
+
 
 ..  figure:: ../../figures/graph_model_comparision.png
-
-Furthermore, we measure the percentage of nodes reached by a message in general. The last row of this Figure shows that approximately 8% of Görli testnet nodes do not see all the broadcasted messages. We could attribute this phenomena to the hub and spoke structure of the Görli testnet. Basically, some nodes in the spoke part of the network might not see all the broadcasted messages.
 
 Broadcast settings
 ~~~~~~~~~~~~~~~~~~
@@ -73,11 +73,11 @@ Next, observe the significant change in the results when a message is propagated
 Robustness for active and passive adversary
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    In our next experiment, we consider two types of adversaries. A **passive adversary** that follows the protocol and only logs the timestamp information when its nodes encounter messages. We also implemented an **active adversary** that does not forward incoming messages. In the next Figure, we show that this is especially problematic for Dandelion(++). Imagine that an active adversary sits in the stem (anonymity) phase of Dandelion(++). Basically, if a message encounters an adversarial node on the line graph then it will be never broadcasted. The more and more adversaries censor messages the larger the portion of messages that are not heard by nodes in the P2P network. This is even more concerning, when the high-degree nodes are compromised (e.g., adversary_centrality='degree'). Note that the random regular graph is more robust against (active) adversaries.
+    In our next experiment, we consider two types of adversaries. A **passive adversary** that follows the protocol and only logs the timestamp information when its nodes encounter messages. We also implemented an **active adversary** that does not forward messages at all. In the next Figure, we show that this is especially problematic for Dandelion(++). Imagine that an active adversary sits in the stem (anonymity) phase of Dandelion(++). Basically, if a message encounters an adversarial node on the line graph then it will be never broadcasted. The more and more adversaries censor messages the larger the portion of messages that are not heard by nodes in the P2P network. This is even more concerning, when the high-degree nodes are compromised (e.g., adversary_centrality='degree'). Note that the random regular graph is more robust against (active) adversaries.
 
 ..  figure:: ../../figures/passive_vs_active_adversary_centrality_message_spread.png
 
-    In the next Figure, once again, we see the low levels of privacy (measured in inverse_rank in this figure) provided by various privacy-enhanced routing algorithms. It is easy to consider that in our setting active and passive adversaries have the same power to deanonymize  messsage. Deanonymization results are slightly better for the Görli testnet's topology, i.e., the adversary is less powerful on a scale-free graph. In our experiments, the random regular graph has a higher edge density, hence, the adversary can make a more informed guess about the originator of the messages.
+    In the next Figure, once again, we see the low levels of privacy (measured in inverse rank in this figure) provided by various privacy-enhanced routing algorithms. It is easy to see that in our setting active and passive adversaries have the same power to deanonymize  messsage. Deanonymization results are slightly better for the Goerli testnet's topology, i.e., the adversary is less powerful on a scale-free graph. In our experiments, the random regular graph has a higher edge density, hence, the adversary can make a more informed guess about the originator of the messages.
 
 ..  figure:: ../../figures/passive_vs_active_adversary_inverse_rank.png
 
