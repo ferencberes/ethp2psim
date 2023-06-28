@@ -31,7 +31,7 @@ pytest --doctest-modules --cov
 
 ## Cite
 
-If you use this simulator, please cite our [paper](https://arxiv.org/pdf/2005.14051.pdf) on arXiv.
+If you use this simulator, please cite our [paper](https://arxiv.org/pdf/2306.15024.pdf) on arXiv.
 
 ```
 @misc{béres2023ethp2psim,
