@@ -7,7 +7,7 @@
 ![Python versions](pybadge.svg)
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/ferencberes/ethp2psim/HEAD?labpath=ipython/EthP2PSimExamples.ipynb)
 
-**ethp2psim** is a network privacy simulator for the Ethereum peer-to-peer (p2p) network. It allows developers and researchers to implement, test, and evaluate the anonymity and privacy guarantees of various routing protocols (e.g., Dandelion(++)) and custom privacy-enhanced message routing protocols. *Issues, PRs, and contributions are welcome!* Let's make Ethereum private together!
+**ethp2psim** is a network privacy simulator for the Ethereum peer-to-peer (p2p) network. It allows developers and researchers to implement, test, and evaluate the anonymity and privacy guarantees of various routing protocols (e.g., Dandelion(++)) and custom privacy-enhanced message routing protocols. *Issues, PRs, and contributions are [welcome](https://ethresear.ch/t/quantifying-the-privacy-guarantees-of-validatory-privacy-mechanisms/15715)!* Let's make Ethereum private together!
 
 ## Installation
 
@@ -27,6 +27,21 @@ pip install .
 Run the following command at the root folder to make sure that your installation was successful:
 ```bash
 pytest --doctest-modules --cov
+```
+
+## Cite
+
+If you use this simulator, please cite our [paper](https://arxiv.org/pdf/2005.14051.pdf) on arXiv.
+
+```
+@misc{béres2023ethp2psim,
+      title={ethp2psim: Evaluating and deploying privacy-enhanced peer-to-peer routing protocols for the Ethereum network}, 
+      author={Ferenc Béres and István András Seres and Domokos M. Kelen and András A. Benczúr},
+      year={2023},
+      eprint={2306.15024},
+      archivePrefix={arXiv},
+      primaryClass={cs.CR}
+}
 ```
 
 ## Quickstart
